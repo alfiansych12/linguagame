@@ -137,7 +137,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                     className="max-w-md w-full text-center space-y-8"
                 >
                     <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Icon name={level.icon} className="text-primary" size={32} />
+                        <Icon name={level.icon || 'school'} className="text-primary" size={32} />
                     </div>
                     <div className="space-y-4">
                         <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.title}</h1>
