@@ -1,65 +1,94 @@
-import Image from "next/image";
+'use client';
 
+import React, { useState } from 'react';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { LearningPath } from '@/components/game/LearningPath';
+import { QuestGacor } from '@/components/game/QuestGacor';
+import { Card, Icon, Button } from '@/components/ui/UIComponents';
+import { useRouter } from 'next/navigation';
+import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
+import { useUserStore } from '@/store/user-store';
+import { useProgressStore } from '@/store/progress-store';
+import { useSession } from 'next-auth/react';
+import { LoginModal } from '@/components/ui/LoginModal';
+
+/**
+ * Home Page - Main learning path entry point
+ */
 export default function Home() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const { totalXp, currentStreak } = useUserStore();
+  const { completedLevels, unlockedLevelIds } = useProgressStore();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const levels = CURRICULUM_LEVELS;
+  const isAuthenticated = status === 'authenticated';
+
+  // Convert progress store data to the format expected by LearningPath
+  const userProgress = levels.map(level => {
+    const progress = completedLevels[level.id];
+    const isUnlocked = unlockedLevelIds.includes(level.id);
+
+    return {
+      id: progress?.levelId || `prog-${level.id}`,
+      userId: session?.user?.id || 'guest',
+      levelId: level.id,
+      status: progress?.completed ? 'COMPLETED' : (isUnlocked ? 'OPEN' : 'LOCKED'),
+      highScore: progress?.score || 0,
+      stars: progress?.stars || 0
+    };
+  });
+
+  const userStats = {
+    name: session?.user?.name || 'Explorer',
+    image: session?.user?.image || '',
+    totalXp,
+    currentStreak,
+  };
+
+  const handleLevelStart = (levelId: string) => {
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    router.push(`/game/${levelId}`);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <PageLayout activeTab="home" user={userStats}>
+      <div className="flex flex-col items-center justify-center mb-8 md:mb-16 text-center space-y-2 md:space-y-4 px-4">
+        <div className="px-3 md:px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1 md:mb-2 animate-bounce-gentle">
+          {isAuthenticated ? 'Target Gacor: +50 XP' : 'Join the Sirkel & Slay!'}
+        </div>
+        <h2 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter max-w-2xl leading-none italic uppercase">
+          {isAuthenticated ? (
+            <>Ready to slay, <br className="md:hidden" /> <span className="text-primary">{userStats.name.split(' ')[0]}</span>? ✨</>
+          ) : (
+            <>Master English, <br className="md:hidden" /> <span className="text-primary leading-none">Literally!</span> 💅</>
+          )}
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 font-bold text-sm md:text-lg max-w-md mx-auto">
+          {isAuthenticated ? (
+            <>Streak kamu <span className="text-orange-500">{userStats.currentStreak} hari</span>. Literally gas!</>
+          ) : (
+            <>Belajar bahasa inggris gaya Jaksel. Gak ribet, which is keren bgt!</>
+          )}
+        </p>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4">
+        <LearningPath
+          levels={levels}
+          userProgress={userProgress as any}
+          onLevelStart={handleLevelStart}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+    </PageLayout>
   );
 }
