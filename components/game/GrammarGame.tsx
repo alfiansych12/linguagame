@@ -239,7 +239,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-4xl mx-auto w-full">
                 <div className="text-center space-y-4 mb-12">
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Time: {theme.highlight} Era</span>
-                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{currentTask.instruction}</h1>
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{currentTask.indonesian}</h1>
                 </div>
 
                 <div className="w-full bg-slate-50 dark:bg-slate-900/50 p-10 rounded-[3rem] border-2 border-slate-200/50 dark:border-slate-800/50 min-h-[160px] flex flex-wrap gap-3 items-center justify-center mb-12 shadow-sm">
