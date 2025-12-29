@@ -54,6 +54,7 @@ export default function DuelRoomPage() {
 
         // 2. Fetch initial room state
         const initRoom = async () => {
+            console.log('📡 Fetching Room Data for:', roomCode);
             const { data: roomData, error } = await supabase
                 .from('duel_rooms')
                 .select('*')
@@ -61,6 +62,7 @@ export default function DuelRoomPage() {
                 .single();
 
             if (error || !roomData) {
+                console.error('❌ Room Fetch Error:', error);
                 router.push('/duel');
                 return;
             }
@@ -69,16 +71,23 @@ export default function DuelRoomPage() {
             setGameState(roomData.status);
 
             // Fetch players
-            const { data: playerData } = await supabase
+            console.log('👥 Fetching initial players for room:', roomData.id);
+            const { data: playerData, error: playerFetchError } = await supabase
                 .from('duel_players')
                 .select('*')
                 .eq('room_id', roomData.id)
                 .order('created_at', { ascending: true });
 
-            if (playerData) setPlayers(playerData);
+            if (playerFetchError) {
+                console.error('❌ Players Initial Fetch Error:', playerFetchError.message, playerFetchError.details, playerFetchError.hint);
+            } else if (playerData) {
+                console.log('✅ Found players:', playerData.length);
+                setPlayers(playerData);
+            }
+
             setLoading(false);
 
-            // 3. Setup Realtime Channel AFTER we have the room ID
+            // 3. Setup Realtime Channel
             console.log('🔌 Connecting to Realtime for Room ID:', roomData.id);
             const channel = supabase.channel(`room:${roomCode}`, {
                 config: {
@@ -93,14 +102,18 @@ export default function DuelRoomPage() {
                     table: 'duel_players',
                     filter: `room_id=eq.${roomData.id}`
                 }, async (payload) => {
-                    console.log('⚡️ Players Change Detected:', payload.event, payload.new);
-                    // Refetch players to get latest state
-                    const { data: updatedPlayers } = await supabase
+                    console.log('⚡️ Database Change Detected!', payload.eventType);
+
+                    // Refetch players only if it's an important change
+                    const { data: updatedPlayers, error: refetchError } = await supabase
                         .from('duel_players')
                         .select('*')
                         .eq('room_id', roomData.id)
                         .order('created_at', { ascending: true });
-                    if (updatedPlayers) {
+
+                    if (refetchError) {
+                        console.error('❌ Refetch Error:', refetchError.message);
+                    } else if (updatedPlayers) {
                         console.log('👥 Updated Players List:', updatedPlayers.length);
                         setPlayers(updatedPlayers);
                     }
@@ -111,17 +124,17 @@ export default function DuelRoomPage() {
                     table: 'duel_rooms',
                     filter: `id=eq.${roomData.id}`
                 }, (payload) => {
-                    console.log('🏠 Room Update:', payload.new.status);
-                    setGameState(payload.new.status);
-                    setRoom(payload.new);
+                    const updatedRoom = payload.new as any;
+                    console.log('🏠 Room Status Update:', updatedRoom.status);
+                    setGameState(updatedRoom.status);
+                    setRoom(updatedRoom);
                 })
                 .on('broadcast', { event: 'score_update' }, (payload) => {
-                    console.log('🎯 Score Broadcast:', payload);
                     const { playerId, score } = payload.payload;
                     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, score } : p));
                 })
                 .subscribe((status) => {
-                    console.log('📡 Subscription Status:', status);
+                    console.log('📡 Realtime Subscription Status:', status);
                 });
 
             channelRef.current = channel;
