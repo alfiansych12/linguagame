@@ -10,6 +10,7 @@ import { supabase } from '@/lib/db/supabase';
 import { setPlayerReady, startDuel, updatePlayerScore, endDuel } from '@/lib/db/duel';
 import { VOCABULARY_DATA } from '@/lib/data/vocabulary';
 import confetti from 'canvas-confetti';
+import { sanitizeDisplayName } from '@/lib/utils/anonymize';
 
 interface Player {
     id: string;
@@ -213,6 +214,9 @@ export default function DuelRoomPage() {
             setLocalScore(newScore);
             setCorrectCount(prev => prev + 1);
 
+            // Update local state for immediate feedback
+            setPlayers(prev => prev.map(p => p.id === currentPlayerId ? { ...p, score: newScore } : p));
+
             // Broadcast score to others
             channelRef.current.send({
                 type: 'broadcast',
@@ -228,16 +232,27 @@ export default function DuelRoomPage() {
     };
 
     const handleGameEnd = async () => {
+        setLoading(true);
         if (currentPlayerId) {
-            await updatePlayerScore(currentPlayerId, localScore);
+            try {
+                // Force final update to DB
+                await updatePlayerScore(currentPlayerId, localScore);
+
+                // Final refetch to ensure we have the absolute truth for results
+                const { data } = await supabase
+                    .from('duel_players')
+                    .select('*')
+                    .eq('room_id', room.id)
+                    .order('score', { ascending: false });
+                if (data) setPlayers(data);
+            } catch (err) {
+                console.error('Final score sync error:', err);
+            }
         }
 
-        // If host, set room to finished after a delay
-        // (Simplification: just wait for timer)
         setGameState('FINISHED');
+        setLoading(false);
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-
-        // Bonus crystals for participation
         addGems(50);
     };
 
@@ -264,7 +279,7 @@ export default function DuelRoomPage() {
 
     return (
         <PageLayout activeTab="home">
-            <div className="max-w-5xl mx-auto py-8 md:py-12 px-4">
+            <div className="max-w-6xl mx-auto py-8 md:py-12 px-4">
 
                 {/* Lobby / Waiting Phase */}
                 {gameState === 'WAITING' && (
@@ -295,7 +310,9 @@ export default function DuelRoomPage() {
                                                 {idx + 1}
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-slate-900 dark:text-white">{p.name} {p.id === currentPlayerId && '(You)'}</h4>
+                                                <h4 className="font-black text-slate-900 dark:text-white truncate max-w-[120px]">
+                                                    {sanitizeDisplayName(p.name, p.id)} {p.id === currentPlayerId && '(You)'}
+                                                </h4>
                                                 <p className="text-xs font-bold text-slate-500">{p.is_ready ? 'Ready to Slay' : 'Literally Unready'}</p>
                                             </div>
                                         </div>
@@ -375,15 +392,17 @@ export default function DuelRoomPage() {
 
                 {/* Playing Phase */}
                 {gameState === 'PLAYING' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
                         {/* Live Leaderboard Sidebar */}
-                        <div className="lg:col-span-1 space-y-4">
+                        <div className="lg:col-span-3 space-y-4 sticky top-24">
                             <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase italic mb-4">Live Standings</h3>
                             {players.sort((a, b) => b.score - a.score).map((p, idx) => (
-                                <Card key={p.id} className={`p-4 flex items-center justify-between border-2 ${p.id === currentPlayerId ? 'border-primary' : 'border-transparent'}`}>
+                                <Card key={p.id} className={`p-4 flex items-center justify-between border-2 transition-all ${p.id === currentPlayerId ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
                                     <div className="flex items-center gap-3">
                                         <span className="text-xs font-black text-slate-400">#{idx + 1}</span>
-                                        <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[80px]">{p.name}</span>
+                                        <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+                                            {sanitizeDisplayName(p.name, p.id)}
+                                        </span>
                                     </div>
                                     <span className="font-black text-primary">{p.score}</span>
                                 </Card>
@@ -391,7 +410,7 @@ export default function DuelRoomPage() {
                         </div>
 
                         {/* Game Arena */}
-                        <div className="lg:col-span-3 space-y-8">
+                        <div className="lg:col-span-9 space-y-8">
                             <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-4">
                                     <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -462,7 +481,9 @@ export default function DuelRoomPage() {
                                                 {idx + 1}
                                             </div>
                                             <div className="text-left">
-                                                <h4 className="text-2xl font-black text-slate-900 dark:text-white">{p.name}</h4>
+                                                <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                                                    {sanitizeDisplayName(p.name, p.id)}
+                                                </h4>
                                                 {idx === 0 && <span className="text-[10px] font-black uppercase text-yellow-500">🏆 The Actual Sepuh</span>}
                                             </div>
                                         </div>
