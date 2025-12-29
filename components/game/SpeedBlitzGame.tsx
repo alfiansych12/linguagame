@@ -251,7 +251,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 </div>
                                 <span className="text-xs font-black text-white w-8">{(timeLeft).toFixed(1)}s</span>
                             </div>
-                            <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">{currentTask.question}</h1>
+                            <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">{currentTask.english}</h1>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
