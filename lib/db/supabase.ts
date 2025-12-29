@@ -12,6 +12,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-        persistSession: false // Sesuai untuk server-side/NextAuth usage
+        persistSession: false
+    },
+    realtime: {
+        params: {
+            eventsPerSecond: 10
+        }
     }
 });
