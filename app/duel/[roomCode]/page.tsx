@@ -79,7 +79,12 @@ export default function DuelRoomPage() {
             setLoading(false);
 
             // 3. Setup Realtime Channel AFTER we have the room ID
-            const channel = supabase.channel(`room:${roomCode}`);
+            console.log('🔌 Connecting to Realtime for Room ID:', roomData.id);
+            const channel = supabase.channel(`room:${roomCode}`, {
+                config: {
+                    broadcast: { self: true },
+                }
+            });
 
             channel
                 .on('postgres_changes', {
@@ -88,13 +93,17 @@ export default function DuelRoomPage() {
                     table: 'duel_players',
                     filter: `room_id=eq.${roomData.id}`
                 }, async (payload) => {
-                    // Refetch players to get latest state (ready, score, etc)
+                    console.log('⚡️ Players Change Detected:', payload.event, payload.new);
+                    // Refetch players to get latest state
                     const { data: updatedPlayers } = await supabase
                         .from('duel_players')
                         .select('*')
                         .eq('room_id', roomData.id)
                         .order('created_at', { ascending: true });
-                    if (updatedPlayers) setPlayers(updatedPlayers);
+                    if (updatedPlayers) {
+                        console.log('👥 Updated Players List:', updatedPlayers.length);
+                        setPlayers(updatedPlayers);
+                    }
                 })
                 .on('postgres_changes', {
                     event: 'UPDATE',
@@ -102,15 +111,18 @@ export default function DuelRoomPage() {
                     table: 'duel_rooms',
                     filter: `id=eq.${roomData.id}`
                 }, (payload) => {
-                    console.log('Room update:', payload.new);
+                    console.log('🏠 Room Update:', payload.new.status);
                     setGameState(payload.new.status);
                     setRoom(payload.new);
                 })
                 .on('broadcast', { event: 'score_update' }, (payload) => {
+                    console.log('🎯 Score Broadcast:', payload);
                     const { playerId, score } = payload.payload;
                     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, score } : p));
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    console.log('📡 Subscription Status:', status);
+                });
 
             channelRef.current = channel;
         };
