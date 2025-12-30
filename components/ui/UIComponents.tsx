@@ -35,7 +35,8 @@ export const Icon: React.FC<IconProps> = ({
 
     return (
         <span
-            className={`material-symbols-outlined select-none inline-block align-middle transition-all ${filled ? 'fill-1' : ''} ${className}`}
+            className={`notranslate material-symbols-outlined select-none inline-block align-middle transition-all ${filled ? 'fill-1' : ''} ${className}`}
+            translate="no"
             style={{
                 ...getSize(),
                 fontSize: 'var(--icon-size)',
