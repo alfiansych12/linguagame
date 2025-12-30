@@ -11,6 +11,7 @@ import { setPlayerReady, startDuel, updatePlayerScore, endDuel } from '@/lib/db/
 import { VOCABULARY_DATA } from '@/lib/data/vocabulary';
 import confetti from 'canvas-confetti';
 import { sanitizeDisplayName } from '@/lib/utils/anonymize';
+import { useSound } from '@/hooks/use-sound';
 
 interface Player {
     id: string;
@@ -33,6 +34,7 @@ export default function DuelRoomPage() {
     const [countdown, setCountdown] = useState(3);
     const [gameTimer, setGameTimer] = useState(60);
     const [loading, setLoading] = useState(true);
+    const { playSound } = useSound();
 
     // Game Content State
     const [currentQuestion, setCurrentQuestion] = useState<any>(null);
@@ -165,6 +167,7 @@ export default function DuelRoomPage() {
         if (gameState === 'STARTING') {
             const int = setInterval(() => {
                 setCountdown(prev => {
+                    if (prev === 3) playSound('START');
                     if (prev <= 1) {
                         clearInterval(int);
                         setGameState('PLAYING');
@@ -208,9 +211,13 @@ export default function DuelRoomPage() {
         setOptions([question.indonesian, ...others].sort(() => 0.5 - Math.random()));
     };
 
+    const scoreRef = useRef(0);
+
     const handleAnswer = (answer: string) => {
         if (answer === currentQuestion.indonesian) {
-            const newScore = localScore + 10;
+            playSound('CORRECT');
+            const newScore = scoreRef.current + 10;
+            scoreRef.current = newScore;
             setLocalScore(newScore);
             setCorrectCount(prev => prev + 1);
 
@@ -226,17 +233,22 @@ export default function DuelRoomPage() {
 
             generateQuestion();
         } else {
+            playSound('WRONG');
             // Shake effect or penalty? Let's just go next to keep speed
             generateQuestion();
         }
     };
 
     const handleGameEnd = async () => {
+        console.log('Game Over! Syncing final score:', scoreRef.current);
         setLoading(true);
         if (currentPlayerId) {
             try {
-                // Force final update to DB
-                await updatePlayerScore(currentPlayerId, localScore);
+                // Force final update to DB with the absolute latest score from ref
+                await updatePlayerScore(currentPlayerId, scoreRef.current);
+
+                // Wait a bit for other players to sync
+                await new Promise(r => setTimeout(r, 1500));
 
                 // Final refetch to ensure we have the absolute truth for results
                 const { data } = await supabase
@@ -244,14 +256,25 @@ export default function DuelRoomPage() {
                     .select('*')
                     .eq('room_id', room.id)
                     .order('score', { ascending: false });
-                if (data) setPlayers(data);
+                if (data) {
+                    setPlayers(data);
+                    // Winner sound logic
+                    const winner = data[0];
+                    if (winner && winner.id === currentPlayerId) {
+                        playSound('SPECIAL_WIN');
+                    } else {
+                        playSound('SUCCESS');
+                    }
+                }
             } catch (err) {
                 console.error('Final score sync error:', err);
+                playSound('SUCCESS');
             }
         }
 
         setGameState('FINISHED');
         setLoading(false);
+
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         addGems(50);
     };

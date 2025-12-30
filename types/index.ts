@@ -23,6 +23,8 @@ export interface Level {
     icon?: string;
     isPublished: boolean;
     words?: Word[];
+    phase?: number;
+    isExam?: boolean;
 }
 
 export interface UserProgress {

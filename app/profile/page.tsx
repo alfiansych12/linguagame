@@ -6,7 +6,7 @@ import { Card, Icon, Badge, Button } from '@/components/ui/UIComponents';
 import { supabase } from '@/lib/db/supabase';
 import { useUserStore } from '@/store/user-store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 /**
  * Profile Page - User statistics and progress overview
@@ -15,12 +15,15 @@ export default function ProfilePage() {
     const { data: session, status } = useSession();
     const {
         name, totalXp, currentStreak, referralCount, referralCode, claimedMilestones,
-        addGems, checkReferralMilestones, setReferralCode
+        addGems, checkReferralMilestones, setReferralCode, setName
     } = useUserStore();
 
     const [wordsCount, setWordsCount] = useState(0);
+    const [duelWins, setDuelWins] = useState(0);
     const [refCodeInput, setRefCodeInput] = useState('');
     const [loadingRef, setLoadingRef] = useState(false);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [tempName, setTempName] = useState(name);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -34,7 +37,18 @@ export default function ProfilePage() {
 
             if (count) setWordsCount(count);
 
-            // Sync referral code if missing
+            if (count) setWordsCount(count);
+
+            // 2. Fetch Duel Wins
+            const { count: winCount } = await supabase
+                .from('duel_players')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', session.user.id)
+                .gt('score', 0); // Simplified win check: had a score in a duel
+
+            if (winCount) setDuelWins(winCount);
+
+            // 3. Sync referral code if missing
             const { data: userData } = await supabase
                 .from('users')
                 .select('referral_code')
@@ -63,12 +77,17 @@ export default function ProfilePage() {
         }, 1500);
     };
 
+    // Level Logic (1000 XP per Level)
+    const currentLevel = Math.floor(totalXp / 1000) + 1;
+    const levelXp = totalXp % 1000;
+    const progressToNext = (levelXp / 1000) * 100;
+
     // Stats for the profile
     const stats = [
         { label: 'XP Gacor', value: totalXp, icon: 'bolt', color: 'text-primary', bg: 'bg-primary/10' },
         { label: 'Kosa Kata', value: wordsCount * 10, icon: 'menu_book', color: 'text-success', bg: 'bg-success/10' },
-        { label: 'Streak Harian', value: currentStreak, icon: 'local_fire_department', color: 'text-orange-500', bg: 'bg-orange-50' },
-        { label: 'Akurasi', value: '88%', icon: 'target', color: 'text-purple-500', bg: 'bg-purple-50' },
+        { label: 'Duel Won', value: duelWins, icon: 'swords', color: 'text-error', bg: 'bg-error/10' },
+        { label: 'Spent', value: wordsCount * 15, icon: 'shopping_cart', color: 'text-purple-500', bg: 'bg-purple-50' },
     ];
 
     const mockUser = {
@@ -90,19 +109,76 @@ export default function ProfilePage() {
                             <Icon name="person" size={40} mdSize={80} className="text-slate-300 dark:text-slate-500" />
                         )}
                     </div>
-                    <button className="absolute -bottom-1 -right-1 size-10 md:size-14 bg-primary hover:bg-primary-dark text-white rounded-xl md:rounded-2xl border-2 md:border-4 border-white dark:border-[#0a0a0f] flex items-center justify-center shadow-lg hover:scale-110 transition-all active:scale-95 group-hover:-translate-y-1">
+                    <button
+                        onClick={() => setIsEditingName(true)}
+                        className="absolute -bottom-1 -right-1 size-10 md:size-14 bg-primary hover:bg-primary-dark text-white rounded-xl md:rounded-2xl border-2 md:border-4 border-white dark:border-[#0a0a0f] flex items-center justify-center shadow-lg hover:scale-110 transition-all active:scale-95 group-hover:-translate-y-1"
+                    >
                         <Icon name="edit" size={16} mdSize={24} />
                     </button>
                     <div className="absolute -top-3 -left-3 size-8 md:size-12 bg-yellow-400 rounded-lg md:rounded-2xl flex items-center justify-center shadow-lg -rotate-12 animate-bounce-gentle">
                         <Icon name="star" size={16} mdSize={24} className="text-white" filled />
                     </div>
                 </div>
-                <h2 className="text-2xl md:text-6xl font-black text-slate-900 dark:text-white mb-1 md:mb-2 tracking-tighter italic uppercase">
-                    {mockUser.name || 'Linguist Explorer'}
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 font-bold text-xs md:text-lg flex items-center gap-2 uppercase tracking-widest">
-                    Joined Dec 2025 <span className="size-1 rounded-full bg-slate-300"></span> Pro Member
-                </p>
+                {isEditingName ? (
+                    <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+                        <input
+                            type="text"
+                            value={tempName}
+                            onChange={(e) => setTempName(e.target.value)}
+                            className="text-2xl md:text-5xl font-black text-center bg-transparent border-b-4 border-primary outline-none text-slate-900 dark:text-white uppercase italic tracking-tighter w-full"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    setName(tempName);
+                                    setIsEditingName(false);
+                                }
+                            }}
+                        />
+                        <div className="flex gap-2">
+                            <Button variant="primary" className="rounded-xl px-6" onClick={async () => {
+                                setName(tempName);
+                                if (session?.user?.id) {
+                                    await supabase.from('users').update({ name: tempName }).eq('id', session.user.id);
+                                }
+                                setIsEditingName(false);
+                            }}>
+                                Save
+                            </Button>
+                            <Button variant="ghost" className="rounded-xl px-6" onClick={() => {
+                                setTempName(name);
+                                setIsEditingName(false);
+                            }}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <h2 className="text-2xl md:text-6xl font-black text-slate-900 dark:text-white mb-1 md:mb-2 tracking-tighter italic uppercase">
+                            {name || 'Linguist Explorer'}
+                        </h2>
+                        <div className="flex flex-col items-center gap-4">
+                            <p className="text-slate-500 dark:text-slate-400 font-bold text-xs md:text-lg flex items-center gap-2 uppercase tracking-widest">
+                                Joined Dec 2025 <span className="size-1 rounded-full bg-slate-300"></span> Level {currentLevel} Gacor
+                            </p>
+
+                            {/* Level Progress Bar */}
+                            <div className="w-full max-w-md space-y-2">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    <span>Level {currentLevel}</span>
+                                    <span>{levelXp} / 1000 XP</span>
+                                </div>
+                                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progressToNext}%` }}
+                                        className="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Stats Grid */}
@@ -247,12 +323,26 @@ export default function ProfilePage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 md:mt-12 flex flex-col md:flex-row gap-3 md:gap-4">
-                <Button variant="primary" fullWidth className="py-3 md:py-5 h-auto rounded-xl md:rounded-[1.5rem] text-xs md:text-sm font-black uppercase tracking-widest">
+            <div className="mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <Button variant="primary" fullWidth className="py-3 md:py-5 h-auto rounded-xl md:rounded-[1.5rem] text-xs md:text-sm font-black uppercase tracking-widest" onClick={() => setIsEditingName(true)}>
                     <Icon name="settings" className="mr-2" size={16} mdSize={20} />
                     Edit Branding
                 </Button>
-                <Button variant="ghost" fullWidth className="text-slate-400 hover:text-error hover:bg-red-50 dark:hover:bg-red-950/20 py-3 md:py-5 h-auto rounded-xl md:rounded-[1.5rem] text-xs md:text-sm font-black uppercase tracking-widest border border-slate-200/50 dark:border-slate-800/50">
+                <Button
+                    variant="ghost"
+                    fullWidth
+                    className="py-3 md:py-5 h-auto rounded-xl md:rounded-[1.5rem] text-xs md:text-sm font-black uppercase tracking-widest border-2 border-primary/20 text-primary hover:bg-primary/5"
+                    onClick={() => window.open('https://linguagame-handbook.vercel.app', '_blank')}
+                >
+                    <Icon name="menu_book" className="mr-2" size={16} mdSize={20} />
+                    View Handbook
+                </Button>
+                <Button
+                    variant="ghost"
+                    fullWidth
+                    className="text-slate-400 hover:text-error hover:bg-red-50 dark:hover:bg-red-950/20 py-3 md:py-5 h-auto rounded-xl md:rounded-[1.5rem] text-xs md:text-sm font-black uppercase tracking-widest border border-slate-200/50 dark:border-slate-800/50"
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                >
                     <Icon name="logout" className="mr-2" size={16} mdSize={20} />
                     Sign Out Dulu
                 </Button>

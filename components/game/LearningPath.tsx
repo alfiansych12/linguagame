@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Icon } from '../ui/UIComponents';
+import { useSound } from '@/hooks/use-sound';
 import type { Level, UserProgress } from '@/types';
 import { motion } from 'framer-motion';
 
@@ -23,6 +24,7 @@ export const LevelCard: React.FC<LevelCardProps> = ({
     index
 }) => {
     const isEven = index % 2 === 0;
+    const { playSound } = useSound();
 
     return (
         <motion.div
@@ -36,7 +38,7 @@ export const LevelCard: React.FC<LevelCardProps> = ({
                 <motion.div
                     whileHover={!isLocked ? { scale: 1.1, rotate: 5 } : {}}
                     whileTap={!isLocked ? { scale: 0.9 } : {}}
-                    onClick={!isLocked ? onStart : undefined}
+                    onClick={!isLocked ? () => { playSound('CLICK'); onStart?.(); } : undefined}
                     className={`size-12 md:size-20 rounded-xl md:rounded-[1.5rem] flex items-center justify-center cursor-pointer shadow-lg transition-all duration-300 relative overflow-hidden ${progress.status === 'COMPLETED' ? 'bg-gradient-to-br from-success to-success-dark text-white' :
                         isActive ? 'bg-gradient-to-br from-primary to-primary-dark text-white ring-2 md:ring-4 ring-primary/20 scale-105 shadow-glow' :
                             'bg-slate-200 dark:bg-slate-800 text-slate-400'
@@ -58,7 +60,7 @@ export const LevelCard: React.FC<LevelCardProps> = ({
 
             {/* Content Card */}
             <div
-                onClick={!isLocked ? onStart : undefined}
+                onClick={!isLocked ? () => { playSound('CLICK'); onStart?.(); } : undefined}
                 className={`flex-1 min-w-0 p-3 md:p-5 rounded-xl md:rounded-2xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl shadow-card border border-white/20 dark:border-white/5 transition-all duration-300 ${isLocked ? 'opacity-50 grayscale' : 'hover:shadow-floating hover:-translate-y-0.5 cursor-pointer group'
                     }`}
             >
@@ -99,6 +101,7 @@ export const LevelCard: React.FC<LevelCardProps> = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
+                                playSound('CLICK');
                                 onStart?.();
                             }}
                             className="w-full py-2 md:py-4 bg-primary text-white font-black text-xs md:text-sm uppercase tracking-[0.15em] rounded-xl md:rounded-2xl shadow-lg shadow-primary/20 group-hover:scale-[1.02] transition-all active:scale-95"
@@ -131,11 +134,6 @@ export const LearningPath: React.FC<LearningPathProps> = ({
             </div>
 
             <div className="flex flex-col max-w-2xl mx-auto px-4 md:px-8">
-                {/* VOCABULARY SECTION HEADER */}
-                <div className="mb-6 md:mb-8 text-center">
-                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-primary bg-primary/5 px-5 md:px-6 py-2 md:py-2.5 rounded-full border border-primary/10 notranslate" translate="no">Phase 1: Vocabulary Journey</span>
-                </div>
-
                 {levels.map((level, index) => {
                     const progress = userProgress.find(p => p.levelId === level.id) || {
                         id: '',
@@ -146,15 +144,28 @@ export const LearningPath: React.FC<LearningPathProps> = ({
                         stars: 0
                     };
 
-                    const isGrammarStart = level.id === 'grammar-1';
+                    const prevLevel = index > 0 ? levels[index - 1] : null;
+                    const isNewPhase = !prevLevel || prevLevel.phase !== level.phase;
+                    const isGrammarStart = level.id.startsWith('grammar') && (!prevLevel || !prevLevel.id.startsWith('grammar'));
 
                     return (
                         <React.Fragment key={level.id}>
-                            {isGrammarStart && (
-                                <div className="my-20 text-center">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-600 bg-purple-50 px-6 py-2 rounded-full border border-purple-100 notranslate" translate="no">Phase 2: Grammar Mastery</span>
+                            {isNewPhase && !level.id.startsWith('grammar') && (
+                                <div className="mb-8 mt-12 text-center">
+                                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-primary bg-primary/5 px-6 py-2.5 rounded-full border border-primary/10 notranslate" translate="no">
+                                        Phase {level.phase || 1}: {level.phase === 1 ? 'Beginner' : level.phase === 2 ? 'Intermediate' : 'Advanced'}
+                                    </span>
                                 </div>
                             )}
+
+                            {isGrammarStart && (
+                                <div className="my-20 text-center">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-600 bg-purple-50 px-6 py-2 rounded-full border border-purple-100 notranslate" translate="no">
+                                        Grammar Mastery
+                                    </span>
+                                </div>
+                            )}
+
                             <LevelCard
                                 level={level}
                                 progress={progress}

@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, Icon, Badge, Button, ProgressBar } from '@/components/ui/UIComponents';
 import { useUserStore } from '@/store/user-store';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/db/supabase';
+import { useSession } from 'next-auth/react';
+import { useSound } from '@/hooks/use-sound';
 
 interface Quest {
     id: string;
@@ -18,43 +21,60 @@ interface Quest {
 
 export function QuestGacor() {
     const { addGems } = useUserStore();
-    const [quests, setQuests] = useState<Quest[]>([
-        {
-            id: 'login',
-            title: 'Sapa Sirkel',
-            desc: 'Login hari ini buat absen gacor.',
-            target: 1,
-            current: 1,
-            reward: 50,
-            icon: 'waving_hand',
-            claimed: false
-        },
-        {
-            id: 'duel_win',
-            title: 'Arena Conqueror',
-            desc: 'Win 1 match di Sirkel Arena.',
-            target: 1,
-            current: 0,
-            reward: 200,
-            icon: 'military_tech',
-            claimed: false
-        },
-        {
-            id: 'lesson_3',
-            title: 'Grinding Sepuh',
-            desc: 'Selesaikan 3 level journey mumpung semangat.',
-            target: 3,
-            current: 1,
-            reward: 500,
-            icon: 'menu_book',
-            claimed: false
-        }
-    ]);
+    const { data: session } = useSession();
+    const { playSound } = useSound();
+    const [quests, setQuests] = useState<Quest[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleClaim = (quest: Quest) => {
+    useEffect(() => {
+        const fetchQuests = async () => {
+            if (!session?.user?.id) return;
+            setLoading(true);
+
+            const { data, error } = await supabase
+                .from('user_quests')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                const mappedQuests: Quest[] = data.map(q => ({
+                    id: q.id,
+                    title: q.quest_id === 'xp' ? 'XP Hunter' : q.quest_id === 'streak' ? 'Stay Hot' : 'Elite Grinder',
+                    desc: q.quest_id === 'xp' ? `Collect ${q.target} XP to slay.` : `Complete ${q.target} activities today.`,
+                    target: q.target,
+                    current: q.progress,
+                    reward: q.reward_gems,
+                    icon: q.quest_id === 'xp' ? 'bolt' : 'local_fire_department',
+                    claimed: q.status === 'CLAIMED'
+                }));
+                setQuests(mappedQuests);
+            }
+            setLoading(false);
+        };
+
+        fetchQuests();
+    }, [session?.user?.id]);
+
+    const handleClaim = async (quest: Quest) => {
         if (quest.current >= quest.target && !quest.claimed) {
-            addGems(quest.reward);
-            setQuests(prev => prev.map(q => q.id === quest.id ? { ...q, claimed: true } : q));
+            try {
+                // Update in Supabase
+                const { error } = await supabase
+                    .from('user_quests')
+                    .update({ status: 'CLAIMED' })
+                    .eq('id', quest.id);
+
+                if (error) throw error;
+
+                // Update local store/state
+                playSound('SUCCESS');
+                addGems(quest.reward);
+                setQuests(prev => prev.map(q => q.id === quest.id ? { ...q, claimed: true } : q));
+            } catch (err) {
+                console.error('Error claiming quest:', err);
+                alert('Gagal ambil reward sirkel. Coba lagi nanti!');
+            }
         }
     };
 

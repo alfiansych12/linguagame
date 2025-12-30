@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sidebar, BottomNav, Header, RightSidebar } from './Navigation';
+import { OnboardingOverlay } from '../ui/OnboardingOverlay';
 
 interface PageLayoutProps {
     children: React.ReactNode;
@@ -60,6 +61,9 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children, activeTab, use
 
             {/* Bottom Navigation for Mobile */}
             <BottomNav activeTab={activeTab} />
+
+            {/* Onboarding Tutorial Overlay */}
+            <OnboardingOverlay />
 
             {/* Decorative Background Elements */}
             <div className="fixed top-0 left-0 right-0 bottom-0 -z-10 pointer-events-none opacity-40 overflow-hidden">

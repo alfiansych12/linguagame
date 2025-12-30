@@ -5,6 +5,8 @@ import { useUserStore } from '@/store/user-store';
 import { motion } from 'framer-motion';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/db/supabase';
+import { useSound } from '@/hooks/use-sound';
 
 interface HeaderProps {
     user: {
@@ -112,30 +114,35 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
 
             <nav className="flex flex-col gap-2">
                 <SidebarItem
+                    id="nav-home"
                     href="/"
                     icon="home"
                     label="Leveling Up"
                     active={activeTab === 'home'}
                 />
                 <SidebarItem
+                    id="nav-leaderboard"
                     href="/leaderboard"
                     icon="leaderboard"
                     label="Sirkel Board"
                     active={activeTab === 'leaderboard'}
                 />
                 <SidebarItem
+                    id="nav-profile"
                     href="/profile"
                     icon="person"
                     label="Personal Branding"
                     active={activeTab === 'profile'}
                 />
                 <SidebarItem
+                    id="nav-duel"
                     href="/duel"
                     icon="groups"
                     label="Sirkel Arena"
                     active={activeTab === 'duel'}
                 />
                 <SidebarItem
+                    id="nav-forge"
                     href="/shop"
                     icon="shopping_basket"
                     label="Crystal Forge"
@@ -180,7 +187,13 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                             </div>
                             <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">DuoPlus</p>
                             <p className="text-base font-black mb-4 leading-tight">Zero Ads, <br />Energy Unlimited!</p>
-                            <button className="w-full py-3 bg-white text-primary text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-xl group-hover:bg-slate-50 transition-colors">
+                            <button
+                                onClick={() => {
+                                    useSound().playSound('CLICK');
+                                    // Subscription logic
+                                }}
+                                className="w-full py-3 bg-white text-primary text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-xl group-hover:bg-slate-50 transition-colors"
+                            >
                                 Upgrade Now
                             </button>
                         </div>
@@ -208,59 +221,124 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
     );
 };
 
-const SidebarItem = ({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) => (
-    <Link
-        href={href}
-        className={`flex items-center gap-4 px-5 py-4 rounded-[1.5rem] transition-all duration-300 group ${active
-            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-            : 'text-slate-500 hover:bg-white dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent hover:border-slate-100 dark:hover:border-slate-800'
-            }`}
-    >
-        <Icon name={icon} filled={active} size={26} className={active ? 'scale-110' : 'group-hover:scale-120 group-hover:rotate-3 transition-transform'} />
-        <span className={`text-[15px] font-black tracking-tight notranslate ${active ? 'opacity-100' : 'opacity-80'}`} translate="no">
-            {label}
-        </span>
-    </Link>
-);
+const SidebarItem = ({ href, icon, label, active, id }: { href: string; icon: string; label: string; active: boolean; id?: string }) => {
+    const { playSound } = useSound();
+    return (
+        <Link
+            id={id}
+            href={href}
+            onClick={() => playSound('CLICK')}
+            className={`flex items-center gap-4 px-5 py-4 rounded-[1.5rem] transition-all duration-300 group ${active
+                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                : 'text-slate-500 hover:bg-white dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent hover:border-slate-100 dark:hover:border-slate-800'
+                }`}
+        >
+            <Icon name={icon} filled={active} size={26} className={active ? 'scale-110' : 'group-hover:scale-120 group-hover:rotate-3 transition-transform'} />
+            <span className={`text-[15px] font-black tracking-tight notranslate ${active ? 'opacity-100' : 'opacity-80'}`} translate="no">
+                {label}
+            </span>
+        </Link>
+    );
+};
 
 export const RightSidebar: React.FC<{ user: any }> = ({ user }) => {
+    const { data: session } = useSession();
+    const [topUsers, setTopUsers] = useState<any[]>([]);
+    const [userQuests, setUserQuests] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRightSidebarData = async () => {
+            setLoading(true);
+            try {
+                // 1. Fetch Top Users for Leaderboard
+                const { data: usersData, error: usersError } = await supabase
+                    .from('users')
+                    .select('id, name, total_xp, image')
+                    .order('total_xp', { ascending: false })
+                    .limit(5);
+
+                if (usersData) setTopUsers(usersData);
+
+                // 2. Fetch User Quests if authenticated
+                if (session?.user?.id) {
+                    const { data: questsData, error: questsError } = await supabase
+                        .from('user_quests')
+                        .select('*')
+                        .eq('user_id', session.user.id)
+                        .eq('status', 'ACTIVE')
+                        .limit(3);
+
+                    if (questsData) setUserQuests(questsData);
+                }
+            } catch (err) {
+                console.error('Error fetching RightSidebar data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRightSidebarData();
+    }, [session?.user?.id]);
+
     return (
-        <aside className="hidden xl:flex flex-col w-80 h-screen sticky top-0 p-10 gap-10 border-l border-slate-200/50 dark:border-slate-800/50 bg-white/20 dark:bg-white/5 transition-all">
+        <aside className="hidden xl:flex flex-col w-80 h-screen sticky top-0 p-10 gap-10 border-l border-slate-200/50 dark:border-slate-800/50 bg-white/20 dark:bg-white/5 transition-all overflow-y-auto hide-scrollbar">
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Quest Gacor</h3>
-                    <button className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline">View All</button>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight italic uppercase">Quest Gacor</h3>
                 </div>
 
-                <QuestCard
-                    icon="bolt"
-                    title="XP Hunter"
-                    progress={65}
-                    target="50 XP"
-                    color="primary"
-                />
-                <QuestCard
-                    icon="local_fire_department"
-                    title="Stay Hot"
-                    progress={100}
-                    target="1 Day"
-                    color="orange-500"
-                    completed
-                />
+                {userQuests.length > 0 ? (
+                    userQuests.map((quest) => (
+                        <QuestCard
+                            key={quest.id}
+                            icon={quest.quest_id === 'xp' ? 'bolt' : 'local_fire_department'}
+                            title={quest.quest_id === 'xp' ? 'XP Hunter' : 'Daily Grind'}
+                            progress={(quest.progress / quest.target) * 100}
+                            target={`${quest.target} ${quest.quest_id === 'xp' ? 'XP' : 'Units'}`}
+                            color={quest.quest_id === 'xp' ? 'primary' : 'orange-500'}
+                            completed={quest.progress >= quest.target}
+                        />
+                    ))
+                ) : (
+                    <div className="p-6 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
+                        <Icon name="lock" size={24} className="mx-auto mb-2 text-slate-300" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Login buat unlock quest!</p>
+                    </div>
+                )}
             </div>
 
             <div className="space-y-6">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Sirkel Terkece</h3>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight italic uppercase">Sirkel Terkece</h3>
                 <div className="bg-white/50 dark:bg-slate-900/50 rounded-3xl p-4 border border-slate-200/50 dark:border-slate-800/50">
                     <div className="flex flex-col gap-4">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="flex items-center gap-3">
-                                <span className={`size-6 rounded-lg flex items-center justify-center text-[10px] font-black ${i === 1 ? 'bg-yellow-400 text-white' : 'text-slate-400'
-                                    }`}>{i}</span>
-                                <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-800"></div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">User {i}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{1000 - i * 100} XP</p>
+                        {topUsers.length > 0 ? (
+                            topUsers.map((u, i) => (
+                                <div key={u.id} className="flex items-center gap-3 group">
+                                    <span className={`size-6 rounded-lg flex items-center justify-center text-[10px] font-black ${i === 0 ? 'bg-yellow-400 text-white shadow-sm' : 'text-slate-400'
+                                        }`}>{i + 1}</span>
+                                    <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                                        {u.image ? (
+                                            <img src={u.image} alt={u.name} className="size-full object-cover" />
+                                        ) : (
+                                            <div className="size-full flex items-center justify-center text-slate-400">
+                                                <Icon name="person" size={16} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[11px] font-black text-slate-900 dark:text-white truncate uppercase italic">{u.name || 'Anonymous'}</p>
+                                        <p className="text-[10px] text-primary font-black uppercase tracking-widest">{u.total_xp || 0} XP</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : [1, 2, 3].map(i => (
+                            <div key={i} className="flex items-center gap-3 animate-pulse">
+                                <div className="size-6 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                                <div className="size-8 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full w-20"></div>
+                                    <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full w-12"></div>
                                 </div>
                             </div>
                         ))}
@@ -341,30 +419,35 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
         <nav className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden px-4 pb-6 pt-2 bg-gradient-to-t from-white/0 via-white/80 to-transparent dark:from-[#0a0a0f]/0 dark:via-[#0a0a0f]/80 dark:to-transparent pointer-events-none mb-safe">
             <div className="max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-2 border-slate-200/50 dark:border-slate-700/50 rounded-[2.5rem] shadow-floating p-1 flex items-center justify-between gap-1 pointer-events-auto">
                 <BottomNavItem
+                    id="nav-forge"
                     href="/shop"
                     icon="shopping_basket"
                     label="Forge"
                     active={activeTab === 'shop'}
                 />
                 <BottomNavItem
+                    id="nav-duel"
                     href="/duel"
                     icon="groups"
                     label="Arena"
                     active={activeTab === 'duel'}
                 />
                 <BottomNavItem
+                    id="nav-home"
                     href="/"
                     icon="home"
                     label="Misi"
                     active={activeTab === 'home'}
                 />
                 <BottomNavItem
+                    id="nav-leaderboard"
                     href="/leaderboard"
                     icon="leaderboard"
                     label="Board"
                     active={activeTab === 'leaderboard'}
                 />
                 <BottomNavItem
+                    id="nav-profile"
                     href="/profile"
                     icon="person"
                     label="Branding"
@@ -375,25 +458,30 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
     );
 };
 
-const BottomNavItem = ({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) => (
-    <Link
-        href={href}
-        className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-[2rem] transition-all duration-300 ${active
-            ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 -translate-y-1'
-            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-90'
-            }`}
-    >
-        <div className="relative">
-            <Icon name={icon} filled={active} size={24} className={active ? 'scale-110' : ''} />
-            {active && (
-                <motion.div
-                    layoutId="nav-glow"
-                    className="absolute inset-0 bg-white/20 blur-lg rounded-full"
-                />
-            )}
-        </div>
-        <span className={`text-[8px] font-black uppercase tracking-[0.2em] notranslate ${active ? 'opacity-100' : 'opacity-50'}`} translate="no">
-            {label}
-        </span>
-    </Link>
-);
+const BottomNavItem = ({ href, icon, label, active, id }: { href: string; icon: string; label: string; active: boolean; id: string }) => {
+    const { playSound } = useSound();
+    return (
+        <Link
+            id={id}
+            href={href}
+            onClick={() => playSound('CLICK')}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-[2rem] transition-all duration-300 ${active
+                ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 -translate-y-1'
+                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-90'
+                }`}
+        >
+            <div className="relative">
+                <Icon name={icon} filled={active} size={24} className={active ? 'scale-110' : ''} />
+                {active && (
+                    <motion.div
+                        layoutId="nav-glow"
+                        className="absolute inset-0 bg-white/20 blur-lg rounded-full"
+                    />
+                )}
+            </div>
+            <span className={`text-[8px] font-black uppercase tracking-[0.2em] notranslate ${active ? 'opacity-100' : 'opacity-50'}`} translate="no">
+                {label}
+            </span>
+        </Link>
+    );
+};

@@ -19,6 +19,7 @@ interface ProgressState {
     unlockLevel: (levelId: string) => void;
     isLevelUnlocked: (levelId: string) => boolean;
     getLevelProgress: (levelId: string) => LevelProgress | null;
+    resetPhaseProgress: (levelIds: string[]) => void;
 }
 
 // Initial unlocked levels (usually just the first one)
@@ -54,6 +55,13 @@ export const useProgressStore = create<ProgressState>()(
 
             getLevelProgress: (levelId) => {
                 return get().completedLevels[levelId] || null;
+            },
+
+            resetPhaseProgress: (levelIds) => {
+                const { completedLevels } = get();
+                const newCompleted = { ...completedLevels };
+                levelIds.forEach(id => delete newCompleted[id]);
+                set({ completedLevels: newCompleted });
             }
         }),
         {

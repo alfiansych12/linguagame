@@ -23,8 +23,10 @@ interface UserState {
     referralCode: string | null;
     referralCount: number;
     claimedMilestones: string[]; // e.g., ['1_referral', '3_referrals', '10_referrals']
+    hasSeenTutorial: boolean;
 
     // Actions
+    setHasSeenTutorial: (val: boolean) => void;
     setName: (name: string) => void;
     setReferralCode: (code: string) => void;
     addGems: (amount: number) => void;
@@ -58,7 +60,9 @@ export const useUserStore = create<UserState>()(
             referralCode: null,
             referralCount: 0,
             claimedMilestones: [],
+            hasSeenTutorial: false,
 
+            setHasSeenTutorial: (hasSeenTutorial) => set({ hasSeenTutorial }),
             setName: (name) => set({ name }),
             setReferralCode: (referralCode) => set({ referralCode }),
             addGems: (amount) => set((state) => ({ gems: state.gems + amount })),

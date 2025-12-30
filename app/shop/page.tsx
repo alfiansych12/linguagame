@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useSession } from 'next-auth/react';
 import { LoginModal } from '@/components/ui/LoginModal';
+import { useSound } from '@/hooks/use-sound';
 
 interface CrystalItem {
     id: keyof CrystalInventory;
@@ -22,8 +23,8 @@ interface CrystalItem {
 const CRYSTAL_ITEMS: CrystalItem[] = [
     {
         id: 'shield',
-        name: 'Tameng Gaib',
-        description: 'Kasih +5 Energy biar gak gampang game over pas lagi grinding.',
+        name: 'Shield Crystal',
+        description: 'Jagain Energy lo biar nggak gampang game over pas lagi grinding misi.',
         cost: 50,
         icon: 'security',
         color: 'text-emerald-500',
@@ -31,8 +32,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'booster',
-        name: 'Booster Gacor',
-        description: 'XP kamu auto-double buat 3 level kedepan. Literally shortcut sepuh.',
+        name: 'XP Overflow',
+        description: 'Double XP buat 3 level kedepan. Literally shortcut buat jadi sepuh!',
         cost: 100,
         icon: 'bolt',
         color: 'text-amber-500',
@@ -40,8 +41,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'hint',
-        name: 'Hint Literally',
-        description: 'Gak tau jawabannya? Click ini buat bocoran jawaban (3x use).',
+        name: 'Vision Crystal',
+        description: 'Pusing nggak tau jawabannya? Pake ini buat intip bocoran sirkel pusat.',
         cost: 150,
         icon: 'psychology',
         color: 'text-blue-500',
@@ -49,8 +50,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'focus',
-        name: 'Focus Banget',
-        description: 'Timer di Speed Blitz auto stop. Bisa mikir santuy tanpa panik.',
+        name: 'Temporal Crystal',
+        description: 'Timer di Speed Blitz auto stop. Bisa mikir santuy tanpa panik, literally.',
         cost: 200,
         icon: 'timer_off',
         color: 'text-purple-500',
@@ -58,8 +59,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'slay',
-        name: 'Streak Slay',
-        description: 'Jagain streak kamu biar tetep slay walaupun lupa login 24 jem.',
+        name: 'Phoenix Crystal',
+        description: 'Jagain streak lo biar tetep slay walaupun lo lupa login seharian.',
         cost: 300,
         icon: 'auto_awesome',
         color: 'text-rose-500',
@@ -67,7 +68,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'timefreeze',
-        name: 'Waktunya Berhenti',
+        name: 'Stasis Crystal',
         description: 'Literally berhentiin waktu pas duel selama 5 detik. Musuh auto bengong!',
         cost: 2000,
         icon: 'ac_unit',
@@ -76,8 +77,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'autocorrect',
-        name: 'Mata Dewa',
-        description: 'Auto-pick jawaban yang bener buat 1 pertanyaan. Literally dewa!',
+        name: 'Divine Eye',
+        description: 'Auto-pick jawaban bener. Pilihan dewa buat yang pengen cepet beres.',
         cost: 5000,
         icon: 'remove_red_eye',
         color: 'text-orange-400',
@@ -85,8 +86,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     },
     {
         id: 'adminvision',
-        name: 'Sirkel King',
-        description: 'Exclusive skill dari 10 invites! Liat semua jawaban musuh di arena.',
+        name: 'King Vision',
+        description: 'Exclusive skill! Intip semua jawaban musuh lo di sirkel duel arena.',
         cost: 999999,
         icon: 'visibility',
         color: 'text-fuchsia-500',
@@ -98,6 +99,7 @@ export default function ShopPage() {
     const { data: session, status } = useSession();
     const { gems, inventory, spendGems, addCrystal } = useUserStore();
     const [purchasingId, setPurchasingId] = useState<string | null>(null);
+    const { playSound } = useSound();
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
     const isAuthenticated = status === 'authenticated';
@@ -107,14 +109,19 @@ export default function ShopPage() {
             setIsLoginModalOpen(true);
             return;
         }
-        if (gems < item.cost) return;
+        if (gems < item.cost) {
+            playSound('WRONG');
+            return;
+        }
 
         setPurchasingId(item.id);
+        playSound('CRYSTAL');
 
         // Simulating forge animation
         setTimeout(() => {
             const success = spendGems(item.cost);
             if (success) {
+                playSound('SUCCESS');
                 addCrystal(item.id, 1);
                 confetti({
                     particleCount: 100,
