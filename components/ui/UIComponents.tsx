@@ -37,15 +37,14 @@ export const Icon: React.FC<IconProps> = ({
         <span
             className={`notranslate material-symbols-outlined select-none inline-block align-middle transition-all ${filled ? 'fill-1' : ''} ${className}`}
             translate="no"
+            aria-hidden="true"
             style={{
                 ...getSize(),
-                fontSize: 'var(--icon-size)',
-                fontVariationSettings: filled ? "'FILL' 1" : "'FILL' 0",
                 display: 'inline-block',
-                verticalAlign: 'middle'
+                verticalAlign: 'middle',
+                fontVariationSettings: filled ? "'FILL' 1" : "'FILL' 0",
             }}
         >
-            {/* We'll use a CSS class to handle the responsive fontSize since style prop can't do Media Queries */}
             <style jsx>{`
                 span {
                     font-size: var(--icon-size);
@@ -60,6 +59,15 @@ export const Icon: React.FC<IconProps> = ({
         </span>
     );
 };
+
+/**
+ * Component to prevent browser translation for specific text (e.g. English materials)
+ */
+export const NoTranslate: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+    <span className={`notranslate ${className}`} translate="no">
+        {children}
+    </span>
+);
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'ghost' | 'success' | 'error' | 'white';
@@ -167,7 +175,7 @@ export const Badge: React.FC<BadgeProps> = ({
     return (
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs tracking-tight ${variantStyles[variant]} ${className}`}>
             {icon && <Icon name={icon} filled size={18} />}
-            <span>{children}</span>
+            <span className="notranslate" translate="no">{children}</span>
         </div>
     );
 };

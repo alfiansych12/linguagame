@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Icon, Button } from '../ui/UIComponents';
+import { Icon, Button, NoTranslate } from '../ui/UIComponents';
 import { GameHeader } from '../layout/Navigation';
 import { Level } from '@/types';
 import { GrammarTask } from '@/lib/data/grammar';
@@ -247,7 +247,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                         {selectedPieces.map((piece, i) => (
                             <motion.button key={`selected-${i}-${piece}`} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
                                 onClick={() => handlePieceClick(piece, true)} className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-bold text-lg shadow-sm border border-slate-200 dark:border-slate-700 hover:border-primary transition-colors">
-                                {piece}
+                                <NoTranslate>{piece}</NoTranslate>
                             </motion.button>
                         ))}
                     </AnimatePresence>
@@ -257,7 +257,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                 <div className="flex flex-wrap gap-3 justify-center mb-16">
                     {availablePieces.map((piece, i) => (
                         <motion.button key={`available-${i}-${piece}`} layout onClick={() => handlePieceClick(piece, false)} className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl font-bold text-lg border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-200 transition-all">
-                            {piece}
+                            <NoTranslate>{piece}</NoTranslate>
                         </motion.button>
                     ))}
                 </div>

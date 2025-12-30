@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Card, Icon, Button, Badge, ProgressBar } from '@/components/ui/UIComponents';
+import { Card, Icon, Button, Badge, ProgressBar, NoTranslate } from '@/components/ui/UIComponents';
 import { useUserStore } from '@/store/user-store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/db/supabase';
@@ -433,7 +433,7 @@ export default function DuelRoomPage() {
                                 <div className="space-y-4">
                                     <span className="text-xs font-black text-primary uppercase tracking-[0.3em]">Translate This</span>
                                     <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic underline decoration-primary/20 decoration-8 underline-offset-8">
-                                        {currentQuestion?.english}
+                                        <NoTranslate>{currentQuestion?.english}</NoTranslate>
                                     </h2>
                                 </div>
 
@@ -445,7 +445,7 @@ export default function DuelRoomPage() {
                                             className="h-24 md:h-32 text-xl md:text-2xl font-black rounded-3xl hover:bg-primary hover:text-white hover:scale-[1.02] border-b-8 border-slate-200 dark:border-slate-800 active:border-b-0 transition-all uppercase"
                                             onClick={() => handleAnswer(opt)}
                                         >
-                                            {opt}
+                                            <NoTranslate>{opt}</NoTranslate>
                                         </Button>
                                     ))}
                                 </div>

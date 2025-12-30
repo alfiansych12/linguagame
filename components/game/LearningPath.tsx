@@ -79,7 +79,7 @@ export const LevelCard: React.FC<LevelCardProps> = ({
                     )}
                 </div>
 
-                <h3 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white mb-1 md:mb-2 tracking-tight group-hover:text-primary transition-colors truncate">
+                <h3 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white mb-1 md:mb-2 tracking-tight group-hover:text-primary transition-colors truncate notranslate" translate="no">
                     {level.title}
                 </h3>
 
@@ -133,7 +133,7 @@ export const LearningPath: React.FC<LearningPathProps> = ({
             <div className="flex flex-col max-w-2xl mx-auto px-4 md:px-8">
                 {/* VOCABULARY SECTION HEADER */}
                 <div className="mb-6 md:mb-8 text-center">
-                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-primary bg-primary/5 px-5 md:px-6 py-2 md:py-2.5 rounded-full border border-primary/10">Phase 1: Vocabulary Journey</span>
+                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-primary bg-primary/5 px-5 md:px-6 py-2 md:py-2.5 rounded-full border border-primary/10 notranslate" translate="no">Phase 1: Vocabulary Journey</span>
                 </div>
 
                 {levels.map((level, index) => {
@@ -152,7 +152,7 @@ export const LearningPath: React.FC<LearningPathProps> = ({
                         <React.Fragment key={level.id}>
                             {isGrammarStart && (
                                 <div className="my-20 text-center">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-600 bg-purple-50 px-6 py-2 rounded-full border border-purple-100">Phase 2: Grammar Mastery</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-600 bg-purple-50 px-6 py-2 rounded-full border border-purple-100 notranslate" translate="no">Phase 2: Grammar Mastery</span>
                                 </div>
                             )}
                             <LevelCard

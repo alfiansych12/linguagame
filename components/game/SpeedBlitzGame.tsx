@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Icon, Button } from '../ui/UIComponents';
+import { Icon, Button, NoTranslate } from '../ui/UIComponents';
 import { GameHeader } from '../layout/Navigation';
 import { Level } from '@/types';
 import { BlitzTask } from '@/lib/data/blitz';
@@ -251,7 +251,9 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 </div>
                                 <span className="text-xs font-black text-white w-8">{(timeLeft).toFixed(1)}s</span>
                             </div>
-                            <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">{currentTask.english}</h1>
+                            <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">
+                                <NoTranslate>{currentTask.english}</NoTranslate>
+                            </h1>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -261,7 +263,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                         ${feedback === 'CORRECT' && idx === currentTask.correctIndex ? 'bg-success/20 border-success text-success scale-105' :
                                             feedback === 'WRONG' && idx === currentIndex ? 'bg-error/20 border-error text-error shake' :
                                                 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:border-white/20'}`}>
-                                    <span>{choice}</span>
+                                    <NoTranslate>{choice}</NoTranslate>
                                     {feedback === 'CORRECT' && idx === currentTask.correctIndex && <Icon name="check_circle" filled />}
                                     {feedback === 'WRONG' && idx === currentIndex && <Icon name="cancel" filled />}
                                 </button>

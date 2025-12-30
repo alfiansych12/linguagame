@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Icon, Button } from '../ui/UIComponents';
+import { Icon, Button, NoTranslate } from '../ui/UIComponents';
 import { GameHeader } from '../layout/Navigation';
 import { Level, Word } from '@/types';
 import confetti from 'canvas-confetti';
@@ -269,7 +269,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             <div className="space-y-4">
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">New Word</span>
                                 <h2 className="text-7xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                    {words[currentIndex].english}
+                                    <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h2>
                                 <p className="text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
                                     {words[currentIndex].indonesian}
@@ -277,9 +277,9 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             </div>
 
                             <div className="p-8 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <p className="text-slate-600 dark:text-slate-300 font-bold text-xl leading-relaxed">
+                                <NoTranslate className="text-slate-600 dark:text-slate-300 font-bold text-xl leading-relaxed">
                                     "{words[currentIndex].exampleSentence}"
-                                </p>
+                                </NoTranslate>
                             </div>
 
                             <Button
@@ -307,7 +307,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             <div className="text-center space-y-4">
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-500">Pick the meaning</span>
                                 <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                    {words[currentIndex].english}
+                                    <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h1>
                             </div>
 

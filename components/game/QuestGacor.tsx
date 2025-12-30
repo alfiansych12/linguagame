@@ -63,7 +63,7 @@ export function QuestGacor() {
             <div className="relative z-10 space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight">Quest <span className="text-primary">Gacor</span></h2>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight notranslate" translate="no">Quest <span className="text-primary">Gacor</span></h2>
                         <p className="text-sm font-bold text-slate-500">Daily tasks buat jajan di Forge.</p>
                     </div>
                     <Badge variant="xp" icon="schedule">Reset in 14h</Badge>
@@ -78,8 +78,8 @@ export function QuestGacor() {
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
-                                        <h4 className="font-black text-slate-900 dark:text-white uppercase text-sm">{quest.title}</h4>
-                                        <span className="text-xs font-black text-primary">+{quest.reward} Crystals</span>
+                                        <h4 className="font-black text-slate-900 dark:text-white uppercase text-sm notranslate" translate="no">{quest.title}</h4>
+                                        <span className="text-xs font-black text-primary notranslate" translate="no">+{quest.reward} Crystals</span>
                                     </div>
                                     <p className="text-xs font-bold text-slate-500 leading-tight">{quest.desc}</p>
                                 </div>
@@ -102,7 +102,8 @@ export function QuestGacor() {
                                     variant={quest.current >= quest.target && !quest.claimed ? 'primary' : 'secondary'}
                                     disabled={quest.current < quest.target || quest.claimed}
                                     onClick={() => handleClaim(quest)}
-                                    className="px-6 h-10 text-xs rounded-xl"
+                                    className="px-6 h-10 text-xs rounded-xl notranslate"
+                                    translate="no"
                                 >
                                     {quest.claimed ? 'CLAIMED' : 'AMBIL'}
                                 </Button>

@@ -105,7 +105,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                 <div className="size-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform duration-500">
                     <Icon name="translate" className="text-white" size={28} />
                 </div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter notranslate" translate="no">
                     Lingua<span className="text-primary italic">Game</span>
                 </h1>
             </Link>
@@ -217,7 +217,7 @@ const SidebarItem = ({ href, icon, label, active }: { href: string; icon: string
             }`}
     >
         <Icon name={icon} filled={active} size={26} className={active ? 'scale-110' : 'group-hover:scale-120 group-hover:rotate-3 transition-transform'} />
-        <span className={`text-[15px] font-black tracking-tight ${active ? 'opacity-100' : 'opacity-80'}`}>
+        <span className={`text-[15px] font-black tracking-tight notranslate ${active ? 'opacity-100' : 'opacity-80'}`} translate="no">
             {label}
         </span>
     </Link>
@@ -278,8 +278,8 @@ const QuestCard = ({ icon, title, progress, target, color, completed = false }: 
                 <Icon name={icon} className={`text-${color}`} size={20} filled />
             </div>
             <div className="flex-1">
-                <p className="text-xs font-black text-slate-900 dark:text-white">{title}</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{target}</p>
+                <p className="text-xs font-black text-slate-900 dark:text-white notranslate" translate="no">{title}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest notranslate" translate="no">{target}</p>
             </div>
             {completed && <Icon name="check_circle" className="text-success" size={20} filled />}
         </div>
@@ -392,7 +392,7 @@ const BottomNavItem = ({ href, icon, label, active }: { href: string; icon: stri
                 />
             )}
         </div>
-        <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${active ? 'opacity-100' : 'opacity-50'}`}>
+        <span className={`text-[8px] font-black uppercase tracking-[0.2em] notranslate ${active ? 'opacity-100' : 'opacity-50'}`} translate="no">
             {label}
         </span>
     </Link>
