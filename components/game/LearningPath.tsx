@@ -60,12 +60,18 @@ export const LevelCard: React.FC<LevelCardProps> = ({
 
             {/* Content Card */}
             <div
-                onClick={!isLocked ? () => { playSound('CLICK'); onStart?.(); } : undefined}
+                onClick={!isLocked ? (e) => {
+                    // Prevent double-triggering if clicking on the button inside
+                    if ((e.target as HTMLElement).tagName !== 'BUTTON') {
+                        playSound('CLICK');
+                        onStart?.();
+                    }
+                } : undefined}
                 className={`flex-1 min-w-0 p-3 md:p-5 rounded-xl md:rounded-2xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl shadow-card border border-white/20 dark:border-white/5 transition-all duration-300 ${isLocked ? 'opacity-50 grayscale' : 'hover:shadow-floating hover:-translate-y-0.5 cursor-pointer group'
                     }`}
             >
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                    <span className={`text-xs md:text-xs font-black uppercase tracking-[0.1em] px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl ${progress.status === 'COMPLETED' ? 'bg-success/10 text-success' :
+                <div className="flex items-center justify-between mb-1.5 md:mb-2 lg:mb-3">
+                    <span className={`text-[9px] md:text-xs font-black uppercase tracking-[0.1em] px-2 md:px-2.5 lg:px-3 py-0.5 md:py-1 lg:py-1.5 rounded-md md:rounded-lg lg:rounded-xl ${progress.status === 'COMPLETED' ? 'bg-success/10 text-success' :
                         isActive ? 'bg-primary/10 text-primary animate-pulse' :
                             'bg-slate-100 dark:bg-slate-800 text-slate-500'
                         }`}>
@@ -75,23 +81,23 @@ export const LevelCard: React.FC<LevelCardProps> = ({
                     {!isLocked && (
                         <div className="flex gap-0.5">
                             {[1, 2, 3].map((s) => (
-                                <Icon key={s} name="star" size={16} mdSize={16} className={s <= (progress.stars || 0) ? 'text-yellow-400' : 'text-slate-200 dark:text-slate-800'} filled={s <= (progress.stars || 0)} />
+                                <Icon key={s} name="star" size={12} mdSize={16} className={s <= (progress.stars || 0) ? 'text-yellow-400' : 'text-slate-200 dark:text-slate-800'} filled={s <= (progress.stars || 0)} />
                             ))}
                         </div>
                     )}
                 </div>
 
-                <h3 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white mb-1 md:mb-2 tracking-tight group-hover:text-primary transition-colors truncate notranslate" translate="no">
+                <h3 className="text-sm md:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mb-1 md:mb-1.5 lg:mb-2 tracking-tight group-hover:text-primary transition-colors truncate notranslate" translate="no">
                     {level.title}
                 </h3>
 
-                <p className="text-sm md:text-base font-bold text-slate-500 dark:text-slate-400 leading-snug mb-2 md:mb-3 line-clamp-2">
+                <p className="text-xs md:text-sm lg:text-base font-bold text-slate-500 dark:text-slate-400 leading-snug mb-1.5 md:mb-2 lg:mb-3 line-clamp-2">
                     {level.description}
                 </p>
 
                 {isActive && (
-                    <div className="flex flex-col gap-1.5 md:gap-2.5">
-                        <div className="w-full h-1 md:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="flex flex-col gap-1 md:gap-1.5 lg:gap-2.5">
+                        <div className="w-full h-1 md:h-1.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: '40%' }}
@@ -151,16 +157,16 @@ export const LearningPath: React.FC<LearningPathProps> = ({
                     return (
                         <React.Fragment key={level.id}>
                             {isNewPhase && !level.id.startsWith('grammar') && (
-                                <div className="mb-8 mt-12 text-center">
-                                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-primary bg-primary/5 px-6 py-2.5 rounded-full border border-primary/10 notranslate" translate="no">
+                                <div className="mb-4 md:mb-6 lg:mb-8 mt-6 md:mt-10 lg:mt-12 text-center">
+                                    <span className="text-[9px] md:text-xs lg:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-primary bg-primary/5 px-3 md:px-5 lg:px-6 py-1.5 md:py-2 lg:py-2.5 rounded-full border border-primary/10 notranslate" translate="no">
                                         Phase {level.phase || 1}: {level.phase === 1 ? 'Beginner' : level.phase === 2 ? 'Intermediate' : 'Advanced'}
                                     </span>
                                 </div>
                             )}
 
                             {isGrammarStart && (
-                                <div className="my-20 text-center">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-600 bg-purple-50 px-6 py-2 rounded-full border border-purple-100 notranslate" translate="no">
+                                <div className="my-10 md:my-16 lg:my-20 text-center">
+                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-purple-600 bg-purple-50 dark:bg-purple-950/20 dark:text-purple-400 px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-purple-100 dark:border-purple-900 notranslate" translate="no">
                                         Grammar Mastery
                                     </span>
                                 </div>

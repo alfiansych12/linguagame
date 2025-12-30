@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Audio Fix - LinguaGame</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #0a0a0f;
+            color: white;
+        }
+
+        .issue {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 8px;
+        }
+
+        .fix {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 8px;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+
+        code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        h2 {
+            color: #a78bfa;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔧 Mobile Audio Fix Applied</h1>
+    <p><strong>Update:</strong> 30 Desember 2025, 15:45 WIB</p>
+
+    <h2>❌ Masalah yang Ditemukan</h2>
+
+    <div class="issue">
+        <h3>1. Audio Autoplay Policy Violation</h3>
+        <p>Mobile browser (iOS Safari, Chrome Android) memblokir audio autoplay. Saat app mencoba play sound tanpa user
+            gesture yang jelas, browser crash halaman.</p>
+        <code>DOMException: The play() request was interrupted</code>
+    </div>
+
+    <div class="issue">
+        <h3>2. Double Sound Call</h3>
+        <p>Di LearningPath, saat user klik level card, sound dipanggil 2x karena event bubbling dari icon dan card
+            container.</p>
+    </div>
+
+    <div class="issue">
+        <h3>3. Missing Sound Files</h3>
+        <p>Sound randomizer mencoba load file yang tidak ada (*.3.mp3, *.4.mp3, *.5.mp3), menyebabkan error 404.</p>
+    </div>
+
+    <h2>✅ Fix yang Sudah Diterapkan</h2>
+
+    <div class="fix">
+        <h3>1. Mobile-Safe Sound Hook</h3>
+        <ul>
+            <li>Added comprehensive try-catch untuk semua audio operations</li>
+            <li>Check Audio API availability sebelum instantiate</li>
+            <li>Gracefully handle autoplay blocking tanpa crash</li>
+            <li>Silent fail untuk NotAllowedError & NotSupportedError</li>
+        </ul>
+    </div>
+
+    <div class="fix">
+        <h3>2. Prevent Event Bubbling</h3>
+        <ul>
+            <li>Check tagName sebelum trigger sound di parent container</li>
+            <li>Prevent double-triggering dengan proper event delegation</li>
+        </ul>
+    </div>
+
+    <div class="fix">
+        <h3>3. Sound Files Sync</h3>
+        <ul>
+            <li>Updated SOUND_FILES array dengan file yang benar-benar ada</li>
+            <li>CORRECT: 4 variations (bukan 5)</li>
+            <li>WRONG: 2 variations</li>
+            <li>CLICK: 1 variation</li>
+        </ul>
+    </div>
+
+    <h2>🧪 Test di HP Sekarang</h2>
+
+    <button class="test-button" onclick="testSound()">
+        🔊 Test Sound (Tap Here)
+    </button>
+
+    <button class="test-button" onclick="window.location.href='/'">
+        🚀 Buka LinguaGame
+    </button>
+
+    <div id="result"
+        style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px; display: none;">
+        <strong>Test Result:</strong> <span id="status"></span>
+    </div>
+
+    <h2>📱 Cara Test di HP</h2>
+    <ol>
+        <li>Clear cache browser (Settings → Clear browsing data)</li>
+        <li>Reload halaman (pull to refresh)</li>
+        <li>Tap "Test Sound" button di atas</li>
+        <li>Kalau berhasil bunyi, app harusnya sudah aman</li>
+        <li>Kalau masih error, screenshot console dan kirim ke dev</li>
+    </ol>
+
+    <h2>🐛 Kalau Masih Bermasalah</h2>
+    <p>Buka DevTools console di HP:</p>
+    <ul>
+        <li><strong>Chrome Android:</strong> chrome://inspect</li>
+        <li><strong>Safari iOS:</strong> Safari → Preferences → Advanced → Show Develop menu</li>
+    </ul>
+    <p>Cari error yang mengandung "Audio", "play()", atau "NotAllowed"</p>
+
+    <script>
+        function testSound() {
+            const result = document.getElementById('result');
+            const status = document.getElementById('status');
+            result.style.display = 'block';
+
+            try {
+                const audio = new Audio('/sounds/click.mp3');
+                audio.volume = 0.5;
+
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            status.textContent = '✅ Sound system working! App should be safe now.';
+                            status.style.color = '#22c55e';
+                        })
+                        .catch(error => {
+                            if (error.name === 'NotAllowedError') {
+                                status.textContent = '⚠️ Browser blocked autoplay, but this is normal. App won\'t crash.';
+                                status.style.color = '#f59e0b';
+                            } else {
+                                status.textContent = '❌ Error: ' + error.name + ' - ' + error.message;
+                                status.style.color = '#ef4444';
+                            }
+                        });
+                }
+            } catch (error) {
+                status.textContent = '❌ Critical Error: ' + error.message;
+                status.style.color = '#ef4444';
+            }
+        }
+    </script>
+</body>
+
+</html>

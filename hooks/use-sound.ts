@@ -17,14 +17,42 @@ const SOUND_FILES: Record<SoundType, string[]> = {
 
 export const useSound = () => {
     const playSound = useCallback((type: SoundType) => {
+        // Mobile-safe: wrap everything in try-catch
         try {
             const variations = SOUND_FILES[type];
+            if (!variations || variations.length === 0) {
+                console.warn('No sound variations found for:', type);
+                return;
+            }
+
             const randomIndex = Math.floor(Math.random() * variations.length);
-            const audio = new Audio(variations[randomIndex]);
+            const soundPath = variations[randomIndex];
+
+            // Check if Audio API is available (some mobile browsers might restrict it)
+            if (typeof Audio === 'undefined') {
+                return;
+            }
+
+            const audio = new Audio(soundPath);
             audio.volume = 0.5;
-            audio.play().catch(e => console.log('Audio play failed:', e));
+
+            // Mobile browsers require user gesture for audio
+            // Silently fail if autoplay is blocked
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Autoplay was prevented - this is normal on mobile
+                    // Don't crash the app, just log silently
+                    if (error.name !== 'NotAllowedError' && error.name !== 'NotSupportedError') {
+                        console.log('Audio play failed:', type, error.name);
+                    }
+                });
+            }
         } catch (error) {
-            console.error('Sound error:', error);
+            // Critical: Never let sound errors crash the app
+            // Mobile browsers can throw unexpected errors
+            console.error('Sound system error:', error);
         }
     }, []);
 

@@ -259,18 +259,18 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                     </div>
 
                     <div className="space-y-4">
-                        <h1 className="text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-8 underline-offset-8 decoration-skip-ink-none">Speed Blitz</h1>
-                        <p className="text-slate-400 font-bold text-xl px-12">Literally 5 detik tiap soal! Reflex kamu harus gokil biar gak game over. Slay the grammar!</p>
+                        <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-8 underline-offset-8 decoration-skip-ink-none">Speed Blitz</h1>
+                        <p className="text-slate-400 font-bold text-base md:text-xl px-4 md:px-12">Literally 5 detik tiap soal! Reflex kamu harus gokil biar gak game over. Slay the grammar!</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-left">
-                        <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-2">Rule #1</span>
-                            <p className="text-white font-bold leading-snug">Mistakes = Energy loss. Don't blink!</p>
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 text-left">
+                        <div className="p-4 md:p-6 bg-white/5 rounded-2xl md:rounded-3xl border border-white/10">
+                            <span className="text-[8px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-2">Rule #1</span>
+                            <p className="text-xs md:text-base text-white font-bold leading-snug">Mistakes = Energy loss. Don't blink!</p>
                         </div>
-                        <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-2">Rule #2</span>
-                            <p className="text-white font-bold leading-snug">Streaks make it FASTER. Gacor reflexes only.</p>
+                        <div className="p-4 md:p-6 bg-white/5 rounded-2xl md:rounded-3xl border border-white/10">
+                            <span className="text-[8px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-2">Rule #2</span>
+                            <p className="text-xs md:text-base text-white font-bold leading-snug">Streaks make it FASTER. Gacor reflexes only.</p>
                         </div>
                     </div>
 
@@ -326,8 +326,8 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-8 underline-offset-8">BLITZ SLAY! ✨</h2>
-                                <p className="text-slate-400 font-bold text-lg">Refleks kamu gokil banget! Grammar Master status: Unlocked.</p>
+                                <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-8 underline-offset-8">BLITZ SLAY! ✨</h2>
+                                <p className="text-slate-400 font-bold text-base md:text-lg">Refleks kamu gokil banget! Grammar Master status: Unlocked.</p>
                             </div>
                         </>
                     ) : (
@@ -338,29 +338,29 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-7xl font-black text-white tracking-tighter italic uppercase text-error">BLITZ FAIL! ⚡️</h2>
-                                <p className="text-slate-400 font-bold text-lg px-8">
+                                <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase text-error">BLITZ FAIL! ⚡️</h2>
+                                <p className="text-slate-400 font-bold text-base md:text-lg px-4 md:px-8">
                                     Akurasi lo cuma <span className="text-error font-black">{Math.round(accuracy * 100)}%</span>. Minimal harus 70% biar lulus Blitz ini. Gas coba lagi!
                                 </p>
                             </div>
                         </>
                     )}
 
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-white/5 p-6 rounded-[2.5rem] border border-white/10">
-                            <Icon name="star" className="text-yellow-400 mb-2" size={32} filled />
-                            <p className="text-2xl font-black text-white">{levelData?.stars || 0}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Stars</p>
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
+                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
+                            <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                            <p className="text-lg md:text-2xl font-black text-white">{levelData?.stars || 0}</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Stars</p>
                         </div>
-                        <div className="bg-white/5 p-6 rounded-[2.5rem] border border-white/10">
-                            <Icon name="diamond" className="text-blue-400 mb-2" size={32} filled />
-                            <p className="text-2xl font-black text-white">+{30 + (levelData?.stars || 0) * 20}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Gems</p>
+                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
+                            <Icon name="diamond" className="text-blue-400 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                            <p className="text-lg md:text-2xl font-black text-white">+{30 + (levelData?.stars || 0) * 20}</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Gems</p>
                         </div>
-                        <div className="bg-white/5 p-6 rounded-[2.5rem] border border-white/10">
-                            <Icon name="speed" className="text-primary mb-2" size={32} filled />
-                            <p className="text-2xl font-black text-white">{maxStreak > 5 ? 'Gacor' : 'Mid'}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Reflexes</p>
+                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
+                            <Icon name="speed" className="text-primary mb-1 md:mb-2" size={24} mdSize={32} filled />
+                            <p className="text-lg md:text-2xl font-black text-white">{maxStreak > 5 ? 'Gacor' : 'Mid'}</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Reflexes</p>
                         </div>
                     </div>
 
@@ -389,7 +389,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 <span className={`text-xs font-black w-8 ${isTimeFrozen ? 'text-blue-400 animate-pulse' : 'text-white'}`}>{(timeLeft).toFixed(1)}s</span>
                                 {isTimeFrozen && <Icon name="ac_unit" size={16} className="text-blue-400 animate-spin" />}
                             </div>
-                            <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">
+                            <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">
                                 <NoTranslate>{currentTask.english}</NoTranslate>
                             </h1>
 

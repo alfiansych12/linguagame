@@ -152,20 +152,20 @@ export const OnboardingOverlay: React.FC = () => {
                 />
 
                 {/* Content */}
-                <div className="relative z-10 w-full max-w-lg px-6 flex flex-col items-center animate-float">
+                <div className="relative z-10 w-full max-w-lg px-4 md:px-6 flex flex-col items-center animate-float">
                     <motion.div
                         key={currentStep}
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                        className="bg-white dark:bg-slate-900 rounded-[3rem] p-8 md:p-12 shadow-2xl border-4 border-primary/20 relative"
+                        className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-[3rem] p-4 md:p-8 lg:p-12 shadow-2xl border-2 md:border-4 border-primary/20 relative"
                     >
                         {/* Mascot */}
                         <motion.div
                             key={`mascot-${currentStep}`}
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            className="absolute -top-32 left-1/2 -translate-x-1/2 w-48 h-48 drop-shadow-2xl"
+                            className="absolute -top-16 md:-top-32 left-1/2 -translate-x-1/2 w-28 h-28 md:w-48 md:h-48 drop-shadow-2xl"
                         >
                             <img
                                 src={step.image}
@@ -174,37 +174,37 @@ export const OnboardingOverlay: React.FC = () => {
                             />
                         </motion.div>
 
-                        <div className="pt-8 text-center space-y-6">
+                        <div className="pt-6 md:pt-8 text-center space-y-4 md:space-y-6">
                             <div className="space-y-2">
-                                <h3 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white italic uppercase tracking-tighter">
+                                <h3 className="text-xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white italic uppercase tracking-tighter">
                                     {step.title}
                                 </h3>
-                                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg leading-relaxed min-h-[4.5rem]">
+                                <p className="text-slate-500 dark:text-slate-400 font-bold text-sm md:text-lg leading-relaxed min-h-[3rem] md:min-h-[4.5rem]">
                                     <Typewriter text={step.text} />
                                 </p>
                             </div>
 
-                            <div className="flex flex-col items-center gap-4">
+                            <div className="flex flex-col items-center gap-3 md:gap-4">
                                 <Button
                                     variant="primary"
                                     fullWidth
-                                    className="py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl"
+                                    className="py-3 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-xl"
                                     onClick={handleNext}
                                 >
                                     {currentStep === steps.length - 1 ? 'Slay! 🔥' : 'Lanjut Gan'}
                                 </Button>
-                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] animate-pulse">
+                                <p className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] animate-pulse">
                                     Click anywhere to continue
                                 </p>
                             </div>
                         </div>
 
                         {/* Progress Dots */}
-                        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2">
+                        <div className="absolute -bottom-8 md:-bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2">
                             {steps.map((_: any, i: number) => (
                                 <div
                                     key={i}
-                                    className={`size-2 rounded-full transition-all duration-300 ${i === currentStep ? 'w-8 bg-primary' : 'bg-slate-700'}`}
+                                    className={`size-1.5 md:size-2 rounded-full transition-all duration-300 ${i === currentStep ? 'w-6 md:w-8 bg-primary' : 'bg-slate-700'}`}
                                 />
                             ))}
                         </div>

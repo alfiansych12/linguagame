@@ -39,60 +39,55 @@ export default async function LeaderboardPage() {
 
     return (
         <PageLayout activeTab="leaderboard" user={mockUser}>
-            <div className="text-center mb-8 md:mb-16">
-                <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-2 tracking-tight leading-none italic uppercase">
+            <div className="text-center mb-6 md:mb-16">
+                <h1 className="text-2xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-1 md:mb-2 tracking-tight leading-none italic uppercase">
                     Sirkel Board
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 font-bold text-xs md:text-lg uppercase tracking-widest">Explorer Paling Kece Week Ini</p>
+                <p className="text-[10px] md:text-lg text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Explorer Paling Kece Week Ini</p>
             </div>
 
             {/* Podium Section (Top 3) */}
             <div className="flex items-end justify-center gap-1 md:gap-6 mb-12 md:mb-20 h-48 md:h-80 max-w-lg mx-auto">
                 {/* Rank 2 */}
                 <div className="flex flex-col items-center flex-1">
-                    <div className="w-full bg-gradient-to-br from-slate-100/50 to-slate-200/50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-t-2xl md:rounded-t-3xl p-2 md:p-5 text-center h-20 md:h-28 shadow-lg border border-slate-300/30 dark:border-slate-700/30">
-                        <div className="text-[7px] md:text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-1">🥈 Runner Up</div>
-                        <div className="text-[10px] md:text-sm font-bold truncate text-slate-800 dark:text-slate-100 mb-0.5 md:mb-1">
+                    <div className="w-full bg-gradient-to-br from-slate-100/50 to-slate-200/50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-t-xl md:rounded-t-3xl p-1.5 md:p-5 text-center h-16 md:h-28 shadow-lg border border-slate-300/30 dark:border-slate-700/30">
+                        <div className="text-[6px] md:text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">🥈 Runner Up</div>
+                        <div className="text-[8px] md:text-sm font-bold truncate text-slate-800 dark:text-slate-100 mb-0.5 md:mb-1">
                             {topUsers[1]?.name}
                         </div>
-                        <div className="text-xs md:text-lg text-primary font-black leading-none">{topUsers[1]?.total_xp} <span className="text-[8px] opacity-60">XP</span></div>
+                        <div className="text-[10px] md:text-lg text-primary font-black leading-none">{topUsers[1]?.total_xp} <span className="text-[6px] md:text-[8px] opacity-60">XP</span></div>
                     </div>
                 </div>
 
                 {/* Rank 1 */}
                 <div className="flex flex-col items-center flex-1 z-10 scale-[1.05] md:scale-110">
-                    <div className="relative mb-2 md:mb-4">
-                        <div className="absolute -top-6 md:-top-10 left-1/2 -translate-x-1/2 text-yellow-500 animate-bounce text-2xl md:text-5xl">
+                    <div className="relative mb-1 md:mb-4">
+                        <div className="absolute -top-4 md:-top-10 left-1/2 -translate-x-1/2 text-yellow-500 animate-bounce text-lg md:text-5xl">
                             👑
                         </div>
-                        <div className="size-16 md:size-36 rounded-full border-2 md:border-4 border-yellow-400 bg-gradient-to-b from-white to-yellow-50 dark:from-slate-700 dark:to-slate-800 shadow-2xl shadow-yellow-500/30 overflow-hidden ring-4 md:ring-8 ring-yellow-400/20">
+                        <div className="size-12 md:size-36 rounded-full border-2 md:border-4 border-yellow-400 bg-gradient-to-b from-white to-yellow-50 dark:from-slate-700 dark:to-slate-800 shadow-2xl shadow-yellow-500/30 overflow-hidden ring-4 md:ring-8 ring-yellow-400/20">
                             <div className="absolute inset-0 flex items-center justify-center text-slate-300 dark:text-slate-400">
-                                <Icon name="person" size={40} mdSize={80} />
+                                <Icon name="person" size={24} mdSize={80} />
                             </div>
                         </div>
                     </div>
-                    <div className="w-full bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-primary/30 dark:to-primary/20 rounded-t-2xl md:rounded-t-3xl p-3 md:p-6 text-center h-28 md:h-44 shadow-2xl border-x border-t-2 border-yellow-400/40 dark:border-primary/50">
-                        <div className="text-[8px] md:text-xs font-black text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-1 md:mb-2 italic">🏆 Most Gacor</div>
-                        <div className="text-xs md:text-lg font-black truncate text-slate-900 dark:text-white mb-1 md:mb-2">
+                    <div className="w-full bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-primary/30 dark:to-primary/20 rounded-t-xl md:rounded-t-3xl p-2 md:p-6 text-center h-24 md:h-44 shadow-2xl border-x border-t-2 border-yellow-400/40 dark:border-primary/50">
+                        <div className="text-[7px] md:text-xs font-black text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-0.5 md:mb-2 italic">🏆 Most Gacor</div>
+                        <div className="text-[10px] md:text-lg font-black truncate text-slate-900 dark:text-white mb-0.5 md:mb-2">
                             {topUsers[0]?.name}
                         </div>
-                        <div className="text-sm md:text-2xl text-yellow-600 dark:text-yellow-400 font-black tracking-tight">{topUsers[0]?.total_xp} <span className="text-[10px] opacity-60">XP</span></div>
+                        <div className="text-xs md:text-2xl text-yellow-600 dark:text-yellow-400 font-black tracking-tight">{topUsers[0]?.total_xp} <span className="text-[8px] md:text-[10px] opacity-60">XP</span></div>
                     </div>
                 </div>
 
                 {/* Rank 3 */}
                 <div className="flex flex-col items-center flex-1">
-                    <div className="size-10 md:size-20 rounded-full border-2 md:border-4 border-orange-300 bg-gradient-to-b from-white to-orange-50 dark:from-slate-700 dark:to-slate-800 shadow-lg overflow-hidden mb-2 relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-slate-300 dark:text-slate-400">
-                            <Icon name="person" size={24} mdSize={40} />
-                        </div>
-                    </div>
-                    <div className="w-full bg-gradient-to-br from-orange-50/50 to-orange-100/50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-t-2xl md:rounded-t-3xl p-2 md:p-5 text-center h-16 md:h-24 shadow-lg border border-orange-300/30 dark:border-slate-700/30">
-                        <div className="text-[7px] md:text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest mb-1">🥉 Top 3 Slay</div>
-                        <div className="text-[10px] md:text-xs font-bold truncate text-slate-700 dark:text-slate-300 mb-0.5 md:mb-1">
+                    <div className="w-full bg-gradient-to-br from-orange-50/50 to-orange-100/50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-t-xl md:rounded-t-3xl p-1.5 md:p-5 text-center h-12 md:h-24 shadow-lg border border-orange-300/30 dark:border-slate-700/30">
+                        <div className="text-[6px] md:text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest mb-0.5">🥉 Top 3 Slay</div>
+                        <div className="text-[8px] md:text-xs font-bold truncate text-slate-700 dark:text-slate-300 mb-0.5 md:mb-1">
                             {topUsers[2]?.name}
                         </div>
-                        <div className="text-[10px] md:text-sm text-primary font-black leading-none">{topUsers[2]?.total_xp} <span className="text-[7px] opacity-60">XP</span></div>
+                        <div className="text-[9px] md:text-sm text-primary font-black leading-none">{topUsers[2]?.total_xp} <span className="text-[6px] md:text-[7px] opacity-60">XP</span></div>
                     </div>
                 </div>
             </div>

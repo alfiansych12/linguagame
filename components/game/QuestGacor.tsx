@@ -79,26 +79,26 @@ export function QuestGacor() {
     };
 
     return (
-        <Card className="p-8 border-2 border-primary/20 bg-gradient-to-br from-white to-primary/5 dark:from-slate-900 dark:to-primary/10 relative overflow-hidden">
+        <Card className="p-4 md:p-8 border-2 border-primary/20 bg-gradient-to-br from-white to-primary/5 dark:from-slate-900 dark:to-primary/10 relative overflow-hidden">
             <div className="relative z-10 space-y-8">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                     <div>
-                        <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight notranslate" translate="no">Quest <span className="text-primary">Gacor</span></h2>
-                        <p className="text-sm font-bold text-slate-500">Daily tasks buat jajan di Forge.</p>
+                        <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight notranslate" translate="no">Quest <span className="text-primary">Gacor</span></h2>
+                        <p className="text-[10px] md:text-sm font-bold text-slate-500">Daily tasks buat jajan di Forge.</p>
                     </div>
-                    <Badge variant="xp" icon="schedule">Reset in 14h</Badge>
+                    <Badge variant="xp" icon="schedule" className="whitespace-nowrap scale-90 md:scale-100">Reset in 14h</Badge>
                 </div>
 
                 <div className="space-y-4">
                     {quests.map((quest) => (
-                        <div key={quest.id} className={`p-6 rounded-3xl border-2 transition-all ${quest.claimed ? 'bg-emerald-50 border-emerald-200 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800'}`}>
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className={`size-12 rounded-2xl flex items-center justify-center ${quest.claimed ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-primary'}`}>
-                                    <Icon name={quest.claimed ? 'check' : quest.icon} size={24} />
+                        <div key={quest.id} className={`p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 transition-all ${quest.claimed ? 'bg-emerald-50 border-emerald-200 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800'}`}>
+                            <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                                <div className={`size-10 md:size-12 rounded-xl md:rounded-2xl flex items-center justify-center ${quest.claimed ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-primary'}`}>
+                                    <Icon name={quest.claimed ? 'check' : quest.icon} size={20} mdSize={24} />
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
-                                        <h4 className="font-black text-slate-900 dark:text-white uppercase text-sm notranslate" translate="no">{quest.title}</h4>
+                                        <h4 className="font-black text-slate-900 dark:text-white uppercase text-xs md:text-sm notranslate" translate="no">{quest.title}</h4>
                                         <span className="text-xs font-black text-primary notranslate" translate="no">+{quest.reward} Crystals</span>
                                     </div>
                                     <p className="text-xs font-bold text-slate-500 leading-tight">{quest.desc}</p>
@@ -122,7 +122,7 @@ export function QuestGacor() {
                                     variant={quest.current >= quest.target && !quest.claimed ? 'primary' : 'secondary'}
                                     disabled={quest.current < quest.target || quest.claimed}
                                     onClick={() => handleClaim(quest)}
-                                    className="px-6 h-10 text-xs rounded-xl notranslate"
+                                    className="px-4 md:px-6 h-8 md:h-10 text-[10px] md:text-xs rounded-lg md:rounded-xl notranslate"
                                     translate="no"
                                 >
                                     {quest.claimed ? 'CLAIMED' : 'AMBIL'}

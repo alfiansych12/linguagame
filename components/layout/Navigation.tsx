@@ -375,16 +375,16 @@ interface GameHeaderProps {
 
 export const GameHeader: React.FC<GameHeaderProps> = ({ progress, lives, onPause }) => {
     return (
-        <header className="w-full bg-background-light dark:bg-background-dark py-6 px-4 md:px-8 flex justify-center sticky top-0 z-40 backdrop-blur-sm">
+        <header className="w-full bg-background-light dark:bg-background-dark py-4 md:py-6 px-4 md:px-8 flex justify-center sticky top-0 z-40 backdrop-blur-sm">
             <div className="w-full max-w-5xl flex items-center gap-4 md:gap-8">
                 <button
                     onClick={onPause}
-                    className="size-12 rounded-2xl bg-white dark:bg-surface-dark shadow-soft-xl border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-95 shrink-0"
+                    className="size-10 md:size-12 rounded-xl md:rounded-2xl bg-white dark:bg-surface-dark shadow-soft-xl border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-95 shrink-0"
                 >
-                    <Icon name="close" size={24} />
+                    <Icon name="close" size={20} mdSize={24} />
                 </button>
 
-                <div className="flex-1 relative h-4">
+                <div className="flex-1 relative h-3 md:h-4">
                     <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
                         <div
                             className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-700 ease-out"
@@ -395,14 +395,14 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ progress, lives, onPause
                     </div>
                 </div>
 
-                <div className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all shadow-sm shrink-0 ${lives > 6 ? 'bg-success/10 border-success/20 text-success' :
+                <div className={`flex items-center gap-2 md:gap-3 px-3 md:px-5 py-1.5 md:py-2.5 rounded-xl md:rounded-2xl border transition-all shadow-sm shrink-0 ${lives > 6 ? 'bg-success/10 border-success/20 text-success' :
                     lives > 3 ? 'bg-yellow-400/10 border-yellow-400/20 text-yellow-500' :
                         'bg-error/10 border-error/20 text-error animate-pulse-gentle'
                     }`}>
-                    <Icon name="bolt" size={20} filled={lives > 0} />
+                    <Icon name="bolt" size={16} mdSize={20} filled={lives > 0} />
                     <div className="flex flex-col items-start leading-none">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Energy</span>
-                        <span className="font-black text-xl">{lives}/10</span>
+                        <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest opacity-70">Energy</span>
+                        <span className="font-black text-base md:text-xl">{lives}/10</span>
                     </div>
                 </div>
             </div>

@@ -248,12 +248,12 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                         <Icon name={level.icon || 'school'} className="text-primary" size={32} />
                     </div>
                     <div className="space-y-4">
-                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.title}</h1>
-                        <p className="text-slate-500 font-bold text-lg">{level.description}</p>
+                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.title}</h1>
+                        <p className="text-slate-500 font-bold text-base md:text-lg">{level.description}</p>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-8 rounded-[2.5rem] border border-slate-200/50 text-left">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Mission Goals</h4>
+                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 md:p-8 rounded-2xl md:rounded-[2.5rem] border border-slate-200/50 text-left">
+                        <h4 className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Mission Goals</h4>
                         <ul className="space-y-3">
                             <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold">
                                 <div className="size-6 rounded-full bg-success/20 text-success flex items-center justify-center">
@@ -299,12 +299,12 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                     animate={{ opacity: 1, scale: 1 }}
                     className="max-w-md w-full space-y-8"
                 >
-                    <div className="size-32 bg-error/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
-                        <Icon name="heart_broken" size={60} className="text-error" filled />
+                    <div className="size-24 md:size-32 bg-error/10 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
+                        <Icon name="heart_broken" size={48} mdSize={60} className="text-error" filled />
                     </div>
                     <div>
-                        <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter italic uppercase">Yah, Energy Habis!</h2>
-                        <p className="text-slate-500 font-bold text-lg">Literally harus mulai lagi dari awal nih biar makin gacor.</p>
+                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter italic uppercase">Yah, Energy Habis!</h2>
+                        <p className="text-slate-500 font-bold text-base md:text-lg">Literally harus mulai lagi dari awal nih biar makin gacor.</p>
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button variant="primary" fullWidth className="py-6 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl" onClick={restartLevel}>
@@ -351,40 +351,40 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                 >
                     {isPassed ? (
                         <>
-                            <div className="size-48 bg-gradient-to-br from-primary to-primary-dark rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-2xl border-8 border-white/10 relative">
-                                <span className="text-xs font-black text-white/60 uppercase tracking-widest mt-2">XP Earned</span>
-                                <span className="text-6xl font-black text-white tracking-tighter">{score}</span>
+                            <div className="size-32 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-3xl md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-2xl border-4 md:border-8 border-white/10 relative">
+                                <span className="text-[10px] md:text-xs font-black text-white/60 uppercase tracking-widest mt-2">XP Earned</span>
+                                <span className="text-4xl md:text-6xl font-black text-white tracking-tighter">{score}</span>
                                 {isPerfect && level.isExam && (
-                                    <div className="absolute -top-4 -right-4 bg-yellow-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg animate-bounce">
+                                    <div className="absolute -top-2 -right-2 bg-yellow-400 text-white px-3 py-1.5 rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-lg animate-bounce">
                                         Achievement!
                                     </div>
                                 )}
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
+                                <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
                                     {level.isExam ? 'Phase Passed! 🏆' : 'Level Mastered! ✨'}
                                 </h2>
-                                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">
+                                <p className="text-slate-500 dark:text-slate-400 font-bold text-base md:text-lg">
                                     {isPerfect ? 'Perfect Score! Literal Sepuh momentum.' : `Accuracy: ${Math.round(accuracy * 100)}%. Great job!`}
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-200/50">
-                                    <Icon name="star" className="text-yellow-400 mb-2" size={32} filled />
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{levelData?.stars || 0}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Stars</p>
+                            <div className="grid grid-cols-3 gap-3 md:gap-4">
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
+                                    <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                                    <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">{levelData?.stars || 0}</p>
+                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Stars</p>
                                 </div>
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-200/50">
-                                    <Icon name="diamond" className="text-blue-500 mb-2" size={32} filled />
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">+{25 + (levelData?.stars || 0) * 10}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gems</p>
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
+                                    <Icon name="diamond" className="text-blue-500 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                                    <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{25 + (levelData?.stars || 0) * 10}</p>
+                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Gems</p>
                                 </div>
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-200/50">
-                                    <Icon name="timer" className="text-purple-500 mb-2" size={32} filled />
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{xpBreakdown?.speed > 15 ? 'Fast' : 'Mid'}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Speed</p>
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
+                                    <Icon name="timer" className="text-purple-500 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                                    <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">{xpBreakdown?.speed > 15 ? 'Fast' : 'Mid'}</p>
+                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Speed</p>
                                 </div>
                             </div>
                         </>
@@ -445,17 +445,17 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             className="w-full space-y-12 text-center"
                         >
                             <div className="space-y-4">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">New Word</span>
-                                <h2 className="text-7xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary">New Word</span>
+                                <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h2>
-                                <p className="text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
+                                <p className="text-xl md:text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
                                     {words[currentIndex].indonesian}
                                 </p>
                             </div>
 
-                            <div className="p-8 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <NoTranslate className="text-slate-600 dark:text-slate-300 font-bold text-xl leading-relaxed">
+                            <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900/50 rounded-2xl md:rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                <NoTranslate className="text-slate-600 dark:text-slate-300 font-bold text-lg md:text-xl leading-relaxed">
                                     "{words[currentIndex].exampleSentence}"
                                 </NoTranslate>
                             </div>
@@ -482,9 +482,9 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             animate={{ opacity: 1, scale: 1 }}
                             className="w-full space-y-12"
                         >
-                            <div className="text-center space-y-4 relative">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-500">Pick the meaning</span>
-                                <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            <div className="text-center space-y-3 md:space-y-4 relative">
+                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-purple-500">Pick the meaning</span>
+                                <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h1>
 
@@ -516,7 +516,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                             key={idx}
                                             onClick={() => handleAnswer(option)}
                                             disabled={selectedOption !== null}
-                                            className={`p-6 md:p-8 rounded-[2rem] text-xl font-black transition-all duration-200 border-2 text-left flex items-center justify-between group relative
+                                            className={`p-4 md:p-8 rounded-2xl md:rounded-[2rem] text-lg md:text-xl font-black transition-all duration-200 border-2 text-left flex items-center justify-between group relative
                                                 ${isSelected ? (isCorrect ? 'bg-success/10 border-success text-success scale-105' : 'bg-error/10 border-error text-error shake') :
                                                     showHint ? 'bg-blue-500/10 border-blue-500 text-blue-500 animate-pulse' :
                                                         'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary hover:bg-primary/5 hover:scale-[1.02]'}
