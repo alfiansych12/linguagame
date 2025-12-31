@@ -10,6 +10,7 @@ import { StageTyping } from './StageTyping';
 import { StageSpeedBlitz } from './StageSpeedBlitz';
 import { Button, Icon, Card } from '../ui/UIComponents';
 import { supabase } from '@/lib/db/supabase';
+import { useUserStore } from '@/store/user-store';
 import type { Word, GameStage } from '@/types';
 import confetti from 'canvas-confetti';
 
@@ -24,6 +25,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     levelTitle,
     words
 }) => {
+    const { userId, addXp } = useUserStore();
     const [stage, setStage] = useState<GameStage>('MEMORIZE');
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
@@ -73,13 +75,18 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         const finalXp = Math.round(score / 2);
         setXpEarned(finalXp);
 
-        // Save to Supabase (Targeting 'user1' as placeholder for now)
+        // Save to Supabase (Dynamic User ID)
+        if (!userId || userId === 'guest') {
+            console.log('Skipping sync: No authenticated user.');
+            return;
+        }
+
         try {
             // 1. Update/Upsert Level Progress
             const { error: progressError } = await supabase
                 .from('user_progress')
                 .upsert({
-                    user_id: 'user1',
+                    user_id: userId,
                     level_id: levelId,
                     status: 'COMPLETED',
                     high_score: score,
@@ -89,23 +96,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
             if (progressError) throw progressError;
 
-            // 2. Update User Total XP & Streak
-            // In a real app, this would be a single atomic transaction or increment call
-            const { data: userData } = await supabase
-                .from('users')
-                .select('total_xp, current_streak')
-                .eq('id', 'user1')
-                .single();
-
-            if (userData) {
-                await supabase
-                    .from('users')
-                    .update({
-                        total_xp: (userData.total_xp || 0) + finalXp,
-                        last_played_at: new Date().toISOString()
-                    })
-                    .eq('id', 'user1');
-            }
+            // 2. Update Total XP via store
+            await addXp(finalXp);
 
             console.log('✅ Progress saved successfully!');
         } catch (err) {

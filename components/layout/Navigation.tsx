@@ -255,6 +255,7 @@ export const RightSidebar: React.FC<{ user: any }> = ({ user }) => {
                 const { data: usersData, error: usersError } = await supabase
                     .from('users')
                     .select('id, name, total_xp, image')
+                    .gt('total_xp', 0)
                     .order('total_xp', { ascending: false })
                     .limit(5);
 
@@ -288,18 +289,25 @@ export const RightSidebar: React.FC<{ user: any }> = ({ user }) => {
                     <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight italic uppercase">Quest Gacor</h3>
                 </div>
 
-                {userQuests.length > 0 ? (
-                    userQuests.map((quest) => (
-                        <QuestCard
-                            key={quest.id}
-                            icon={quest.quest_id === 'xp' ? 'bolt' : 'local_fire_department'}
-                            title={quest.quest_id === 'xp' ? 'XP Hunter' : 'Daily Grind'}
-                            progress={(quest.progress / quest.target) * 100}
-                            target={`${quest.target} ${quest.quest_id === 'xp' ? 'XP' : 'Units'}`}
-                            color={quest.quest_id === 'xp' ? 'primary' : 'orange-500'}
-                            completed={quest.progress >= quest.target}
-                        />
-                    ))
+                {status === 'authenticated' ? (
+                    userQuests.length > 0 ? (
+                        userQuests.map((quest) => (
+                            <QuestCard
+                                key={quest.id}
+                                icon={quest.quest_id === 'xp' ? 'bolt' : 'local_fire_department'}
+                                title={quest.quest_id === 'xp' ? 'XP Hunter' : 'Daily Grind'}
+                                progress={(quest.progress / quest.target) * 100}
+                                target={`${quest.target} ${quest.quest_id === 'xp' ? 'XP' : 'Units'}`}
+                                color={quest.quest_id === 'xp' ? 'primary' : 'orange-500'}
+                                completed={quest.progress >= quest.target}
+                            />
+                        ))
+                    ) : (
+                        <div className="p-6 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
+                            <Icon name="military_tech" size={24} className="mx-auto mb-2 text-slate-300" />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Belum ada quest aktif sirkel.</p>
+                        </div>
+                    )
                 ) : (
                     <div className="p-6 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center">
                         <Icon name="lock" size={24} className="mx-auto mb-2 text-slate-300" />
@@ -416,8 +424,8 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden px-4 pb-6 pt-2 bg-gradient-to-t from-white/0 via-white/80 to-transparent dark:from-[#0a0a0f]/0 dark:via-[#0a0a0f]/80 dark:to-transparent pointer-events-none mb-safe">
-            <div className="max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-2 border-slate-200/50 dark:border-slate-700/50 rounded-[2.5rem] shadow-floating p-1 flex items-center justify-between gap-1 pointer-events-auto">
+        <nav className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden px-4 pb-4 pt-4 bg-gradient-to-t from-white via-white/40 to-transparent dark:from-[#0a0a0f] dark:via-[#0a0a0f]/40 dark:to-transparent pointer-events-none">
+            <div className="max-w-[440px] mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl border border-white/40 dark:border-slate-800/40 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-1.5 flex items-center justify-between gap-1 pointer-events-auto relative">
                 <BottomNavItem
                     id="nav-forge"
                     href="/shop"
@@ -443,14 +451,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
                     id="nav-leaderboard"
                     href="/leaderboard"
                     icon="leaderboard"
-                    label="Board"
+                    label="Leader"
                     active={activeTab === 'leaderboard'}
                 />
                 <BottomNavItem
                     id="nav-profile"
                     href="/profile"
                     icon="person"
-                    label="Branding"
+                    label="Profil"
                     active={activeTab === 'profile'}
                 />
             </div>
@@ -465,23 +473,32 @@ const BottomNavItem = ({ href, icon, label, active, id }: { href: string; icon: 
             id={id}
             href={href}
             onClick={() => playSound('CLICK')}
-            className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-[2rem] transition-all duration-300 ${active
-                ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105 -translate-y-1'
-                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-90'
-                }`}
+            className="flex-1 relative flex flex-col items-center justify-center py-2 sm:py-3 transition-all duration-500 group outline-none"
         >
-            <div className="relative">
-                <Icon name={icon} filled={active} size={24} className={active ? 'scale-110' : ''} />
-                {active && (
-                    <motion.div
-                        layoutId="nav-glow"
-                        className="absolute inset-0 bg-white/20 blur-lg rounded-full"
-                    />
-                )}
+            <div className={`relative z-10 flex flex-col items-center gap-1 transition-all duration-500 ${active ? '-translate-y-1' : 'opacity-60'}`}>
+                <div className={`p-2 rounded-2xl transition-all duration-500 ${active ? 'bg-primary text-white shadow-[0_8px_20px_rgba(59,130,246,0.3)]' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'}`}>
+                    <Icon name={icon} filled={active} size={22} className={active ? 'scale-110' : 'group-hover:scale-110 transition-transform'} />
+                </div>
+                <span className={`text-[8px] font-black uppercase tracking-[0.1em] transition-all duration-500 ${active ? 'text-primary' : 'text-slate-400'}`}>
+                    {label}
+                </span>
             </div>
-            <span className={`text-[8px] font-black uppercase tracking-[0.2em] notranslate ${active ? 'opacity-100' : 'opacity-50'}`} translate="no">
-                {label}
-            </span>
+
+            {active && (
+                <motion.div
+                    layoutId="nav-glow-indicator"
+                    className="absolute inset-x-2 inset-y-1 bg-primary/5 dark:bg-primary/10 rounded-3xl -z-0"
+                    transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
+                />
+            )}
+
+            {active && (
+                <motion.div
+                    layoutId="nav-dot"
+                    className="absolute -bottom-1 size-1 bg-primary rounded-full"
+                    transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
+                />
+            )}
         </Link>
     );
 };

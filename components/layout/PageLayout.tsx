@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, BottomNav, Header, RightSidebar } from './Navigation';
 import { OnboardingOverlay } from '../ui/OnboardingOverlay';
+import { useUserStore } from '@/store/user-store';
+import { useProgressStore } from '@/store/progress-store';
+import { useSession } from 'next-auth/react';
 
 interface PageLayoutProps {
     children: React.ReactNode;
@@ -15,16 +18,25 @@ interface PageLayoutProps {
     };
 }
 
-import { useUserStore } from '@/store/user-store';
-
 export const PageLayout: React.FC<PageLayoutProps> = ({ children, activeTab, user: propUser }) => {
-    const totalXp = useUserStore(state => state.totalXp);
-    const currentStreak = useUserStore(state => state.currentStreak);
+    const { totalXp, currentStreak, syncWithDb: syncUser, userId: storeUserId } = useUserStore();
+    const { syncWithDb: syncProgress } = useProgressStore();
+    const { data: session, status } = useSession();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // AUTO SYNC BRIDGE
+    useEffect(() => {
+        if (status === 'authenticated' && session?.user?.id && storeUserId !== session.user.id) {
+            Promise.all([
+                syncUser(session.user.id),
+                syncProgress(session.user.id)
+            ]);
+        }
+    }, [session, status, storeUserId, syncUser, syncProgress]);
 
     const user = propUser || {
         name: 'Alex',

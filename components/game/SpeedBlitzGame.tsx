@@ -13,6 +13,7 @@ import { useProgressStore } from '@/store/progress-store';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/db/supabase';
 import { calculateXp, calculateStars } from '@/lib/game-logic/xp-calculator';
+import { submitGameScore } from '@/app/actions/gameActions';
 import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
 
@@ -139,9 +140,9 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
         }, 600);
     };
 
-    const handleUseFocus = () => {
+    const handleUseFocus = async () => {
         if (inventory.focus > 0 && phase === 'PLAYING' && !feedback) {
-            const used = useCrystal('focus');
+            const used = await useCrystal('focus');
             if (used) {
                 playSound('CRYSTAL');
                 setTimeLeft(Math.max(5, timeLeft + 3));
@@ -149,9 +150,9 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
         }
     };
 
-    const handleUseTimefreeze = () => {
+    const handleUseTimefreeze = async () => {
         if (inventory.timefreeze > 0 && phase === 'PLAYING' && !feedback && !isTimeFrozen) {
-            const used = useCrystal('timefreeze');
+            const used = await useCrystal('timefreeze');
             if (used) {
                 playSound('CRYSTAL');
                 setIsTimeFrozen(true);
@@ -160,9 +161,9 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
         }
     };
 
-    const handleUseShield = () => {
+    const handleUseShield = async () => {
         if (inventory.shield > 0 && !shieldActive && !feedback) {
-            const used = useCrystal('shield');
+            const used = await useCrystal('shield');
             if (used) {
                 playSound('CRYSTAL');
                 setShieldActive(true);
@@ -170,9 +171,9 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
         }
     };
 
-    const handleUseVision = () => {
+    const handleUseVision = async () => {
         if (inventory.hint > 0 && phase === 'PLAYING' && !feedback && !showVision) {
-            const used = useCrystal('hint');
+            const used = await useCrystal('hint');
             if (used) {
                 playSound('CRYSTAL');
                 setShowVision(true);
@@ -199,17 +200,18 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
 
         setScore(xpResults.total);
 
-        // SYNC TO SUPABASE
+        // SECURE SYNC TO SERVER
         if (userId !== 'guest' && isPassed) {
-            supabase.from('user_progress').upsert({
-                user_id: userId,
-                level_id: level.id,
-                status: 'COMPLETED',
+            submitGameScore({
+                levelId: level.id,
                 score: xpResults.total,
                 stars: winStars,
-                completed_at: new Date().toISOString()
-            }).then(({ error }) => {
-                if (error) console.error('Failed to sync SpeedBlitz:', error);
+                timeTaken: Math.round(timeTaken)
+            }).then(result => {
+                if (result.success) {
+                    useUserStore.getState().syncWithDb(userId);
+                    useProgressStore.getState().syncWithDb(userId);
+                }
             });
         }
 
@@ -218,8 +220,8 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                 if (isPassed) {
                     playSound('SUCCESS');
                     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    addGems(30 + (winStars * 20));
-                    addXp(xpResults.total);
+
+                    // Rewards are now handled server-side
                     completeLevel(level.id, xpResults.total, winStars);
 
                     const curriculumIndex = CURRICULUM_LEVELS.findIndex(l => l.id === level.id);
@@ -258,29 +260,29 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                         <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -right-4 bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg">High Intensity</motion.div>
                     </div>
 
-                    <div className="space-y-4">
-                        <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-8 underline-offset-8 decoration-skip-ink-none">Speed Blitz</h1>
-                        <p className="text-slate-400 font-bold text-base md:text-xl px-4 md:px-12">Literally 5 detik tiap soal! Reflex kamu harus gokil biar gak game over. Slay the grammar!</p>
+                    <div className="space-y-3 md:space-y-4">
+                        <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8 decoration-skip-ink-none">Kilatan Cepat</h1>
+                        <p className="text-slate-400 font-bold text-sm md:text-xl px-2 md:px-12">Hanya 5 detik tiap soal! Refleks kamu harus sangat cepat agar tidak kalah. Kuasai tata bahasanya!</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 md:gap-4 text-left">
-                        <div className="p-4 md:p-6 bg-white/5 rounded-2xl md:rounded-3xl border border-white/10">
-                            <span className="text-[8px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-2">Rule #1</span>
-                            <p className="text-xs md:text-base text-white font-bold leading-snug">Mistakes = Energy loss. Don't blink!</p>
+                    <div className="grid grid-cols-2 gap-2 md:gap-4 text-left">
+                        <div className="p-3 md:p-6 bg-white/5 rounded-xl md:rounded-3xl border border-white/10">
+                            <span className="text-[7px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-1 md:mb-2">Aturan #1</span>
+                            <p className="text-[10px] md:text-base text-white font-bold leading-snug">Kesalahan = Kehilangan Nyawa. Jangan berkedip!</p>
                         </div>
-                        <div className="p-4 md:p-6 bg-white/5 rounded-2xl md:rounded-3xl border border-white/10">
-                            <span className="text-[8px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-2">Rule #2</span>
-                            <p className="text-xs md:text-base text-white font-bold leading-snug">Streaks make it FASTER. Gacor reflexes only.</p>
+                        <div className="p-3 md:p-6 bg-white/5 rounded-xl md:rounded-3xl border border-white/10">
+                            <span className="text-[7px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-1 md:mb-2">Aturan #2</span>
+                            <p className="text-[10px] md:text-base text-white font-bold leading-snug">Beruntun = Makin CEPAT. Refleks jagoan saja.</p>
                         </div>
                     </div>
 
-                    <Button variant="primary" fullWidth className="py-7 rounded-[2rem] text-xl font-black uppercase tracking-widest shadow-[0_20px_50px_rgba(8,126,255,0.3)] group overflow-hidden relative"
+                    <Button variant="primary" fullWidth className="py-4 md:py-7 rounded-xl md:rounded-[2rem] text-sm md:text-xl font-black uppercase tracking-widest shadow-[0_20px_50px_rgba(8,126,255,0.3)] group overflow-hidden relative"
                         onClick={() => {
                             playSound('START');
                             setPhase('PLAYING');
                             setStartTime(Date.now());
                         }}>
-                        <span className="relative z-10">Gas Now! ⚡️</span>
+                        <span className="relative z-10">Mulai Sekarang! ⚡️</span>
                         <div className="absolute inset-0 bg-gradient-to-r from-primary-dark to-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </Button>
                 </motion.div>
@@ -296,12 +298,12 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                         <Icon name="bolt" className="text-error" size={80} filled />
                     </div>
                     <div className="space-y-4">
-                        <h2 className="text-6xl font-black text-white tracking-tighter italic uppercase">Energy Out! ⚡️</h2>
-                        <p className="text-slate-400 font-bold text-lg leading-relaxed">Reflex kamu kurang gacor hari ini! Literally butuh fokus lagi biar streak makin mantap.</p>
+                        <h2 className="text-3xl md:text-6xl font-black text-white tracking-tighter italic uppercase">Nyawa Habis! ⚡️</h2>
+                        <p className="text-slate-400 font-bold text-sm md:text-lg leading-relaxed">Refleks kamu kurang cepat hari ini! Kamu butuh fokus lebih agar bisa bertahan lama.</p>
                     </div>
-                    <div className="flex flex-col gap-4">
-                        <Button variant="primary" fullWidth className="py-7 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-xl shadow-primary/20" onClick={restartLevel}>RESTART BLITZ</Button>
-                        <Button variant="ghost" fullWidth className="py-4 font-black uppercase tracking-widest text-slate-500" onClick={() => router.push('/')}>Balik ke Map</Button>
+                    <div className="flex flex-col gap-3 md:gap-4">
+                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-lg shadow-xl shadow-primary/20" onClick={restartLevel}>ULANGI KILATAN</Button>
+                        <Button variant="ghost" fullWidth className="py-3 md:py-4 font-black uppercase tracking-widest text-xs md:text-sm text-slate-500" onClick={() => router.push('/')}>Kembali ke Peta</Button>
                     </div>
                 </motion.div>
             </div>
@@ -319,15 +321,15 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                     {isPassed ? (
                         <>
                             <div className="relative">
-                                <div className="size-48 bg-gradient-to-br from-primary to-primary-dark rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-[0_0_60px_rgba(8,126,255,0.4)] border-8 border-white/10">
-                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">Blitz Score</span>
-                                    <span className="text-7xl font-black text-white tracking-tighter">{score}</span>
+                                <div className="size-28 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-3xl md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-[0_0_60px_rgba(8,126,255,0.4)] border-4 md:border-8 border-white/10">
+                                    <span className="text-[8px] md:text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">Skor Kilatan</span>
+                                    <span className="text-4xl md:text-7xl font-black text-white tracking-tighter">{score}</span>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-8 underline-offset-8">BLITZ SLAY! ✨</h2>
-                                <p className="text-slate-400 font-bold text-base md:text-lg">Refleks kamu gokil banget! Grammar Master status: Unlocked.</p>
+                                <h2 className="text-3xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8">KILATAN SELESAI! ✨</h2>
+                                <p className="text-slate-400 font-bold text-sm md:text-lg">Refleks kamu luar biasa! Status Master Tata Bahasa: Terbuka.</p>
                             </div>
                         </>
                     ) : (
@@ -338,36 +340,36 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase text-error">BLITZ FAIL! ⚡️</h2>
-                                <p className="text-slate-400 font-bold text-base md:text-lg px-4 md:px-8">
-                                    Akurasi lo cuma <span className="text-error font-black">{Math.round(accuracy * 100)}%</span>. Minimal harus 70% biar lulus Blitz ini. Gas coba lagi!
+                                <h2 className="text-3xl md:text-7xl font-black text-white tracking-tighter italic uppercase text-error">KILATAN GAGAL! ⚡️</h2>
+                                <p className="text-slate-400 font-bold text-sm md:text-lg px-2 md:px-8">
+                                    Akurasi kamu hanya <span className="text-error font-black">{Math.round(accuracy * 100)}%</span>. Minimal harus 70% untuk lulus Kilatan ini. Ayo coba lagi!
                                 </p>
                             </div>
                         </>
                     )}
 
                     <div className="grid grid-cols-3 gap-3 md:gap-4">
-                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
-                            <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                        <div className="bg-white/5 p-3 md:p-6 rounded-xl md:rounded-[2.5rem] border border-white/10">
+                            <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
                             <p className="text-lg md:text-2xl font-black text-white">{levelData?.stars || 0}</p>
-                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Stars</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Bintang</p>
                         </div>
-                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
-                            <Icon name="diamond" className="text-blue-400 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                        <div className="bg-white/5 p-3 md:p-6 rounded-xl md:rounded-[2.5rem] border border-white/10">
+                            <Icon name="diamond" className="text-blue-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
                             <p className="text-lg md:text-2xl font-black text-white">+{30 + (levelData?.stars || 0) * 20}</p>
-                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Gems</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Kristal</p>
                         </div>
-                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
-                            <Icon name="speed" className="text-primary mb-1 md:mb-2" size={24} mdSize={32} filled />
-                            <p className="text-lg md:text-2xl font-black text-white">{maxStreak > 5 ? 'Gacor' : 'Mid'}</p>
-                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Reflexes</p>
+                        <div className="bg-white/5 p-3 md:p-6 rounded-xl md:rounded-[2.5rem] border border-white/10">
+                            <Icon name="speed" className="text-primary mb-1 md:mb-2" size={20} mdSize={32} filled />
+                            <p className="text-lg md:text-2xl font-black text-white">{maxStreak > 5 ? 'Cepat' : 'Sedang'}</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Refleks</p>
                         </div>
                     </div>
 
                     {isPassed ? (
-                        <Button variant="primary" fullWidth className="py-7 rounded-[2rem] font-black uppercase tracking-widest text-xl shadow-[0_20px_50px_rgba(8,126,255,0.2)]" onClick={() => router.push('/')}>Gas Terus!</Button>
+                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl shadow-[0_20px_50px_rgba(8,126,255,0.2)]" onClick={() => router.push('/')}>Lanjut!</Button>
                     ) : (
-                        <Button variant="primary" fullWidth className="py-7 rounded-[2rem] font-black uppercase tracking-widest text-xl bg-error hover:bg-error-dark shadow-xl" onClick={restartLevel}>Retry Blitz</Button>
+                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl bg-error hover:bg-error-dark shadow-xl" onClick={restartLevel}>Coba Lagi</Button>
                     )}
                 </motion.div>
             </div>
@@ -389,7 +391,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 <span className={`text-xs font-black w-8 ${isTimeFrozen ? 'text-blue-400 animate-pulse' : 'text-white'}`}>{(timeLeft).toFixed(1)}s</span>
                                 {isTimeFrozen && <Icon name="ac_unit" size={16} className="text-blue-400 animate-spin" />}
                             </div>
-                            <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-8 underline-offset-12">
+                            <h1 className="text-3xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-4 md:decoration-8 underline-offset-8 md:underline-offset-12">
                                 <NoTranslate>{currentTask.english}</NoTranslate>
                             </h1>
 
@@ -397,15 +399,15 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 {shieldActive && (
                                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center z-20">
                                         <div className="bg-blue-500 text-white px-6 py-2 rounded-xl font-black uppercase tracking-widest shadow-2xl flex items-center gap-2 border-2 border-white/20">
-                                            <Icon name="security" size={20} filled />
-                                            Shield Up!
+                                            <Icon name="security" size={16} mdSize={20} filled />
+                                            Tameng Aktif!
                                         </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-3 md:gap-4">
                             {currentTask.choices.map((choice: string, idx: number) => {
                                 const isCorrectChoice = idx === currentTask.correctIndex;
                                 const isWinner = selectedChoice === idx && feedback === 'CORRECT';
@@ -416,7 +418,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                         key={idx}
                                         onClick={() => handleAnswer(idx)}
                                         disabled={feedback !== null}
-                                        className={`w-full p-4 md:p-6 rounded-2xl md:rounded-3xl text-left transition-all duration-200 border-2 font-black text-sm md:text-xl flex items-center justify-between group relative
+                                        className={`w-full p-4 md:p-6 rounded-xl md:rounded-3xl text-left transition-all duration-200 border-2 font-black text-sm md:text-xl flex items-center justify-between group relative
                                                 ${isWinner ? 'bg-success border-success text-white scale-105 shadow-lg shadow-success/20 z-10' :
                                                 isLoser ? 'bg-error border-error text-white shake z-10' :
                                                     showHint ? 'bg-blue-500/10 border-blue-500 text-blue-500 animate-pulse' :
@@ -438,12 +440,11 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                             })}
                         </div>
 
-                        {/* Crystal Action Bar */}
-                        <div className="flex items-center justify-center gap-4 mt-8">
+                        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
                             <CrystalButton
                                 icon="security"
                                 count={inventory.shield}
-                                label="Shield"
+                                label="Tameng"
                                 active={shieldActive}
                                 onClick={handleUseShield}
                                 disabled={feedback !== null || shieldActive}
@@ -451,7 +452,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                             <CrystalButton
                                 icon="psychology"
                                 count={inventory.hint}
-                                label="Vision"
+                                label="Visi"
                                 active={showVision}
                                 onClick={handleUseVision}
                                 disabled={feedback !== null || showVision}
@@ -459,14 +460,14 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                             <CrystalButton
                                 icon="timer"
                                 count={inventory.focus}
-                                label="Focus"
+                                label="Fokus"
                                 onClick={handleUseFocus}
                                 disabled={feedback !== null}
                             />
                             <CrystalButton
                                 icon="ac_unit"
                                 count={inventory.timefreeze}
-                                label="Stasis"
+                                label="Beku"
                                 onClick={handleUseTimefreeze}
                                 disabled={feedback !== null || isTimeFrozen}
                             />

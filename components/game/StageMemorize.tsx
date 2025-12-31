@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, Button } from '../ui/UIComponents';
 import { useGameStore } from '@/store/game-store';
 import type { Word } from '@/types';
+import { highlightVocabInSentence } from '@/lib/utils/vocab-highlight';
 
 interface StageMemorizeProps {
     words: Word[];
@@ -74,7 +75,7 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
             <div className="w-full max-w-3xl mb-8">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">
-                        Memorize the Words
+                        Hafal Kata-Kata Ini
                     </h2>
 
                     {/* Timer */}
@@ -102,7 +103,7 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                 </div>
 
                 <p className="text-slate-500 dark:text-slate-400 mt-3 text-center">
-                    Study {words.length} words • {currentIndex + 1} of {words.length}
+                    Belajar {words.length} kata • {currentIndex + 1} dari {words.length}
                 </p>
             </div>
 
@@ -123,7 +124,7 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                                 {/* English Word */}
                                 <div>
                                     <span className="text-xs font-bold uppercase tracking-wider text-primary mb-2 block">
-                                        English
+                                        Bahasa Inggris
                                     </span>
                                     <h3 className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white mb-4">
                                         {words[currentIndex].english}
@@ -136,7 +137,7 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                                 {/* Indonesian Translation */}
                                 <div>
                                     <span className="text-xs font-bold uppercase tracking-wider text-success mb-2 block">
-                                        Indonesian
+                                        Bahasa Indonesia
                                     </span>
                                     <h4 className="text-4xl md:text-5xl font-bold text-success">
                                         {words[currentIndex].indonesian}
@@ -146,9 +147,12 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                                 {/* Example Sentence */}
                                 {words[currentIndex].exampleSentence && (
                                     <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                                        <p className="text-slate-600 dark:text-slate-300 italic text-lg">
-                                            "{words[currentIndex].exampleSentence}"
-                                        </p>
+                                        <p
+                                            className="text-slate-600 dark:text-slate-300 italic text-lg"
+                                            dangerouslySetInnerHTML={{
+                                                __html: `"${highlightVocabInSentence(words[currentIndex].exampleSentence, words[currentIndex].english)}"`
+                                            }}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -160,8 +164,8 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                                         key={index}
                                         onClick={() => setCurrentIndex(index)}
                                         className={`rounded-full transition-all ${index === currentIndex
-                                                ? 'w-8 h-3 bg-primary'
-                                                : 'w-3 h-3 bg-slate-300 dark:bg-slate-600 hover:bg-primary/50'
+                                            ? 'w-8 h-3 bg-primary'
+                                            : 'w-3 h-3 bg-slate-300 dark:bg-slate-600 hover:bg-primary/50'
                                             }`}
                                     />
                                 ))}
@@ -181,7 +185,7 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                     iconPosition="left"
                     className="flex-1 md:flex-none"
                 >
-                    Previous
+                    Sebelumnya
                 </Button>
 
                 <div className="flex gap-3">
@@ -201,14 +205,14 @@ export const StageMemorize: React.FC<StageMemorizeProps> = ({ words, onComplete 
                     iconPosition="right"
                     className="flex-1 md:flex-none animate-bounce-gentle"
                 >
-                    I'm Ready!
+                    Saya Siap!
                 </Button>
             </div>
 
             {/* Hint Text */}
             <p className="text-slate-400 dark:text-slate-500 text-sm mt-6 text-center max-w-md">
-                💡 Tip: Try to remember both the English word and its Indonesian meaning.
-                You'll be tested in the next stages!
+                💡 Tips: Coba ingat kata dalam Bahasa Inggris dan artinya dalam Bahasa Indonesia.
+                Kamu akan diuji di tahap berikutnya!
             </p>
         </div>
     );

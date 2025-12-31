@@ -12,8 +12,10 @@ import { useProgressStore } from '@/store/progress-store';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/db/supabase';
 import { calculateXp, calculateStars } from '@/lib/game-logic/xp-calculator';
+import { submitGameScore } from '@/app/actions/gameActions';
 import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
+import { highlightVocabInSentence } from '@/lib/utils/vocab-highlight';
 
 interface VocabularyGameProps {
     level: Level;
@@ -35,7 +37,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
     const [startTime, setStartTime] = useState(0);
     const [xpBreakdown, setXpBreakdown] = useState<any>(null);
 
-    const { addGems, addXp, inventory, useCrystal } = useUserStore();
+    const { addGems, addXp, addVocab, inventory, useCrystal } = useUserStore();
     const { completeLevel, unlockLevel, getLevelProgress } = useProgressStore();
     const { playSound } = useSound();
 
@@ -123,9 +125,9 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         }
     };
 
-    const handleUseShield = () => {
+    const handleUseShield = async () => {
         if (inventory.shield > 0 && !shieldActive && !selectedOption) {
-            const used = useCrystal('shield');
+            const used = await useCrystal('shield');
             if (used) {
                 playSound('CRYSTAL');
                 setShieldActive(true);
@@ -133,9 +135,9 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         }
     };
 
-    const handleUseVision = () => {
+    const handleUseVision = async () => {
         if (inventory.hint > 0 && !showVision && !selectedOption) {
-            const used = useCrystal('hint');
+            const used = await useCrystal('hint');
             if (used) {
                 playSound('CRYSTAL');
                 setShowVision(true);
@@ -143,9 +145,9 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         }
     };
 
-    const handleUseDivineEye = () => {
+    const handleUseDivineEye = async () => {
         if (inventory.autocorrect > 0 && !selectedOption) {
-            const used = useCrystal('autocorrect');
+            const used = await useCrystal('autocorrect');
             if (used) {
                 playSound('CRYSTAL');
                 handleAnswer(words[currentIndex].indonesian);
@@ -180,29 +182,23 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         setXpBreakdown(xpResults.breakdown);
         setScore(xpResults.total);
 
-        // SYNC TO SUPABASE
+        // SECURE SYNC TO SERVER
         if (userId !== 'guest' && isPassed) {
-            try {
-                // 1. Save Level Progress
-                await supabase.from('user_progress').upsert({
-                    user_id: userId,
-                    level_id: level.id,
-                    status: 'COMPLETED',
-                    score: xpResults.total,
-                    stars: winStars,
-                    completed_at: new Date().toISOString()
-                });
+            const result = await submitGameScore({
+                levelId: level.id,
+                score: xpResults.total,
+                stars: winStars,
+                timeTaken: Math.round(timeTaken)
+            });
 
-                // 2. Save Achievement if Perfect Exam
-                if (level.isExam && isPerfect) {
-                    await supabase.from('user_achievements').upsert({
-                        user_id: userId,
-                        achievement_id: `vocab_phase_${level.phase}_perfect`,
-                        title: `Perfect Phase ${level.phase}`,
-                    });
-                }
-            } catch (err) {
-                console.error('Failed to sync with Supabase:', err);
+            if (result.success) {
+                // Sync local stores to reflect server changes (rewards, progress)
+                await Promise.all([
+                    useUserStore.getState().syncWithDb(userId),
+                    useProgressStore.getState().syncWithDb(userId)
+                ]);
+            } else {
+                console.error('Secure score submission failed:', result.error);
             }
         }
 
@@ -210,9 +206,8 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
             if (isPassed) {
                 playSound('SUCCESS');
                 confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-                addGems(level.isExam ? 100 : 25 + (winStars * 10));
-                addXp(xpResults.total);
 
+                // We no longer call addGems/addXp manually here as the server action handled it
                 completeLevel(level.id, xpResults.total, winStars);
 
                 const currentIndexInCurriculum = CURRICULUM_LEVELS.findIndex(l => l.id === level.id);
@@ -223,7 +218,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                 playSound('GAMEOVER');
             }
             setPhase('RESULTS');
-        }, 1000);
+        }, 1200);
     };
 
     const restartLevel = () => {
@@ -238,34 +233,34 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
 
     if (phase === 'INTRO') {
         return (
-            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col items-center justify-center p-6">
+            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col items-center justify-center p-4 md:p-6">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="max-w-md w-full text-center space-y-8"
                 >
-                    <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Icon name={level.icon || 'school'} className="text-primary" size={32} />
+                    <div className="size-12 md:size-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
+                        <Icon name={level.icon || 'school'} className="text-primary" size={24} mdSize={32} />
                     </div>
                     <div className="space-y-4">
-                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.title}</h1>
-                        <p className="text-slate-500 font-bold text-base md:text-lg">{level.description}</p>
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.title}</h1>
+                        <p className="text-slate-500 font-bold text-sm md:text-base lg:text-lg">{level.description}</p>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 md:p-8 rounded-2xl md:rounded-[2.5rem] border border-slate-200/50 text-left">
-                        <h4 className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Mission Goals</h4>
-                        <ul className="space-y-3">
-                            <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold">
-                                <div className="size-6 rounded-full bg-success/20 text-success flex items-center justify-center">
-                                    <Icon name="check" size={14} />
+                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl lg:rounded-[2.5rem] border border-slate-200/50 text-left">
+                        <h4 className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Tujuan Misi</h4>
+                        <ul className="space-y-2 md:space-y-3">
+                            <li className="flex items-center gap-2 md:gap-3 text-slate-600 dark:text-slate-300 font-bold text-sm md:text-base">
+                                <div className="size-5 md:size-6 rounded-full bg-success/20 text-success flex items-center justify-center flex-shrink-0">
+                                    <Icon name="check" size={12} mdSize={14} />
                                 </div>
-                                Learn {words.length} new words
+                                Pelajari {words.length} kata baru
                             </li>
-                            <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold">
+                            <li className="flex items-center gap-2 md:gap-3 text-slate-600 dark:text-slate-300 font-bold text-sm md:text-base">
                                 <div className="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center">
                                     <Icon name="bolt" size={14} />
                                 </div>
-                                Earn up to 150+ XP
+                                Dapatkan hingga 150+ XP
                             </li>
                         </ul>
                     </div>
@@ -273,7 +268,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                     <Button
                         variant="primary"
                         fullWidth
-                        className="py-6 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                        className="py-4 md:py-5 lg:py-6 rounded-xl md:rounded-[1.5rem] font-black uppercase tracking-widest text-sm md:text-base shadow-xl shadow-primary/20"
                         onClick={() => {
                             playSound('START');
                             setStartTime(Date.now());
@@ -284,7 +279,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             }
                         }}
                     >
-                        {level.isExam ? 'Start Final Exam' : 'Gas Belajar!'}
+                        {level.isExam ? 'Mulai Ujian Akhir' : 'Mulai Belajar'}
                     </Button>
                 </motion.div>
             </div>
@@ -297,21 +292,21 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="max-w-md w-full space-y-8"
+                    className="max-w-md w-full space-y-6 md:space-y-8"
                 >
-                    <div className="size-24 md:size-32 bg-error/10 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
-                        <Icon name="heart_broken" size={48} mdSize={60} className="text-error" filled />
+                    <div className="size-20 md:size-24 lg:size-32 bg-error/10 rounded-xl md:rounded-2xl lg:rounded-[2.5rem] flex items-center justify-center mx-auto mb-4 md:mb-6">
+                        <Icon name="heart_broken" size={40} mdSize={60} className="text-error" filled />
                     </div>
                     <div>
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter italic uppercase">Yah, Energy Habis!</h2>
-                        <p className="text-slate-500 font-bold text-base md:text-lg">Literally harus mulai lagi dari awal nih biar makin gacor.</p>
+                        <h2 className="text-2xl md:text-3xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter italic uppercase">Nyawa Habis!</h2>
+                        <p className="text-slate-500 font-bold text-base md:text-lg">Kamu harus mulai ulang dari awal untuk memperbaiki kesalahan.</p>
                     </div>
-                    <div className="flex flex-col gap-3">
-                        <Button variant="primary" fullWidth className="py-6 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl" onClick={restartLevel}>
-                            Restart Level
+                    <div className="flex flex-col gap-2 md:gap-3">
+                        <Button variant="primary" fullWidth className="py-4 md:py-5 lg:py-6 rounded-xl md:rounded-[1.5rem] font-black uppercase tracking-widest text-sm md:text-base shadow-xl" onClick={restartLevel}>
+                            Mulai Ulang Level
                         </Button>
-                        <Button variant="ghost" fullWidth className="py-4 font-black uppercase tracking-widest text-slate-400" onClick={() => router.push('/')}>
-                            Balik ke Home
+                        <Button variant="ghost" fullWidth className="py-3 md:py-4 font-black uppercase tracking-widest text-xs md:text-sm text-slate-400" onClick={() => router.push('/')}>
+                            Kembali ke Beranda
                         </Button>
                     </div>
                 </motion.div>
@@ -347,44 +342,44 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="max-w-md w-full space-y-12"
+                    className="max-w-md w-full space-y-8 md:space-y-10 lg:space-y-12"
                 >
                     {isPassed ? (
                         <>
-                            <div className="size-32 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-3xl md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-2xl border-4 md:border-8 border-white/10 relative">
-                                <span className="text-[10px] md:text-xs font-black text-white/60 uppercase tracking-widest mt-2">XP Earned</span>
-                                <span className="text-4xl md:text-6xl font-black text-white tracking-tighter">{score}</span>
+                            <div className="size-24 md:size-32 lg:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-2xl md:rounded-3xl lg:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-2xl border-2 md:border-4 lg:border-8 border-white/10 relative">
+                                <span className="text-[10px] md:text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">XP Didapat</span>
+                                <span className="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter">{score}</span>
                                 {isPerfect && level.isExam && (
                                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-white px-3 py-1.5 rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-lg animate-bounce">
-                                        Achievement!
+                                        Pencapaian!
                                     </div>
                                 )}
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
-                                    {level.isExam ? 'Phase Passed! 🏆' : 'Level Mastered! ✨'}
+                                <h2 className="text-2xl md:text-3xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
+                                    {level.isExam ? 'Fase Selesai! 🏆' : 'Level Dikuasai! ✨'}
                                 </h2>
                                 <p className="text-slate-500 dark:text-slate-400 font-bold text-base md:text-lg">
-                                    {isPerfect ? 'Perfect Score! Literal Sepuh momentum.' : `Accuracy: ${Math.round(accuracy * 100)}%. Great job!`}
+                                    {isPerfect ? 'Nilai Sempurna! Luar biasa!' : `Akurasi: ${Math.round(accuracy * 100)}%. Kerja bagus!`}
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3 md:gap-4">
+                            <div className="grid grid-cols-3 gap-2 md:gap-3 lg:gap-4">
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
-                                    <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={24} mdSize={32} filled />
+                                    <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
                                     <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">{levelData?.stars || 0}</p>
-                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Stars</p>
+                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Bintang</p>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
                                     <Icon name="diamond" className="text-blue-500 mb-1 md:mb-2" size={24} mdSize={32} filled />
                                     <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{25 + (levelData?.stars || 0) * 10}</p>
-                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Gems</p>
+                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Kristal</p>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
                                     <Icon name="timer" className="text-purple-500 mb-1 md:mb-2" size={24} mdSize={32} filled />
                                     <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">{xpBreakdown?.speed > 15 ? 'Fast' : 'Mid'}</p>
-                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Speed</p>
+                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Kecepatan</p>
                                 </div>
                             </div>
                         </>
@@ -396,11 +391,11 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.isExam ? 'Exam Failed!' : 'Level Failed!'}</h2>
+                                <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.isExam ? 'Ujian Gagal!' : 'Level Gag al!'}</h2>
                                 <p className="text-slate-500 dark:text-slate-400 font-bold text-lg leading-relaxed">
                                     {level.isExam
-                                        ? `Waduh! Minimal harus 80% buat lanjut ke Phase berikutnya. Karena gagal, lo harus REPLAY Phase ini dari awal.`
-                                        : `Waduh! Akurasi lo cuma ${Math.round(accuracy * 100)}%. Minimal harus 70% biar lulus level ini. Gas coba lagi!`
+                                        ? `Minimal harus 80% untuk lanjut ke Fase berikutnya. Karena gagal, kamu harus mengulang Fase ini dari awal.`
+                                        : `Akurasi kamu hanya ${Math.round(accuracy * 100)}%. Minimal harus 70% untuk lulus level ini. Coba lagi!`
                                     }
                                 </p>
                             </div>
@@ -411,14 +406,14 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                 className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl bg-error hover:bg-error-dark"
                                 onClick={level.isExam ? handleResetPhase : restartLevel}
                             >
-                                {level.isExam ? `Replay Phase ${level.phase}` : 'Retry Level'}
+                                {level.isExam ? `Ulangi Fase ${level.phase}` : 'Coba Lagi'}
                             </Button>
                         </div>
                     )}
 
                     {isPassed && (
                         <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.push('/')}>
-                            Gas Terus!
+                            Lanjut!
                         </Button>
                     )}
                 </motion.div>
@@ -434,7 +429,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                 onPause={() => router.push('/')}
             />
 
-            <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-2xl mx-auto w-full">
+            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 max-w-2xl mx-auto w-full">
                 <AnimatePresence mode="wait">
                     {phase === 'MEMORIZE' ? (
                         <motion.div
@@ -442,27 +437,30 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -50 }}
-                            className="w-full space-y-12 text-center"
+                            className="w-full space-y-8 md:space-y-10 lg:space-y-12 text-center"
                         >
                             <div className="space-y-4">
-                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary">New Word</span>
-                                <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary">Kata Baru</span>
+                                <h2 className="text-3xl md:text-5xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h2>
-                                <p className="text-xl md:text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
+                                <p className="text-lg md:text-2xl lg:text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
                                     {words[currentIndex].indonesian}
                                 </p>
                             </div>
 
-                            <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900/50 rounded-2xl md:rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <NoTranslate className="text-slate-600 dark:text-slate-300 font-bold text-lg md:text-xl leading-relaxed">
-                                    "{words[currentIndex].exampleSentence}"
-                                </NoTranslate>
+                            <div className="p-4 md:p-6 lg:p-8 bg-slate-50 dark:bg-slate-900/50 rounded-xl md:rounded-2xl lg:rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                <p
+                                    className="text-slate-600 dark:text-slate-300 font-bold text-base md:text-lg lg:text-xl leading-relaxed"
+                                    dangerouslySetInnerHTML={{
+                                        __html: `"${highlightVocabInSentence(words[currentIndex].exampleSentence || '', words[currentIndex].english)}"`
+                                    }}
+                                />
                             </div>
 
                             <Button
                                 variant="primary"
-                                className="px-12 py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                                className="px-8 md:px-10 lg:px-12 py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-xl shadow-primary/20"
                                 onClick={() => {
                                     if (currentIndex === words.length - 1) {
                                         setCurrentIndex(0);
@@ -472,7 +470,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                     }
                                 }}
                             >
-                                {currentIndex === words.length - 1 ? 'Start Quiz' : 'Next Word'}
+                                {currentIndex === words.length - 1 ? 'Mulai Kuis' : 'Kata Berikutnya'}
                             </Button>
                         </motion.div>
                     ) : (
@@ -480,11 +478,11 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             key={`quiz-${currentIndex}`}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="w-full space-y-12"
+                            className="w-full space-y-8 md:space-y-10 lg:space-y-12"
                         >
                             <div className="text-center space-y-3 md:space-y-4 relative">
-                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-purple-500">Pick the meaning</span>
-                                <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-purple-500">Pilih Artinya</span>
+                                <h1 className="text-3xl md:text-4xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h1>
 
@@ -498,14 +496,14 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                         >
                                             <div className="bg-blue-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-widest shadow-xl flex items-center gap-2">
                                                 <Icon name="security" size={20} filled />
-                                                Shield Activated!
+                                                Tameng Aktif!
                                             </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-3 md:gap-4">
                                 {options.map((option, idx) => {
                                     const isCorrectOption = option === words[currentIndex].indonesian;
                                     const isSelected = selectedOption === option;
@@ -516,27 +514,26 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                             key={idx}
                                             onClick={() => handleAnswer(option)}
                                             disabled={selectedOption !== null}
-                                            className={`p-4 md:p-8 rounded-2xl md:rounded-[2rem] text-lg md:text-xl font-black transition-all duration-200 border-2 text-left flex items-center justify-between group relative
+                                            className={`p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl lg:rounded-[2rem] text-base md:text-lg lg:text-xl font-black transition-all duration-200 border-2 text-left flex items-center justify-between group relative
                                                 ${isSelected ? (isCorrect ? 'bg-success/10 border-success text-success scale-105' : 'bg-error/10 border-error text-error shake') :
                                                     showHint ? 'bg-blue-500/10 border-blue-500 text-blue-500 animate-pulse' :
                                                         'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary hover:bg-primary/5 hover:scale-[1.02]'}
                                             `}
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-black text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                                            <div className="flex items-center gap-3 md:gap-4">
+                                                <div className="size-7 md:size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-black text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                                                     {idx + 1}
                                                 </div>
-                                                {option}
+                                                <span className="break-words">{option}</span>
                                             </div>
                                             {isSelected && (isCorrect ? <Icon name="check_circle" filled /> : <Icon name="cancel" filled />)}
-                                            {showHint && <Icon name="visibility" size={20} className="animate-bounce" filled />}
+                                            {showHint && <Icon name="visibility" size={18} mdSize={20} className="animate-bounce flex-shrink-0" filled />}
                                         </button>
                                     );
                                 })}
                             </div>
 
-                            {/* Crystal Action Bar */}
-                            <div className="flex items-center justify-center gap-4 mt-8">
+                            <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
                                 <CrystalButton
                                     icon="security"
                                     count={inventory.shield}

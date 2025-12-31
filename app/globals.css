@@ -50,6 +50,16 @@ h6 {
   @apply font-black tracking-tight leading-tight;
 }
 
+/* Vocabulary Highlighting in Example Sentences */
+strong em,
+em strong {
+  @apply font-black not-italic text-primary;
+  font-style: normal;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

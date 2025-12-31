@@ -24,7 +24,7 @@ export default function DuelRoomPage() {
     const params = useParams();
     const router = useRouter();
     const roomCode = params.roomCode as string;
-    const { name, addGems } = useUserStore();
+    const { name, addGems, inventory, useCrystal } = useUserStore();
 
     // Internal States
     const [room, setRoom] = useState<any>(null);
@@ -42,12 +42,17 @@ export default function DuelRoomPage() {
     const [localScore, setLocalScore] = useState(0);
     const [correctCount, setCorrectCount] = useState(0);
 
+    // Power-up States
+    const [isFrozen, setIsFrozen] = useState(false);
+    const [activeBooster, setActiveBooster] = useState(0);
+    const [isDivineEyeActive, setIsDivineEyeActive] = useState(0);
+
     // Refs for real-time
     const channelRef = useRef<any>(null);
     const timerRef = useRef<any>(null);
+    const scoreRef = useRef(0);
 
     useEffect(() => {
-        // 1. Identify local player
         const savedPlayerId = sessionStorage.getItem(`duel_player_${roomCode}`);
         if (!savedPlayerId) {
             router.push('/duel');
@@ -55,9 +60,7 @@ export default function DuelRoomPage() {
         }
         setCurrentPlayerId(savedPlayerId);
 
-        // 2. Fetch initial room state
         const initRoom = async () => {
-            console.log('📡 Fetching Room Data for:', roomCode);
             const { data: roomData, error } = await supabase
                 .from('duel_rooms')
                 .select('*')
@@ -65,7 +68,6 @@ export default function DuelRoomPage() {
                 .single();
 
             if (error || !roomData) {
-                console.error('❌ Room Fetch Error:', error);
                 router.push('/duel');
                 return;
             }
@@ -73,29 +75,17 @@ export default function DuelRoomPage() {
             setRoom(roomData);
             setGameState(roomData.status);
 
-            // Fetch players
-            console.log('👥 Fetching initial players for room:', roomData.id);
-            const { data: playerData, error: playerFetchError } = await supabase
+            const { data: playerData } = await supabase
                 .from('duel_players')
                 .select('*')
                 .eq('room_id', roomData.id)
                 .order('created_at', { ascending: true });
 
-            if (playerFetchError) {
-                console.error('❌ Players Initial Fetch Error:', playerFetchError.message, playerFetchError.details, playerFetchError.hint);
-            } else if (playerData) {
-                console.log('✅ Found players:', playerData.length);
-                setPlayers(playerData);
-            }
-
+            if (playerData) setPlayers(playerData);
             setLoading(false);
 
-            // 3. Setup Realtime Channel
-            console.log('🔌 Connecting to Realtime for Room ID:', roomData.id);
             const channel = supabase.channel(`room:${roomCode}`, {
-                config: {
-                    broadcast: { self: true },
-                }
+                config: { broadcast: { self: true } }
             });
 
             channel
@@ -104,22 +94,13 @@ export default function DuelRoomPage() {
                     schema: 'public',
                     table: 'duel_players',
                     filter: `room_id=eq.${roomData.id}`
-                }, async (payload) => {
-                    console.log('⚡️ Database Change Detected!', payload.eventType);
-
-                    // Refetch players only if it's an important change
-                    const { data: updatedPlayers, error: refetchError } = await supabase
+                }, async () => {
+                    const { data: updatedPlayers } = await supabase
                         .from('duel_players')
                         .select('*')
                         .eq('room_id', roomData.id)
                         .order('created_at', { ascending: true });
-
-                    if (refetchError) {
-                        console.error('❌ Refetch Error:', refetchError.message);
-                    } else if (updatedPlayers) {
-                        console.log('👥 Updated Players List:', updatedPlayers.length);
-                        setPlayers(updatedPlayers);
-                    }
+                    if (updatedPlayers) setPlayers(updatedPlayers);
                 })
                 .on('postgres_changes', {
                     event: 'UPDATE',
@@ -128,7 +109,6 @@ export default function DuelRoomPage() {
                     filter: `id=eq.${roomData.id}`
                 }, (payload) => {
                     const updatedRoom = payload.new as any;
-                    console.log('🏠 Room Status Update:', updatedRoom.status);
                     setGameState(updatedRoom.status);
                     setRoom(updatedRoom);
                 })
@@ -136,9 +116,15 @@ export default function DuelRoomPage() {
                     const { playerId, score } = payload.payload;
                     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, score } : p));
                 })
-                .subscribe((status) => {
-                    console.log('📡 Realtime Subscription Status:', status);
-                });
+                .on('broadcast', { event: 'power_up_used' }, (payload) => {
+                    const { type, senderId } = payload.payload;
+                    if (type === 'freeze' && senderId !== savedPlayerId) {
+                        setIsFrozen(true);
+                        playSound('WRONG');
+                        setTimeout(() => setIsFrozen(false), 3000);
+                    }
+                })
+                .subscribe();
 
             channelRef.current = channel;
         };
@@ -149,20 +135,8 @@ export default function DuelRoomPage() {
             if (channelRef.current) supabase.removeChannel(channelRef.current);
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [roomCode, router]);
+    }, [roomCode, router, playSound]);
 
-    // Re-fetch helper (if needed elsewhere)
-    const fetchPlayers = async (roomId?: string) => {
-        if (!roomId) return;
-        const { data } = await supabase
-            .from('duel_players')
-            .select('*')
-            .eq('room_id', roomId)
-            .order('created_at', { ascending: true });
-        if (data) setPlayers(data);
-    };
-
-    // Handle Game Startup
     useEffect(() => {
         if (gameState === 'STARTING') {
             const int = setInterval(() => {
@@ -194,14 +168,13 @@ export default function DuelRoomPage() {
             timerRef.current = int;
             return () => clearInterval(int);
         }
-    }, [gameState]);
+    }, [gameState, playSound]);
 
     const generateQuestion = () => {
         const randomIndex = Math.floor(Math.random() * VOCABULARY_DATA.length);
         const question = VOCABULARY_DATA[randomIndex];
         setCurrentQuestion(question);
 
-        // Generate options (1 correct + 3 random)
         const others = VOCABULARY_DATA
             .filter(w => w.id !== question.id)
             .sort(() => 0.5 - Math.random())
@@ -211,20 +184,30 @@ export default function DuelRoomPage() {
         setOptions([question.indonesian, ...others].sort(() => 0.5 - Math.random()));
     };
 
-    const scoreRef = useRef(0);
+    useEffect(() => {
+        if (isDivineEyeActive > 0 && currentQuestion && gameState === 'PLAYING' && !isFrozen) {
+            const timer = setTimeout(() => {
+                handleAnswer(currentQuestion.indonesian);
+                setIsDivineEyeActive(prev => prev - 1);
+            }, 600);
+            return () => clearTimeout(timer);
+        }
+    }, [isDivineEyeActive, currentQuestion, gameState, isFrozen]);
 
     const handleAnswer = (answer: string) => {
+        if (isFrozen || !currentQuestion) return;
+
         if (answer === currentQuestion.indonesian) {
             playSound('CORRECT');
-            const newScore = scoreRef.current + 10;
+            const pointsToAdd = activeBooster > 0 ? 20 : 10;
+            if (activeBooster > 0) setActiveBooster(prev => prev - 1);
+
+            const newScore = scoreRef.current + pointsToAdd;
             scoreRef.current = newScore;
             setLocalScore(newScore);
             setCorrectCount(prev => prev + 1);
 
-            // Update local state for immediate feedback
             setPlayers(prev => prev.map(p => p.id === currentPlayerId ? { ...p, score: newScore } : p));
-
-            // Broadcast score to others
             channelRef.current.send({
                 type: 'broadcast',
                 event: 'score_update',
@@ -234,23 +217,48 @@ export default function DuelRoomPage() {
             generateQuestion();
         } else {
             playSound('WRONG');
-            // Shake effect or penalty? Let's just go next to keep speed
             generateQuestion();
         }
     };
 
+    const handleUsePowerUp = async (type: 'stasis' | 'divine' | 'overflow') => {
+        if (gameState !== 'PLAYING' || isFrozen) return;
+
+        try {
+            if (type === 'stasis') {
+                const success = await useCrystal('timefreeze');
+                if (success) {
+                    playSound('SUCCESS');
+                    channelRef.current.send({
+                        type: 'broadcast',
+                        event: 'power_up_used',
+                        payload: { type: 'freeze', senderName: name, senderId: currentPlayerId }
+                    });
+                }
+            } else if (type === 'divine') {
+                const success = await useCrystal('autocorrect');
+                if (success) {
+                    playSound('SUCCESS');
+                    setIsDivineEyeActive(prev => prev + 3);
+                }
+            } else if (type === 'overflow') {
+                const success = await useCrystal('booster');
+                if (success) {
+                    playSound('SUCCESS');
+                    setActiveBooster(prev => prev + 5);
+                }
+            }
+        } catch (err) {
+            console.error('Power-up error:', err);
+        }
+    };
+
     const handleGameEnd = async () => {
-        console.log('Game Over! Syncing final score:', scoreRef.current);
         setLoading(true);
         if (currentPlayerId) {
             try {
-                // Force final update to DB with the absolute latest score from ref
                 await updatePlayerScore(currentPlayerId, scoreRef.current);
-
-                // Wait a bit for other players to sync
                 await new Promise(r => setTimeout(r, 1500));
-
-                // Final refetch to ensure we have the absolute truth for results
                 const { data } = await supabase
                     .from('duel_players')
                     .select('*')
@@ -258,7 +266,6 @@ export default function DuelRoomPage() {
                     .order('score', { ascending: false });
                 if (data) {
                     setPlayers(data);
-                    // Winner sound logic
                     const winner = data[0];
                     if (winner && winner.id === currentPlayerId) {
                         playSound('SPECIAL_WIN');
@@ -274,7 +281,6 @@ export default function DuelRoomPage() {
 
         setGameState('FINISHED');
         setLoading(false);
-
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         addGems(50);
     };
@@ -300,234 +306,343 @@ export default function DuelRoomPage() {
     const isHost = players.length > 0 && players[0].id === currentPlayerId;
     const allReady = players.length > 1 && players.every(p => p.is_ready);
 
-    return (
-        <PageLayout activeTab="home">
-            <div className="max-w-6xl mx-auto py-8 md:py-12 px-4">
+    // --- PHASE: PLAYING (Full Screen Header) ---
+    if (gameState === 'PLAYING') {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-[#06060a] flex flex-col overflow-hidden relative selection:bg-primary/30">
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute -top-1/4 -left-1/4 size-[100%] bg-primary/5 blur-[120px] rounded-full animate-pulse" />
+                    <div className="absolute -bottom-1/4 -right-1/4 size-[100%] bg-purple-500/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                </div>
 
-                {/* Lobby / Waiting Phase */}
-                {gameState === 'WAITING' && (
-                    <div className="space-y-8">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b-2 border-slate-100 dark:border-slate-800 pb-8">
-                            <div className="text-center md:text-left">
-                                <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
-                                    Sirkel Ready?
-                                </h1>
-                                <p className="text-slate-500 font-bold">Waiting for everyone to lock in.</p>
+                <header className="relative z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50 shadow-sm">
+                    <div className="max-w-5xl mx-auto px-4 h-16 md:h-20 flex items-center gap-4">
+                        <Button variant="ghost" className="size-10 md:size-12 rounded-xl" onClick={() => router.push('/duel')}>
+                            <Icon name="close" size={20} />
+                        </Button>
+
+                        <div className="flex-1 flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                <span className="flex items-center gap-1.5"><Icon name="timer" size={12} /> Time Remaining</span>
+                                <span className={`${gameTimer < 10 ? 'text-error animate-pulse' : 'text-slate-600 dark:text-slate-300'} font-black text-xs`}>{gameTimer}s</span>
                             </div>
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="bg-slate-900 text-white px-8 py-4 rounded-3xl flex items-center gap-4 shadow-xl">
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">Room Code</span>
-                                    <span className="text-4xl font-black tracking-[0.2em]">{roomCode}</span>
-                                </div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Share this with the sirkel</p>
+                            <div className="h-2.5 sm:h-3.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner relative">
+                                <motion.div
+                                    className={`h-full bg-gradient-to-r ${gameTimer < 10 ? 'from-error to-error-light' : 'from-primary to-primary-light'}`}
+                                    initial={{ width: '100%' }}
+                                    animate={{ width: `${(gameTimer / 60) * 100}%` }}
+                                    transition={{ duration: 1, ease: 'linear' }}
+                                />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {/* Players List */}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700/50 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl flex items-center gap-3 shadow-xl">
+                            <Icon name="emoji_events" size={20} className="text-primary" filled />
+                            <div className="flex flex-col items-start leading-none">
+                                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Score</span>
+                                <span className="font-black text-base sm:text-2xl text-slate-900 dark:text-white">{localScore}</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-6xl mx-auto w-full relative z-10">
+                    {/* Floating Leaderboard (Desktop) */}
+                    <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col gap-3 w-64 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-5 rounded-[2.5rem] border border-white/20 shadow-2xl">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 italic mb-2">Live Rankings</h3>
+                        <div className="space-y-2">
+                            {[...players].sort((a, b) => b.score - a.score).map((p, idx) => (
+                                <motion.div
+                                    key={p.id}
+                                    layout
+                                    className={`p-3.5 rounded-2xl border-2 flex items-center justify-between transition-all ${p.id === currentPlayerId ? 'bg-primary border-primary shadow-lg shadow-primary/20 scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 shadow-sm'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-[10px] font-black ${p.id === currentPlayerId ? 'text-white/60' : 'text-slate-400'}`}>#{idx + 1}</span>
+                                        <span className={`text-xs font-bold truncate max-w-[100px] ${p.id === currentPlayerId ? 'text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                                            {sanitizeDisplayName(p.name, p.id)}
+                                        </span>
+                                    </div>
+                                    <span className={`text-sm font-black ${p.id === currentPlayerId ? 'text-white' : 'text-primary'}`}>{p.score}</span>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Power-ups Sidebar / Bottom Bar */}
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:right-12 lg:top-1/2 lg:-translate-y-1/2 z-40 w-[95%] max-w-[400px] lg:w-72 px-2 lg:px-0">
+                        <div className="flex flex-row lg:flex-col gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl p-2 sm:p-4 rounded-[2rem] sm:rounded-[3rem] border border-white/30 shadow-2xl">
+                            <h3 className="hidden lg:block text-xs font-black text-slate-400 uppercase tracking-widest px-3 italic mb-3">Crystals Arsenal</h3>
+                            <PowerUpButton
+                                icon="ac_unit"
+                                label="Stasis"
+                                count={inventory.timefreeze || 0}
+                                color="blue"
+                                onClick={() => handleUsePowerUp('stasis')}
+                                disabled={isFrozen || !inventory.timefreeze}
+                            />
+                            <PowerUpButton
+                                icon="visibility"
+                                label="Divine"
+                                count={inventory.autocorrect || 0}
+                                color="purple"
+                                onClick={() => handleUsePowerUp('divine')}
+                                disabled={isFrozen || !inventory.autocorrect || isDivineEyeActive > 0}
+                            />
+                            <PowerUpButton
+                                icon="bolt"
+                                label="Double"
+                                count={inventory.booster || 0}
+                                color="yellow"
+                                onClick={() => handleUsePowerUp('overflow')}
+                                disabled={isFrozen || !inventory.booster || activeBooster > 0}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Arena Area */}
+                    <div className="w-full max-w-2xl relative">
+                        <AnimatePresence>
+                            {isFrozen && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 z-50 bg-blue-500/20 backdrop-blur-md rounded-[3rem] sm:rounded-[4rem] flex flex-col items-center justify-center text-center p-8 border-4 border-blue-400 shadow-xl"
+                                >
+                                    <Icon name="ac_unit" size={64} className="text-white animate-pulse mb-6" />
+                                    <h2 className="text-5xl sm:text-7xl font-black text-white italic drop-shadow-lg uppercase">FROZEN!</h2>
+                                    <p className="text-sm sm:text-lg font-black text-blue-100 uppercase mt-4 tracking-widest opacity-80">Someone used Stasis on you</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="flex flex-col items-center gap-10 sm:gap-14">
+                            <div className="flex gap-4">
+                                {activeBooster > 0 && (
+                                    <Badge variant="streak" icon="bolt" className="px-6 py-2.5 shadow-xl bg-yellow-500 text-white animate-pulse border-none">
+                                        SCORE 2X ({activeBooster})
+                                    </Badge>
+                                )}
+                                {isDivineEyeActive > 0 && (
+                                    <Badge variant="xp" icon="visibility" className="px-6 py-2.5 shadow-xl bg-purple-600 text-white animate-bounce border-none">
+                                        DIVINE EYE ({isDivineEyeActive})
+                                    </Badge>
+                                )}
+                            </div>
+
+                            <div className="w-full text-center space-y-4">
+                                <span className="text-xs sm:text-sm font-black text-primary uppercase tracking-[0.4em]">Translate This</span>
+                                <motion.h2
+                                    key={currentQuestion?.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-tight"
+                                >
+                                    <NoTranslate>{currentQuestion?.english}</NoTranslate>
+                                </motion.h2>
+                                <div className="w-32 h-2 bg-primary/10 rounded-full mx-auto" />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl">
+                                {options.map((opt, i) => (
+                                    <Button
+                                        key={i}
+                                        variant="secondary"
+                                        className="h-16 sm:h-26 md:h-36 text-lg sm:text-2xl md:text-3xl font-black rounded-2xl sm:rounded-[3rem] bg-white dark:bg-slate-900 hover:bg-primary hover:text-white hover:scale-[1.03] active:scale-95 border-b-[4px] sm:border-b-[12px] border-slate-200 dark:border-slate-800 active:border-b-0 transition-all uppercase shadow-2xl"
+                                        onClick={() => handleAnswer(opt)}
+                                        disabled={isFrozen}
+                                    >
+                                        <NoTranslate>{opt}</NoTranslate>
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    // --- MAIN RETURN (WAITING, STARTING, FINISHED) ---
+    return (
+        <PageLayout activeTab="home">
+            <div className="max-w-6xl mx-auto px-4 relative z-10">
+                {/* LOBBY PHASE */}
+                {gameState === 'WAITING' && (
+                    <div className="space-y-12">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-10 border-b-2 border-slate-100 dark:border-slate-800 pb-12">
+                            <div className="text-center md:text-left space-y-2">
+                                <h1 className="text-4xl sm:text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
+                                    Sirkel <span className="text-primary italic">Ready?</span>
+                                </h1>
+                                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg sm:text-xl">Waiting for everyone to lock in.</p>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-3 w-full md:w-auto">
+                                <div className="bg-slate-900 dark:bg-slate-800 text-white px-8 sm:px-12 py-5 sm:py-7 rounded-[2.5rem] flex items-center gap-6 shadow-2xl border-4 border-white/5">
+                                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400">Code</span>
+                                    <span className="text-4xl sm:text-6xl font-black tracking-[0.3em] font-mono text-primary">{roomCode}</span>
+                                </div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Share with your homies</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 {players.map((p, idx) => (
-                                    <Card key={p.id} className={`p-6 flex items-center justify-between border-2 ${p.is_ready ? 'border-success/30 bg-success/5' : 'border-slate-100 dark:border-slate-800'}`}>
-                                        <div className="flex items-center gap-4">
-                                            <div className="size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black">
+                                    <Card key={p.id} className={`p-6 sm:p-10 flex items-center justify-between border-4 ${p.is_ready ? 'border-success/30 bg-success/5' : 'border-slate-100 dark:border-slate-800'}`}>
+                                        <div className="flex items-center gap-6">
+                                            <div className="size-16 rounded-[1.5rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-2xl text-slate-400">
                                                 {idx + 1}
                                             </div>
-                                            <div>
-                                                <h4 className="font-black text-slate-900 dark:text-white truncate max-w-[120px]">
-                                                    {sanitizeDisplayName(p.name, p.id)} {p.id === currentPlayerId && '(You)'}
+                                            <div className="space-y-1">
+                                                <h4 className="font-black text-slate-900 dark:text-white text-xl uppercase italic">
+                                                    {sanitizeDisplayName(p.name, p.id)}
                                                 </h4>
-                                                <p className="text-xs font-bold text-slate-500">{p.is_ready ? 'Ready to Slay' : 'Literally Unready'}</p>
+                                                <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">
+                                                    {p.is_ready ? 'Ready to Slay' : 'Waiting...'}
+                                                </p>
                                             </div>
                                         </div>
-                                        {p.is_ready ? (
-                                            <div className="size-8 bg-success text-white rounded-full flex items-center justify-center">
-                                                <Icon name="check" size={20} />
-                                            </div>
-                                        ) : (
-                                            <div className="size-8 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center">
-                                                <Icon name="hourglass_empty" size={20} className="animate-pulse" />
-                                            </div>
-                                        )}
+                                        <div className={`size-12 rounded-full flex items-center justify-center shrink-0 ${p.is_ready ? 'bg-success text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-300'}`}>
+                                            <Icon name={p.is_ready ? 'check' : 'hourglass_empty'} size={24} className={p.is_ready ? '' : 'animate-pulse'} />
+                                        </div>
                                     </Card>
                                 ))}
-
-                                {/* Slot placeholders */}
                                 {[...Array(Math.max(0, 5 - players.length))].map((_, i) => (
-                                    <div key={i} className="p-6 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl flex items-center justify-center text-slate-300 dark:text-slate-800 italic font-bold">
+                                    <div key={i} className="p-10 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[2.5rem] flex items-center justify-center text-slate-300 dark:text-slate-800 font-black text-xs uppercase tracking-widest italic">
                                         Empty Slot
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Lobby Controls */}
-                            <div className="space-y-4">
+                            <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border-2 border-slate-100 dark:border-slate-800 shadow-2xl h-fit space-y-6">
+                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest italic">Lobby Controls</h3>
                                 <Button
                                     variant={players.find(p => p.id === currentPlayerId)?.is_ready ? 'secondary' : 'primary'}
                                     fullWidth
-                                    className="py-6 h-auto"
+                                    className="py-6 h-auto text-xl rounded-[2rem]"
                                     onClick={toggleReady}
                                 >
-                                    {players.find(p => p.id === currentPlayerId)?.is_ready ? 'I\'m Not Ready! (Wait)' : 'LFG! READY'}
+                                    {players.find(p => p.id === currentPlayerId)?.is_ready ? 'I\'m Not Ready' : 'READY!'}
                                 </Button>
-
                                 {isHost && (
                                     <Button
                                         variant="success"
                                         fullWidth
-                                        className="py-6 h-auto"
+                                        className="py-8 h-auto rounded-[2rem] shadow-2xl"
                                         disabled={players.length < 2 || !allReady}
                                         onClick={startRoomGame}
                                     >
                                         <div className="flex flex-col items-center">
-                                            <span className="text-xl">START GAME</span>
-                                            <span className="text-[10px] opacity-70">Requires 2+ Players Ready</span>
+                                            <span className="text-2xl font-black italic">START DUEL</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">2+ Players Ready</span>
                                         </div>
                                     </Button>
                                 )}
-
-                                <Card className="p-6 bg-amber-50 dark:bg-amber-950/20 border-amber-200/50">
-                                    <h5 className="text-amber-600 dark:text-amber-400 font-black text-xs uppercase mb-2">Rules of Arena</h5>
-                                    <ul className="text-xs text-amber-500 font-bold space-y-2">
-                                        <li>• 1 Minute of pure chaos</li>
-                                        <li>• +10 XP per correct answer</li>
-                                        <li>• Top score takes the crown</li>
-                                    </ul>
-                                </Card>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Starting Countdown */}
+                {/* STARTING PHASE */}
                 {gameState === 'STARTING' && (
                     <div className="h-96 flex flex-col items-center justify-center text-center">
                         <motion.h1
                             key={countdown}
-                            initial={{ scale: 2, opacity: 0 }}
+                            initial={{ scale: 3, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="text-9xl font-black text-primary italic"
+                            className="text-[15rem] font-black text-primary italic leading-none"
                         >
                             {countdown}
                         </motion.h1>
-                        <p className="text-2xl font-black text-slate-400 uppercase tracking-widest mt-8">Prepare to Gacor!</p>
+                        <p className="text-3xl font-black text-slate-400 uppercase tracking-[1em] mt-8">Get Ready!</p>
                     </div>
                 )}
 
-                {/* Playing Phase */}
-                {gameState === 'PLAYING' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-                        {/* Live Leaderboard Sidebar */}
-                        <div className="lg:col-span-3 space-y-4 sticky top-24">
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase italic mb-4">Live Standings</h3>
-                            {players.sort((a, b) => b.score - a.score).map((p, idx) => (
-                                <Card key={p.id} className={`p-4 flex items-center justify-between border-2 transition-all ${p.id === currentPlayerId ? 'border-primary ring-4 ring-primary/10' : 'border-transparent'}`}>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-black text-slate-400">#{idx + 1}</span>
-                                        <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
-                                            {sanitizeDisplayName(p.name, p.id)}
-                                        </span>
-                                    </div>
-                                    <span className="font-black text-primary">{p.score}</span>
-                                </Card>
-                            ))}
-                        </div>
-
-                        {/* Game Arena */}
-                        <div className="lg:col-span-9 space-y-8">
-                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-4">
-                                    <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                                        <Icon name="timer" size={32} className="text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Time Left</p>
-                                        <p className={`text-3xl font-black ${gameTimer < 10 ? 'text-error animate-pulse' : 'text-slate-900 dark:text-white'}`}>{gameTimer}s</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Score</p>
-                                    <Badge variant="xp" className="text-2xl px-6 py-2">
-                                        {localScore}
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            <Card className="p-8 md:p-12 text-center space-y-12">
-                                <div className="space-y-4">
-                                    <span className="text-xs font-black text-primary uppercase tracking-[0.3em]">Translate This</span>
-                                    <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic underline decoration-primary/20 decoration-8 underline-offset-8">
-                                        <NoTranslate>{currentQuestion?.english}</NoTranslate>
-                                    </h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {options.map((opt, i) => (
-                                        <Button
-                                            key={i}
-                                            variant="secondary"
-                                            className="h-24 md:h-32 text-xl md:text-2xl font-black rounded-3xl hover:bg-primary hover:text-white hover:scale-[1.02] border-b-8 border-slate-200 dark:border-slate-800 active:border-b-0 transition-all uppercase"
-                                            onClick={() => handleAnswer(opt)}
-                                        >
-                                            <NoTranslate>{opt}</NoTranslate>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
-                )}
-
-                {/* Results Phase */}
+                {/* RESULTS PHASE */}
                 {gameState === 'FINISHED' && (
-                    <div className="max-w-2xl mx-auto space-y-12 text-center py-12">
-                        <div className="space-y-4">
-                            <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
+                    <div className="max-w-4xl mx-auto space-y-8 sm:space-y-16 pb-10 sm:pb-20 text-center">
+                        <div className="space-y-4 sm:space-y-6">
+                            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-none">
                                 Sirkel <span className="text-primary">Conquered!</span>
                             </h1>
-                            <p className="text-slate-500 font-bold text-xl">The dust has settled. Who is the most gacor?</p>
+                            <p className="text-slate-500 dark:text-slate-400 font-bold text-sm sm:text-lg md:text-xl px-4">The dust has settled. Who is the most gacor?</p>
                         </div>
 
-                        <div className="space-y-4">
-                            {players.sort((a, b) => b.score - a.score).map((p, idx) => (
+                        <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
+                            {[...players].sort((a, b) => b.score - a.score).map((p, idx) => (
                                 <motion.div
                                     key={p.id}
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     transition={{ delay: idx * 0.1 }}
                                 >
-                                    <Card className={`p-8 flex items-center justify-between border-4 ${idx === 0 ? 'border-yellow-400 bg-yellow-400/5' : 'border-slate-100 dark:border-slate-800'}`}>
-                                        <div className="flex items-center gap-6">
-                                            <div className={`size-16 rounded-2xl flex items-center justify-center text-2xl font-black ${idx === 0 ? 'bg-yellow-400 text-white' :
+                                    <Card className={`p-4 sm:p-8 md:p-10 flex items-center justify-between border-2 sm:border-4 ${idx === 0 ? 'border-yellow-400 bg-yellow-400/5 shadow-2xl' :
+                                        p.id === currentPlayerId ? 'border-primary/40 bg-primary/5' : 'border-slate-100 dark:border-slate-800'}`}>
+                                        <div className="flex items-center gap-4 sm:gap-8">
+                                            <div className={`size-12 sm:size-14 md:size-16 rounded-[1.2rem] sm:rounded-2xl flex items-center justify-center text-xl sm:text-xl md:text-2xl font-black ${idx === 0 ? 'bg-yellow-400 text-white' :
                                                 idx === 1 ? 'bg-slate-300 text-slate-600' :
                                                     idx === 2 ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                                                 }`}>
                                                 {idx + 1}
                                             </div>
                                             <div className="text-left">
-                                                <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                                                <h4 className="text-xl sm:text-2xl md:text-2xl font-black text-slate-900 dark:text-white uppercase italic truncate max-w-[120px] sm:max-w-none">
                                                     {sanitizeDisplayName(p.name, p.id)}
                                                 </h4>
-                                                {idx === 0 && <span className="text-[10px] font-black uppercase text-yellow-500">🏆 The Actual Sepuh</span>}
+                                                {idx === 0 && <span className="text-[10px] sm:text-xs font-black uppercase text-yellow-500">🏆 The Actual Sepuh</span>}
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{p.score}</p>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Final Score</p>
+                                            <p className="text-3xl sm:text-4xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{p.score}</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Final Score</p>
                                         </div>
                                     </Card>
                                 </motion.div>
                             ))}
                         </div>
 
-                        <div className="pt-8">
-                            <Button variant="primary" fullWidth className="py-6 h-auto text-xl rounded-3xl shadow-2xl" onClick={() => router.push('/duel')}>
+                        <div className="flex gap-4 justify-center">
+                            <Button variant="primary" className="py-4 sm:py-6 px-10 sm:px-16 h-auto text-sm sm:text-xl rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl" onClick={() => router.push('/duel')}>
                                 Back to Arena Lobby
                             </Button>
                         </div>
                     </div>
                 )}
-
             </div>
         </PageLayout>
     );
 }
+
+const PowerUpButton = ({ icon, label, count, color, onClick, disabled }: any) => {
+    const colorClasses: any = {
+        blue: 'from-blue-500/10 to-blue-500/20 border-blue-500/30 text-blue-600 hover:from-blue-500 hover:to-blue-600 hover:text-white shadow-blue-500/10 hover:shadow-blue-500/40',
+        purple: 'from-purple-500/10 to-purple-500/20 border-purple-500/30 text-purple-600 hover:from-purple-500 hover:to-purple-600 hover:text-white shadow-purple-500/10 hover:shadow-purple-500/40',
+        yellow: 'from-yellow-500/10 to-yellow-500/20 border-yellow-500/30 text-yellow-600 hover:from-yellow-500 hover:to-yellow-600 hover:text-white shadow-yellow-500/10 hover:shadow-yellow-500/40'
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled || count <= 0}
+            className={`flex items-center justify-between p-1.5 sm:p-4 rounded-xl sm:rounded-[2rem] border-2 transition-all group disabled:opacity-40 disabled:grayscale bg-gradient-to-br shadow-xl flex-1 lg:flex-none min-w-[70px] lg:min-w-[240px] ${colorClasses[color]}`}
+        >
+            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
+                <div className="size-6 sm:size-12 rounded-lg sm:rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                    <Icon name={icon} size={12} mdSize={28} filled className="group-hover:rotate-12 transition-transform" />
+                </div>
+                <div className="text-left">
+                    <p className="text-[5px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 leading-tight">Use {label}</p>
+                    <p className="font-black text-[8px] sm:text-base leading-tight whitespace-nowrap">
+                        {count} <span className="opacity-60 font-bold uppercase text-[5px] sm:text-[10px]">Pcs</span>
+                    </p>
+                </div>
+            </div>
+            <div className="hidden lg:flex size-8 rounded-full bg-black/5 items-center justify-center group-hover:translate-x-1 transition-transform shrink-0">
+                <Icon name="chevron_right" size={16} />
+            </div>
+        </button>
+    );
+};

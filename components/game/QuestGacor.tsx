@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/db/supabase';
 import { useSession } from 'next-auth/react';
 import { useSound } from '@/hooks/use-sound';
+import { useAlertStore } from '@/store/alert-store';
 
 interface Quest {
     id: string;
@@ -23,6 +24,7 @@ export function QuestGacor() {
     const { addGems } = useUserStore();
     const { data: session } = useSession();
     const { playSound } = useSound();
+    const { showAlert } = useAlertStore();
     const [quests, setQuests] = useState<Quest[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -73,7 +75,11 @@ export function QuestGacor() {
                 setQuests(prev => prev.map(q => q.id === quest.id ? { ...q, claimed: true } : q));
             } catch (err) {
                 console.error('Error claiming quest:', err);
-                alert('Gagal ambil reward sirkel. Coba lagi nanti!');
+                showAlert({
+                    title: 'Waduh Sirkel...',
+                    message: 'Gagal ambil reward. Coba cek sinyal atau login ulang!',
+                    type: 'error'
+                });
             }
         }
     };

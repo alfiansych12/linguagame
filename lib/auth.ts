@@ -27,24 +27,19 @@ export const authOptions: NextAuthOptions = {
         async signIn({ user, account }) {
             if (!user.email) return false;
 
-            // Ensure user exists in Supabase 'users' table
-            const { data: existingUser } = await supabase
-                .from('users')
-                .select('id')
-                .eq('email', user.email)
-                .single();
+            // Create or Update user to keep image and name in sync
+            const { error: upsertError } = await supabase.from('users').upsert({
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                last_login_at: new Date().toISOString()
+            }, {
+                onConflict: 'email'
+            });
 
-            if (!existingUser) {
-                // Create new explorer!
-                await supabase.from('users').insert({
-                    id: user.id || crypto.randomUUID(),
-                    email: user.email,
-                    name: user.name,
-                    image: user.image,
-                    total_xp: 0,
-                    current_streak: 0,
-                    created_at: new Date().toISOString()
-                });
+            if (upsertError) {
+                console.error('Error upserting user:', upsertError);
             }
             return true;
         },

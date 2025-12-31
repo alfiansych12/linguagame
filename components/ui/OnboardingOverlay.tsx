@@ -34,7 +34,7 @@ const Typewriter = ({ text }: { text: string }) => {
 
 export const OnboardingOverlay: React.FC = () => {
     const { data: session, status } = useSession();
-    const { hasSeenTutorial, setHasSeenTutorial } = useUserStore();
+    const { hasSeenTutorial, setHasSeenTutorial, isLoading } = useUserStore();
     const { playSound } = useSound();
     const [currentStep, setCurrentStep] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
@@ -42,60 +42,60 @@ export const OnboardingOverlay: React.FC = () => {
 
     const steps: Step[] = [
         {
-            title: "Literally Welcome!",
-            text: "Gue Mentor sirkel lo. Siap bikin lo jadi sepuh bahasa Inggris yang paling gacor!",
+            title: "Selamat Datang!",
+            text: "Saya adalah mentor kamu. Siap membantumu menjadi ahli bahasa Inggris yang paling jago!",
             position: 'center',
             image: '/assets/mascot_welcome.png'
         },
         {
             targetId: 'nav-home',
-            title: "Misi Utama",
-            text: "Di sini tempat lo battle kata-kata. Slay Phase 1 sampe 3 buat tamatin Journey lo!",
+            title: "Jalur Pembelajaran",
+            text: "Di sini tempat kamu belajar kata-kata baru. Selesaikan Fase 1 sampai 3 untuk menyelesaikan perjalanan belajar kamu!",
             position: 'bottom',
             image: '/assets/mascot_misi.png'
         },
         {
             targetId: 'nav-duel',
             title: "Arena Duel",
-            text: "Bosen belajar sendiri? Mabar or duel adu mekanik lawan sirkel lo di sini!",
+            text: "Bosan belajar sendiri? Ajak teman atau lawan teman kamu dalam duel kosakata di arena ini!",
             position: 'bottom',
             image: '/assets/mascot_arena.png'
         },
         {
             targetId: 'nav-forge',
-            title: "The Forge",
-            text: "Belanja Crystal & item rare di sini. Pake Booster biar progress lo makin melesat!",
+            title: "Toko Kristal",
+            text: "Belanja Kristal dan item langka di sini. Gunakan Booster supaya progres kamu makin cepat!",
             position: 'bottom',
             image: '/assets/mascot_forge.png'
         },
         {
             targetId: 'nav-leaderboard',
-            title: "Sirkel Board",
-            text: "Pantau rival lo. Jangan sampe kegeser dari tahta paling gacor!",
+            title: "Papan Peringkat",
+            text: "Pantau saingan kamu. Jangan sampai tergeser dari posisi teratas!",
             position: 'bottom',
             image: '/assets/mascot_board.png'
         },
         {
             targetId: 'nav-profile',
-            title: "Branding lo",
-            text: "Urus profile paling kece & baca Handbook buat info spefik tentang sirkel ini.",
+            title: "Profil Kamu",
+            text: "Atur profil kamu dan baca Panduan untuk informasi spesifik tentang platform ini.",
             position: 'bottom',
             image: '/assets/mascot_branding.png'
         },
         {
-            title: "Gas Sekarang!",
-            text: "Enjoy the slay journey, literally. Let's get that XP!",
+            title: "Ayo Mulai!",
+            text: "Selamat belajar dan semoga berhasil. Mari kita kumpulkan XP sebanyak-banyaknya!",
             position: 'center',
             image: '/assets/mascot_welcome.png'
         }
     ];
 
     useEffect(() => {
-        if (!hasSeenTutorial && status === 'authenticated') {
+        if (!isLoading && !hasSeenTutorial && status === 'authenticated') {
             const timer = setTimeout(() => setIsVisible(true), 1500);
             return () => clearTimeout(timer);
         }
-    }, [hasSeenTutorial, status]);
+    }, [hasSeenTutorial, status, isLoading]);
 
     useEffect(() => {
         const targetId = steps[currentStep].targetId;
@@ -191,10 +191,20 @@ export const OnboardingOverlay: React.FC = () => {
                                     className="py-3 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-xl"
                                     onClick={handleNext}
                                 >
-                                    {currentStep === steps.length - 1 ? 'Slay! 🔥' : 'Lanjut Gan'}
+                                    {currentStep === steps.length - 1 ? 'Mulai Belajar! 🔥' : 'Lanjut'}
                                 </Button>
+                                <button
+                                    onClick={() => {
+                                        setIsVisible(false);
+                                        setHasSeenTutorial(true);
+                                        playSound('CLICK');
+                                    }}
+                                    className="text-[8px] md:text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors underline"
+                                >
+                                    Lewati Tutorial
+                                </button>
                                 <p className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] animate-pulse">
-                                    Click anywhere to continue
+                                    Klik di mana saja untuk lanjut
                                 </p>
                             </div>
                         </div>

@@ -61,13 +61,13 @@ export default function Home() {
     <PageLayout activeTab="home" user={userStats}>
       <div className="flex flex-col items-center justify-center mb-8 md:mb-12 text-center space-y-3 md:space-y-4 px-4 mt-6 md:mt-8 lg:mt-12">
         <div className="px-3 md:px-4 py-1 md:py-1.5 rounded-full bg-primary/10 text-primary text-[8px] md:text-[10px] font-black uppercase tracking-widest animate-bounce-gentle">
-          {isAuthenticated ? 'Target Gacor: +50 XP' : 'Join the Sirkel & Slay!'}
+          {isAuthenticated ? 'Target Hari Ini: +50 XP' : 'Gabung dan Mulai Belajar!'}
         </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter max-w-2xl italic uppercase px-2">
+        <h2 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter max-w-2xl italic uppercase px-2">
           {isAuthenticated ? (
-            <>Ready to slay, <span className="text-primary">{userStats.name.split(' ')[0]}</span>? ✨</>
+            <>Siap belajar, <span className="text-primary">{userStats.name.split(' ')[0]}</span>? ✨</>
           ) : (
-            <>Master English, <span className="text-primary">Literally!</span> 💅</>
+            <>Kuasai Bahasa Inggris, <span className="text-primary">Sekarang Juga!</span> 💅</>
           )}
         </h2>
 
@@ -78,16 +78,16 @@ export default function Home() {
             className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-2 md:py-3 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'VOCAB' ? 'bg-white dark:bg-slate-800 text-primary shadow-lg scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <Icon name="translate" size={16} mdSize={18} />
-            <span className="hidden sm:inline">Vocab Path</span>
-            <span className="sm:hidden">Vocab</span>
+            <span className="hidden sm:inline">Jalur Kosakata</span>
+            <span className="sm:hidden">Kosakata</span>
           </button>
           <button
             onClick={() => { playSound('CLICK'); setMode('GRAMMAR'); }}
             className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-2 md:py-3 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'GRAMMAR' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-lg scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <Icon name="history_edu" size={16} mdSize={18} />
-            <span className="hidden sm:inline">Grammar Path</span>
-            <span className="sm:hidden">Grammar</span>
+            <span className="hidden sm:inline">Jalur Tata Bahasa</span>
+            <span className="sm:hidden">Tata Bahasa</span>
           </button>
         </div>
       </div>

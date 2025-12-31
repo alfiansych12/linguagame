@@ -34,193 +34,43 @@
 ### ✅ COMPLETED Stages
 
 #### Stage A: Memorize (Flashcard)
-**File**: `components/game/StageMemorize.tsx`
-**Features**:
-- 60-second countdown timer
-- Flashcard navigation (Next/Previous)
-- Pause/Resume functionality
-- Auto-advance on timer expiry
-- "I'm Ready" skip button
-- Smooth card flip animations (Framer Motion)
-- Progress indicator
-- Responsive design
+**Status**: ✅ COMPLETED
 
 #### Stage B: Jumbled Word (Letter Scramble)
-**File**: `components/game/StageJumbled.tsx`
+**Status**: ✅ COMPLETED
+
+#### Stage C: Connecting Lines (Match Pairs)
+**Status**: ✅ COMPLETED (Interactive UI + Progress Tracking)
+
+#### Stage D: Typing (Recall)
+**Status**: ✅ COMPLETED (Full validation + Feedback)
+
+#### Stage E: Speed Blitz (True/False)
+**Status**: ✅ COMPLETED (Timed action + Combo Multiplier)
+
+#### ⚔️ Duel Arena (Multiplayer)
+**File**: `app/duel/[roomCode]/page.tsx`
 **Features**:
-- Letter scrambling algorithm
-- Interactive letter selection
-- Shake animation on wrong answer
-- Green success feedback on correct
-- Auto-progression to next word
-- Score tracking (+10 per correct answer)
-- Reset functionality
-- Progress bar
+- Real-time rooms via Supabase Broadcast
+- Power-up system (Stasis, Divine Eye, Overflow)
+- Live Leaderboard & Score syncing
+- Immersive Full-screen UI
+- Room code sharing system
+- Result summary with Gem rewards
 
 ---
 
-## 🚧 TODO: Remaining Game Stages
-
-### Stage C: Connecting Lines (Match Pairs)
-**File**: `components/game/StageConnect.tsx` (NOT YET CREATED)
-**Requirements**:
-- Two columns: English (left) | Indonesian (right)
-- Drag-and-drop or click-to-match interaction
-- SVG line drawing between pairs
-- Green line on correct match (lock)
-- Red line + shake on wrong match
-- Track matched pairs
-- Complete when all matched
-
-**Implementation Plan**:
-```typescript
-// Use react-dnd or custom drag logic
-// SVG overlay for drawing lines
-// State: matchedPairs, selectedLeft, selectedRight
-```
-
-### Stage D: Typing (Recall)
-**File**: `components/game/StageTyping.tsx` (NOT YET CREATED)
-**Requirements**:
-- Show Indonesian word
-- Input field for English translation
-- Case-insensitive validation
-- Real-time feedback (green/red border)
-- Allow corrections
-- Score based on accuracy
-
-**Implementation Plan**:
-```typescript
-// Controlled input with onChange validation
-// Fuzzy matching or exact match
-// Enter key to submit
-```
-
-### Stage E: Speed Blitz (True/False)
-**File**: `components/game/StageSpeedBlitz.tsx` (NOT YET CREATED)
-**Requirements**:
-- Show word pair (English + Indonesian)
-- Pair is CORRECT or INCORRECT
-- 2-second time limit per question
-- Large TRUE/FALSE buttons
-- Countdown urgency animation
-- Combo score multiplier
-- Lives system (3 lives, lose 1 on wrong)
-
-**Implementation Plan**:
-```typescript
-// Generate fake pairs for "false" options
-// 2-second countdown per question
-// Track combo streak
-```
-
----
-
-## 📦 Next Immediate Steps
-
-### 1. Database Setup (DO THIS FIRST!)
-
-Follow guide in `docs/SUPABASE_SETUP.md`:
-
-```bash
-# After setting up Supabase and updating .env.local:
-
-# Generate Prisma Client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate dev --name init
-
-# Seed database
-npx prisma db seed
-
-# Verify (optional)
-npx prisma studio
-```
-
-### 2. Test Current Build
-
-```bash
-# Dev server should be running already
-# Open: http://localhost:3000
-
-# Check if CSS error is gone
-# Verify dashboard loads correctly
-```
-
-### 3. Continue Game Stages
-
-Order of implementation:
-1. ✅ StageMemorize (DONE)
-2. ✅ StageJumbled (DONE)
-3. ⏳ StageConnect (IN PROGRESS - You're here!)
-4. ⏳ StageTyping
-5. ⏳ StageSpeedBlitz
-
-### 4. Create Game Container
-
-**File**: `components/game/GameContainer.tsx`
-**Purpose**: Orchestrate stage flow
-```typescript
-// State machine:
-// MEMORIZE → JUMBLED → CONNECT → TYPING → SPEED_BLITZ → RESULTS
-
-// Responsibilities:
-// - Load level data from API
-// - Transition between stages
-// - Aggregate scores
-// - Save game session to database
-// - Show results screen with confetti
-```
-
-### 5. Create Game Route
-
-**File**: `app/game/[levelId]/page.tsx`
-**Purpose**: Dynamic route for playing levels
-```typescript
-// Server Component to fetch level data
-// Pass to GameContainer (client component)
-// Handle authentication check
-```
-
----
-
-## 🗂️ Project Structure Update
-
-```
-learning-web/
-├── app/
-│   ├── globals.css              # ✅ FIXED
-│   ├── page.tsx                 # ✅ Dashboard
-│   └── game/
-│       └── [levelId]/           # ⏳ TODO: Create
-│           └── page.tsx
-├── components/
-│   ├── game/
-│   │   ├── LearningPath.tsx     # ✅ Complete
-│   │   ├── StageMemorize.tsx    # ✅ NEW!
-│   │   ├── StageJumbled.tsx     # ✅ NEW!
-│   │   ├── StageConnect.tsx     # ⏳ TODO
-│   │   ├── StageTyping.tsx      # ⏳ TODO
-│   │   ├── StageSpeedBlitz.tsx  # ⏳ TODO
-│   │   └── GameContainer.tsx    # ⏳ TODO
-│   ├── layout/
-│   │   └── Navigation.tsx       # ✅ Complete
-│   └── ui/
-│       └── UIComponents.tsx     # ✅ Complete
-├── prisma/
-│   ├── schema.prisma            # ✅ Complete
-│   └── seed.ts                  # ✅ NEW!
-├── docs/
-│   └── SUPABASE_SETUP.md        # ✅ NEW!
-└── .env.local                   # ⚠️ NEEDS YOUR CREDENTIALS
-```
+## 🚧 TODO: Remaining Features
+- **Achievements Polish**: Ensure all 20+ achievements trigger correctly
+- **Referral System**: Final UI for sharing referral codes
+- **Admin Dashboard**: Real-time stats visualization
+- **Production Deployment**: Vercel/Supabase final optimization
 
 ---
 
 ## 🎯 Current MVP Progress
 
-**Overall**: ~55% Complete
+**Overall**: ~90% Complete
 
 ### Breakdown:
 - ✅ Foundation & Setup: 100%
@@ -228,12 +78,13 @@ learning-web/
 - ✅ UI Components: 100%
 - ✅ Dashboard: 100%
 - ✅ Database Schema: 100%
-- ✅ Database Seed Data: 100%
-- 🔄 Game Stages: 40% (2/5 done)
-- ⏳ Game Flow Container: 0%
-- ⏳ API Integration: 0%
-- ⏳ Authentication: 0%
-- ⏳ Leaderboard: 0%
+- ✅ Game Stages (A-E): 100%
+- ✅ Duel Arena (Multiplayer): 100%
+- ✅ Real-time Data Sync: 100%
+- 🔄 Inventory & Gems System: 95%
+- ⏳ Leaderboard: 80% (Room leaderboards done, global TBD)
+- ⏳ Social Features: 70% (Referral done, Friend list TBD)
+
 
 ---
 

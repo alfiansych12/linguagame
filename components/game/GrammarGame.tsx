@@ -13,6 +13,7 @@ import { useProgressStore } from '@/store/progress-store';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/db/supabase';
 import { calculateXp, calculateStars } from '@/lib/game-logic/xp-calculator';
+import { submitGameScore } from '@/app/actions/gameActions';
 import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
 
@@ -36,7 +37,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
     const [xpBreakdown, setXpBreakdown] = useState<any>(null);
     const [finalScore, setFinalScore] = useState(0);
 
-    const { addGems, addXp, inventory, useCrystal } = useUserStore();
+    const { addGems, addXp, addVocab, inventory, useCrystal } = useUserStore();
     const { completeLevel, unlockLevel, getLevelProgress } = useProgressStore();
     const { playSound } = useSound();
     const { data: session } = useSession();
@@ -109,9 +110,9 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
         }
     };
 
-    const handleUseShield = () => {
+    const handleUseShield = async () => {
         if (inventory.shield > 0 && !shieldActive && !feedback) {
-            const used = useCrystal('shield');
+            const used = await useCrystal('shield');
             if (used) {
                 playSound('CRYSTAL');
                 setShieldActive(true);
@@ -119,12 +120,12 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
         }
     };
 
-    const handleUseVision = () => {
+    const handleUseVision = async () => {
         if (inventory.hint > 0 && currentTask && !feedback) {
             // Hint shows the NEXT required piece
             const nextPiece = currentTask.solution[selectedPieces.length];
             if (nextPiece) {
-                const used = useCrystal('hint');
+                const used = await useCrystal('hint');
                 if (used) {
                     playSound('CRYSTAL');
                     setPendingHintPiece(nextPiece);
@@ -133,9 +134,9 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
         }
     };
 
-    const handleUseDivineEye = () => {
+    const handleUseDivineEye = async () => {
         if (inventory.autocorrect > 0 && !feedback) {
-            const used = useCrystal('autocorrect');
+            const used = await useCrystal('autocorrect');
             if (used) {
                 playSound('CRYSTAL');
                 setSelectedPieces(currentTask.solution);
@@ -166,17 +167,18 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
         setXpBreakdown(xpResults.breakdown);
         setFinalScore(xpResults.total);
 
-        // SYNC TO SUPABASE
+        // SECURE SYNC TO SERVER
         if (userId !== 'guest' && isPassed) {
-            supabase.from('user_progress').upsert({
-                user_id: userId,
-                level_id: level.id,
-                status: 'COMPLETED',
+            submitGameScore({
+                levelId: level.id,
                 score: xpResults.total,
                 stars: winStars,
-                completed_at: new Date().toISOString()
-            }).then(({ error }) => {
-                if (error) console.error('Failed to sync GrammarGame:', error);
+                timeTaken: Math.round(timeTaken)
+            }).then(result => {
+                if (result.success) {
+                    useUserStore.getState().syncWithDb(userId);
+                    useProgressStore.getState().syncWithDb(userId);
+                }
             });
         }
 
@@ -184,8 +186,8 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             if (isPassed) {
                 playSound('SUCCESS');
                 confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-                addGems(30 + (winStars * 15));
-                addXp(xpResults.total);
+
+                // Rewards are now handled server-side
                 completeLevel(level.id, xpResults.total, winStars);
 
                 const curriculumIndex = CURRICULUM_LEVELS.findIndex(l => l.id === level.id);
@@ -197,7 +199,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             }
 
             setPhase('RESULTS');
-        }, 1000);
+        }, 1200);
     };
 
     const restartLevel = () => {
