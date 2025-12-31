@@ -2,7 +2,7 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { supabase } from '@/lib/db/supabase';
+import { supabaseAdmin as supabase } from '@/lib/db/supabase-admin';
 import { SubmitScoreSchema } from '@/lib/validations/game';
 import { revalidatePath } from 'next/cache';
 import { strictRatelimit } from '@/lib/ratelimit';
@@ -48,14 +48,21 @@ export async function submitGameScore(data: any) {
 
         if (isNewBest || !existingProgress) {
             // Update Progress
-            await supabase.from('user_progress').upsert({
+            const progressUpdate: any = {
                 user_id: userId,
                 level_id: levelId,
                 status: 'COMPLETED',
                 score: score,
                 stars: stars,
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id,level_id' });
+            };
+
+            // If it's a new best, also update high_score (common in trigger-based XP systems)
+            if (isNewBest) {
+                progressUpdate.high_score = score;
+            }
+
+            await supabase.from('user_progress').upsert(progressUpdate, { onConflict: 'user_id,level_id' });
 
             // Reward Calculations
             const xpDiff = existingProgress ? Math.max(0, score - existingProgress.score) : score;
@@ -76,8 +83,59 @@ export async function submitGameScore(data: any) {
         revalidatePath('/'); // For progress on dashboard
 
         return { success: true, isNewBest };
+    } catch (error: any) {
+        console.error('submitGameScore error details:', {
+            message: error.message,
+            code: error.code,
+            details: error.details
+        });
+        return { success: false, error: 'Internal Error' };
+    }
+}
+
+/**
+ * SECURE: Submit Duel Victory
+ * Increments duel_wins for the authenticated user
+ */
+export async function submitDuelWin() {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const userId = session.user.id;
+
+        // 1. Fetch current duel wins
+        const { data: userData, error: fetchError } = await supabase
+            .from('users')
+            .select('duel_wins, gems')
+            .eq('id', userId)
+            .single();
+
+        if (fetchError || !userData) {
+            console.error('Error fetching user for duel win:', fetchError);
+            return { success: false, error: 'User not found' };
+        }
+
+        // 2. Increment wins and add a small gem reward
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({
+                duel_wins: (userData.duel_wins || 0) + 1,
+                gems: (userData.gems || 0) + 50 // Bonus for winning duel
+            })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error('Error updating duel win:', updateError);
+            return { success: false, error: 'Failed to update wins' };
+        }
+
+        revalidatePath('/profile');
+        revalidatePath('/leaderboard');
+
+        return { success: true };
     } catch (error) {
-        console.error('submitGameScore error:', error);
+        console.error('submitDuelWin error:', error);
         return { success: false, error: 'Internal Error' };
     }
 }

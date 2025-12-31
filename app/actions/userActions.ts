@@ -2,7 +2,7 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { supabase } from '@/lib/db/supabase';
+import { supabaseAdmin as supabase } from '@/lib/db/supabase-admin';
 import { checkBorderUnlocked } from '@/lib/utils/borderUnlocks';
 import { EquipBorderSchema, UpdateProfileSchema } from '@/lib/validations/user';
 import { revalidatePath } from 'next/cache';

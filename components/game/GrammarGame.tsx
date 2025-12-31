@@ -44,6 +44,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
     const userId = session?.user?.id || 'guest';
 
     const [shieldActive, setShieldActive] = useState(false);
+    const [boosterActive, setBoosterActive] = useState(false);
     const [pendingHintPiece, setPendingHintPiece] = useState<string | null>(null);
 
     const currentTask = tasks[currentIndex];
@@ -101,6 +102,23 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             setLives(nextLives);
 
             if (nextLives === 0) {
+                // Check for Slay Crystal
+                if (inventory.slay > 0) {
+                    useCrystal('slay').then(used => {
+                        if (used) {
+                            playSound('SUCCESS');
+                            setLives(5);
+                            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#f43f5e'] });
+                            return;
+                        } else {
+                            playSound('GAMEOVER');
+                            setFeedback({ type: 'error', message: 'Energy habis! Tetap semangat, gas lagi yuk.' });
+                            setTimeout(() => setPhase('GAMEOVER'), 1500);
+                        }
+                    });
+                    return;
+                }
+
                 playSound('GAMEOVER');
                 setFeedback({ type: 'error', message: 'Energy habis! Tetap semangat, gas lagi yuk.' });
                 setTimeout(() => setPhase('GAMEOVER'), 1500);
@@ -147,7 +165,17 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
         }
     };
 
-    const handleLevelComplete = () => {
+    const handleUseBooster = async () => {
+        if (inventory.booster > 0 && !boosterActive && !feedback) {
+            const used = await useCrystal('booster');
+            if (used) {
+                playSound('CRYSTAL');
+                setBoosterActive(true);
+            }
+        }
+    };
+
+    const handleLevelComplete = async () => {
         const timeTaken = (Date.now() - startTime) / 1000;
         const maxTime = tasks.length * 20;
 
@@ -157,7 +185,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             timeRemaining: Math.max(0, maxTime - timeTaken),
             maxTime,
             maxStreak: 0,
-            crystalActive: false
+            crystalActive: boosterActive
         });
 
         const accuracy = (tasks.length - Math.min(tasks.length, mistakes)) / tasks.length;
@@ -169,17 +197,19 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
 
         // SECURE SYNC TO SERVER
         if (userId !== 'guest' && isPassed) {
-            submitGameScore({
+            const result = await submitGameScore({
                 levelId: level.id,
                 score: xpResults.total,
                 stars: winStars,
                 timeTaken: Math.round(timeTaken)
-            }).then(result => {
-                if (result.success) {
-                    useUserStore.getState().syncWithDb(userId);
-                    useProgressStore.getState().syncWithDb(userId);
-                }
             });
+
+            if (result.success) {
+                await Promise.all([
+                    useUserStore.getState().syncWithDb(userId),
+                    useProgressStore.getState().syncWithDb(userId)
+                ]);
+            }
         }
 
         setTimeout(() => {
@@ -438,6 +468,21 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                                         label="Divine"
                                         onClick={handleUseDivineEye}
                                         disabled={!!feedback}
+                                    />
+                                    <CrystalButton
+                                        icon="bolt"
+                                        count={inventory.booster}
+                                        label="2x XP"
+                                        active={boosterActive}
+                                        onClick={handleUseBooster}
+                                        disabled={!!feedback || boosterActive}
+                                    />
+                                    <CrystalButton
+                                        icon="auto_awesome"
+                                        count={inventory.slay}
+                                        label="Phoenix"
+                                        onClick={() => { }} // Auto used when dead
+                                        disabled={true}
                                     />
                                 </div>
                             </div>

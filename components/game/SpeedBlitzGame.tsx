@@ -48,6 +48,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
     const [shieldActive, setShieldActive] = useState(false);
     const [isTimeFrozen, setIsTimeFrozen] = useState(false);
     const [showVision, setShowVision] = useState(false);
+    const [boosterActive, setBoosterActive] = useState(false);
 
     const currentTask = tasks[currentIndex];
 
@@ -120,6 +121,22 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
             setLives(nextLives);
 
             if (nextLives === 0) {
+                // Check for Phoenix (Slay) Crystal
+                if (inventory.slay > 0) {
+                    useCrystal('slay').then(used => {
+                        if (used) {
+                            playSound('SUCCESS');
+                            setLives(5); // Revive with 5 lives
+                            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#f43f5e'] });
+                            return;
+                        } else {
+                            playSound('GAMEOVER');
+                            setTimeout(() => setPhase('GAMEOVER'), 600);
+                        }
+                    });
+                    return;
+                }
+
                 playSound('GAMEOVER');
                 setTimeout(() => setPhase('GAMEOVER'), 600);
                 return;
@@ -181,7 +198,17 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
         }
     };
 
-    const handleLevelComplete = () => {
+    const handleUseBooster = async () => {
+        if (inventory.booster > 0 && !boosterActive && !feedback) {
+            const used = await useCrystal('booster');
+            if (used) {
+                playSound('CRYSTAL');
+                setBoosterActive(true);
+            }
+        }
+    };
+
+    const handleLevelComplete = async () => {
         const timeTaken = (Date.now() - startTime) / 1000;
         const maxTime = tasks.length * 5;
 
@@ -191,7 +218,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
             timeRemaining: Math.max(0, maxTime - timeTaken),
             maxTime,
             maxStreak,
-            crystalActive: false
+            crystalActive: boosterActive
         });
 
         const accuracy = (tasks.length - mistakes) / tasks.length;
@@ -202,17 +229,19 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
 
         // SECURE SYNC TO SERVER
         if (userId !== 'guest' && isPassed) {
-            submitGameScore({
+            const result = await submitGameScore({
                 levelId: level.id,
                 score: xpResults.total,
                 stars: winStars,
                 timeTaken: Math.round(timeTaken)
-            }).then(result => {
-                if (result.success) {
-                    useUserStore.getState().syncWithDb(userId);
-                    useProgressStore.getState().syncWithDb(userId);
-                }
             });
+
+            if (result.success) {
+                await Promise.all([
+                    useUserStore.getState().syncWithDb(userId),
+                    useProgressStore.getState().syncWithDb(userId)
+                ]);
+            }
         }
 
         setTimeout(() => {
@@ -470,6 +499,21 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 label="Beku"
                                 onClick={handleUseTimefreeze}
                                 disabled={feedback !== null || isTimeFrozen}
+                            />
+                            <CrystalButton
+                                icon="bolt"
+                                count={inventory.booster}
+                                label="2x XP"
+                                active={boosterActive}
+                                onClick={handleUseBooster}
+                                disabled={feedback !== null || boosterActive}
+                            />
+                            <CrystalButton
+                                icon="auto_awesome"
+                                count={inventory.slay}
+                                label="Phoenix"
+                                onClick={() => { }} // Auto used when dead
+                                disabled={true}
                             />
                         </div>
                     </motion.div>

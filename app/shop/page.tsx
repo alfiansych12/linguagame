@@ -11,7 +11,7 @@ import { LoginModal } from '@/components/ui/LoginModal';
 import { useSound } from '@/hooks/use-sound';
 import { useAlertStore } from '@/store/alert-store';
 import { AvatarFrame } from '@/components/ui/AvatarFrame';
-import { purchaseCrystal, purchaseBorder } from '@/app/actions/shopActions';
+import { purchaseCrystal, purchaseBorder, redeemPromoCode } from '@/app/actions/shopActions';
 
 interface CrystalItem {
     id: keyof CrystalInventory;
@@ -159,6 +159,8 @@ export default function ShopPage() {
     const { playSound } = useSound();
     const { showAlert } = useAlertStore();
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [promoCode, setPromoCode] = useState('');
+    const [isRedeeming, setIsRedeeming] = useState(false);
 
     const isAuthenticated = status === 'authenticated';
 
@@ -311,6 +313,49 @@ export default function ShopPage() {
             });
         }
         setPurchasingId(null);
+    };
+
+    const handleRedeemPromo = async () => {
+        if (!isAuthenticated) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
+        if (!promoCode.trim()) return;
+
+        setIsRedeeming(true);
+        try {
+            const result = await redeemPromoCode(promoCode);
+            if (result.success) {
+                playSound('LEVEL_UP');
+                confetti({
+                    particleCount: 200,
+                    spread: 100,
+                    origin: { y: 0.6 },
+                    colors: ['#3B82F6', '#F59E0B', '#10B981']
+                });
+
+                showAlert({
+                    title: 'JACKPOT! 🎰',
+                    message: `Gila bang! Kode promo berhasil, lo dapet ${result.amount?.toLocaleString()} Crystals instan. Dompet auto meluber!`,
+                    type: 'success'
+                });
+
+                if (userId) useUserStore.getState().syncWithDb(userId);
+                setPromoCode('');
+            } else {
+                playSound('WRONG');
+                showAlert({
+                    title: 'Yah Gagal...',
+                    message: result.error || 'Kode promo salah sirkel.',
+                    type: 'error'
+                });
+            }
+        } catch (err) {
+            console.error('Redeem error:', err);
+        } finally {
+            setIsRedeeming(false);
+        }
     };
 
     return (
@@ -468,9 +513,44 @@ export default function ShopPage() {
                     </AnimatePresence>
                 </div>
 
+                {/* Promo Code Section */}
+                <div className="mt-16 md:mt-24 mb-8">
+                    <Card className="max-w-3xl mx-auto p-6 md:p-12 border-4 border-dashed border-primary/20 bg-primary/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform duration-700">
+                            <Icon name="confirmation_number" size={120} />
+                        </div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                            <div className="flex-1 text-center md:text-left space-y-2">
+                                <h3 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white uppercase italic">Punya Kode Promo?</h3>
+                                <p className="text-xs md:text-lg text-slate-500 font-bold">Masukin kodenya dapet Crystal instan. <br className="hidden md:block" /> Rejeki anak sirkel nggak kemana!</p>
+                            </div>
+
+                            <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="KODE..."
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value)}
+                                    className="px-6 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-black text-center md:text-left focus:border-primary outline-none transition-all uppercase tracking-widest text-lg w-full md:w-48 placeholder:text-slate-300 dark:text-white"
+                                />
+                                <Button
+                                    variant="primary"
+                                    className="px-8 py-4 h-full rounded-2xl shadow-xl whitespace-nowrap"
+                                    onClick={handleRedeemPromo}
+                                    loading={isRedeeming}
+                                    disabled={!promoCode.trim()}
+                                >
+                                    REDEEM KODE
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
                 {/* Mystery Box Placeholder */}
                 <div className="mt-12 opacity-30 text-center border-t border-slate-200 dark:border-slate-800 pt-8">
-                    <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-400">Next drop: Secret mythical borders arriving soon...</p>
+                    <p className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Next drop: Secret mythical borders arriving soon...</p>
                 </div>
 
                 {/* Lab Decoration Footer */}

@@ -23,7 +23,7 @@ export interface DuelPlayer {
 /**
  * Creates a new duel room with a unique 4-digit code
  */
-export async function createDuelRoom(hostName: string) {
+export async function createDuelRoom(hostName: string, userId: string | null = null) {
     // Generate a random 4-digit numeric code
     const code = Math.floor(1000 + Math.random() * 9000).toString();
 
@@ -42,13 +42,20 @@ export async function createDuelRoom(hostName: string) {
     if (roomError) throw roomError;
 
     // 2. Add the host as the first player
+    const playerPayload: any = {
+        room_id: room.id,
+        name: hostName,
+        is_ready: true
+    };
+
+    // Only add user_id if it looks like a valid UUID to match the DB column type
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        playerPayload.user_id = userId;
+    }
+
     const { data: player, error: playerError } = await supabase
         .from('duel_players')
-        .insert({
-            room_id: room.id,
-            name: hostName,
-            is_ready: true
-        })
+        .insert(playerPayload)
         .select()
         .single();
 
@@ -60,7 +67,7 @@ export async function createDuelRoom(hostName: string) {
 /**
  * Joins an existing duel room using a code
  */
-export async function joinDuelRoom(code: string, playerName: string) {
+export async function joinDuelRoom(code: string, playerName: string, userId: string | null = null) {
     // 1. Find the room
     const { data: room, error: roomError } = await supabase
         .from('duel_rooms')
@@ -81,13 +88,19 @@ export async function joinDuelRoom(code: string, playerName: string) {
     if (count && count >= room.max_players) throw new Error('Sirkel full! Room is at max capacity.');
 
     // 3. Add the player
+    const playerPayload: any = {
+        room_id: room.id,
+        name: playerName,
+        is_ready: false
+    };
+
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        playerPayload.user_id = userId;
+    }
+
     const { data: player, error: playerError } = await supabase
         .from('duel_players')
-        .insert({
-            room_id: room.id,
-            name: playerName,
-            is_ready: false
-        })
+        .insert(playerPayload)
         .select()
         .single();
 
@@ -140,7 +153,22 @@ export async function updatePlayerScore(playerId: string, score: number) {
 export async function startDuel(roomId: string) {
     const { error } = await supabase
         .from('duel_rooms')
-        .update({ status: 'PLAYING' })
+        .update({ status: 'STARTING' })
+        .eq('id', roomId);
+
+    if (error) throw error;
+}
+
+/**
+ * Updates room settings
+ */
+export async function updateRoomSettings(roomId: string, timeLimit: number, settings: any) {
+    const { error } = await supabase
+        .from('duel_rooms')
+        .update({
+            time_limit: timeLimit,
+            settings: settings
+        })
         .eq('id', roomId);
 
     if (error) throw error;

@@ -43,6 +43,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
 
     const [showVision, setShowVision] = useState(false);
     const [shieldActive, setShieldActive] = useState(false);
+    const [boosterActive, setBoosterActive] = useState(false);
 
     // Prepare quiz options when currentIndex changes
     useEffect(() => {
@@ -111,6 +112,22 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
             setLives(nextLives);
 
             if (nextLives === 0) {
+                // Check for Phoenix (Slay) Crystal
+                if (inventory.slay > 0) {
+                    useCrystal('slay').then(used => {
+                        if (used) {
+                            playSound('SUCCESS');
+                            setLives(5); // Revive with 5 lives
+                            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#f43f5e'] });
+                            return;
+                        } else {
+                            playSound('GAMEOVER');
+                            setTimeout(() => setPhase('GAMEOVER'), 1000);
+                        }
+                    });
+                    return;
+                }
+
                 playSound('GAMEOVER');
                 setTimeout(() => setPhase('GAMEOVER'), 1000);
             } else {
@@ -155,6 +172,16 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         }
     };
 
+    const handleUseBooster = async () => {
+        if (inventory.booster > 0 && !boosterActive && !selectedOption) {
+            const used = await useCrystal('booster');
+            if (used) {
+                playSound('CRYSTAL');
+                setBoosterActive(true);
+            }
+        }
+    };
+
     const { data: session } = useSession();
     const userId = session?.user?.id || 'guest';
 
@@ -174,7 +201,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
             timeRemaining: Math.max(0, maxTime - timeTaken),
             maxTime,
             maxStreak: 0,
-            crystalActive: false
+            crystalActive: boosterActive
         });
 
         const winStars = calculateStars(accuracy);
@@ -556,6 +583,21 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                     label="Divine"
                                     onClick={handleUseDivineEye}
                                     disabled={selectedOption !== null}
+                                />
+                                <CrystalButton
+                                    icon="bolt"
+                                    count={inventory.booster}
+                                    label="2x XP"
+                                    active={boosterActive}
+                                    onClick={handleUseBooster}
+                                    disabled={selectedOption !== null || boosterActive}
+                                />
+                                <CrystalButton
+                                    icon="auto_awesome"
+                                    count={inventory.slay}
+                                    label="Phoenix"
+                                    onClick={() => { }} // Auto used when dead
+                                    disabled={true}
                                 />
                             </div>
                         </motion.div>

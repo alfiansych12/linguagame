@@ -12,18 +12,27 @@ import { VOCABULARY_DATA } from '@/lib/data/vocabulary';
 import confetti from 'canvas-confetti';
 import { sanitizeDisplayName } from '@/lib/utils/anonymize';
 import { useSound } from '@/hooks/use-sound';
+import { submitDuelWin } from '@/app/actions/gameActions';
+import { useSession } from 'next-auth/react';
+import { AvatarFrame } from '@/components/ui/AvatarFrame';
 
 interface Player {
     id: string;
     name: string;
     score: number;
     is_ready: boolean;
+    user_id?: string;
+    users?: {
+        image: string;
+        equipped_border: string;
+    } | null;
 }
 
 export default function DuelRoomPage() {
     const params = useParams();
     const router = useRouter();
     const roomCode = params.roomCode as string;
+    const { data: session } = useSession();
     const { name, addGems, inventory, useCrystal } = useUserStore();
 
     // Internal States
@@ -41,6 +50,8 @@ export default function DuelRoomPage() {
     const [options, setOptions] = useState<string[]>([]);
     const [localScore, setLocalScore] = useState(0);
     const [correctCount, setCorrectCount] = useState(0);
+    const [localLives, setLocalLives] = useState(0);
+    const [isEliminated, setIsEliminated] = useState(false);
 
     // Power-up States
     const [isFrozen, setIsFrozen] = useState(false);
@@ -75,13 +86,36 @@ export default function DuelRoomPage() {
             setRoom(roomData);
             setGameState(roomData.status);
 
-            const { data: playerData } = await supabase
-                .from('duel_players')
-                .select('*')
-                .eq('room_id', roomData.id)
-                .order('created_at', { ascending: true });
+            const fetchPlayersWithUsers = async (roomDataId: string) => {
+                const { data: playersData } = await supabase
+                    .from('duel_players')
+                    .select('*')
+                    .eq('room_id', roomDataId)
+                    .order('created_at', { ascending: true });
 
-            if (playerData) setPlayers(playerData);
+                if (playersData && playersData.length > 0) {
+                    const userIds = playersData.map(p => p.user_id).filter(Boolean);
+                    if (userIds.length > 0) {
+                        const { data: usersData } = await supabase
+                            .from('users')
+                            .select('id, image, equipped_border')
+                            .in('id', userIds);
+
+                        if (usersData) {
+                            const usersMap = Object.fromEntries(usersData.map(u => [u.id, u]));
+                            return playersData.map(p => ({
+                                ...p,
+                                users: p.user_id ? usersMap[p.user_id] : null
+                            }));
+                        }
+                    }
+                    return playersData;
+                }
+                return [];
+            };
+
+            const playersWithUsers = await fetchPlayersWithUsers(roomData.id);
+            setPlayers(playersWithUsers);
             setLoading(false);
 
             const channel = supabase.channel(`room:${roomCode}`, {
@@ -95,12 +129,8 @@ export default function DuelRoomPage() {
                     table: 'duel_players',
                     filter: `room_id=eq.${roomData.id}`
                 }, async () => {
-                    const { data: updatedPlayers } = await supabase
-                        .from('duel_players')
-                        .select('*')
-                        .eq('room_id', roomData.id)
-                        .order('created_at', { ascending: true });
-                    if (updatedPlayers) setPlayers(updatedPlayers);
+                    const updatedPlayers = await fetchPlayersWithUsers(roomData.id);
+                    setPlayers(updatedPlayers);
                 })
                 .on('postgres_changes', {
                     event: 'UPDATE',
@@ -137,6 +167,35 @@ export default function DuelRoomPage() {
         };
     }, [roomCode, router, playSound]);
 
+    const updateSettings = async (newTime: number, newSettings: any) => {
+        if (!room?.id || !isHost) return;
+        try {
+            await supabase.from('duel_rooms').update({
+                time_limit: newTime,
+                settings: newSettings
+            }).eq('id', room.id);
+        } catch (err) {
+            console.error('Update settings error:', err);
+        }
+    };
+
+    // RESET EFFECT: Clear all local states when room goes back to WAITING
+    useEffect(() => {
+        if (gameState === 'WAITING') {
+            setLocalScore(0);
+            scoreRef.current = 0;
+            setCorrectCount(0);
+            setGameTimer(room?.time_limit || 60);
+            setCountdown(3);
+            setIsFrozen(false);
+            setActiveBooster(0);
+            setIsDivineEyeActive(0);
+            setLocalLives(room?.settings?.lives || 0);
+            setIsEliminated(false);
+            setLoading(false);
+        }
+    }, [gameState, room]);
+
     useEffect(() => {
         if (gameState === 'STARTING') {
             const int = setInterval(() => {
@@ -155,6 +214,10 @@ export default function DuelRoomPage() {
 
         if (gameState === 'PLAYING') {
             generateQuestion();
+            const initialTime = room?.time_limit || 60;
+            setGameTimer(initialTime);
+            setLocalLives(room?.settings?.lives || 0);
+
             const int = setInterval(() => {
                 setGameTimer(prev => {
                     if (prev <= 1) {
@@ -168,7 +231,7 @@ export default function DuelRoomPage() {
             timerRef.current = int;
             return () => clearInterval(int);
         }
-    }, [gameState, playSound]);
+    }, [gameState, playSound, room]);
 
     const generateQuestion = () => {
         const randomIndex = Math.floor(Math.random() * VOCABULARY_DATA.length);
@@ -217,6 +280,31 @@ export default function DuelRoomPage() {
             generateQuestion();
         } else {
             playSound('WRONG');
+
+            // LIVES SYSTEM: Penalty for wrong answer
+            if (room?.settings?.lives > 0) {
+                const nextLives = localLives - 1;
+                setLocalLives(nextLives);
+
+                if (nextLives <= 0) {
+                    setIsEliminated(true);
+                    playSound('GAMEOVER');
+                    // Stop answering more questions
+                }
+            } else {
+                // SCORE PENALTY: Prevent spam if no lives system
+                const penalty = 5;
+                const newScore = Math.max(0, scoreRef.current - penalty);
+                scoreRef.current = newScore;
+                setLocalScore(newScore);
+
+                channelRef.current.send({
+                    type: 'broadcast',
+                    event: 'score_update',
+                    payload: { playerId: currentPlayerId, score: newScore }
+                });
+            }
+
             generateQuestion();
         }
     };
@@ -239,13 +327,13 @@ export default function DuelRoomPage() {
                 const success = await useCrystal('autocorrect');
                 if (success) {
                     playSound('SUCCESS');
-                    setIsDivineEyeActive(prev => prev + 3);
+                    setIsDivineEyeActive(prev => prev + 1); // Fixed: 1 auto answer per use
                 }
             } else if (type === 'overflow') {
                 const success = await useCrystal('booster');
                 if (success) {
                     playSound('SUCCESS');
-                    setActiveBooster(prev => prev + 5);
+                    setActiveBooster(prev => prev + 3);
                 }
             }
         } catch (err) {
@@ -269,6 +357,13 @@ export default function DuelRoomPage() {
                     const winner = data[0];
                     if (winner && winner.id === currentPlayerId) {
                         playSound('SPECIAL_WIN');
+                        // SECURE: Update wins in DB
+                        const result = await submitDuelWin();
+                        if (result.success) {
+                            // Sync with current session user ID
+                            const syncId = session?.user?.id || winner.user_id || 'guest';
+                            await useUserStore.getState().syncWithDb(syncId);
+                        }
                     } else {
                         playSound('SUCCESS');
                     }
@@ -279,10 +374,13 @@ export default function DuelRoomPage() {
             }
         }
 
+        if (isHost && room?.id) {
+            await endDuel(room.id);
+        }
+
         setGameState('FINISHED');
         setLoading(false);
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        addGems(50);
     };
 
     const toggleReady = async () => {
@@ -293,6 +391,28 @@ export default function DuelRoomPage() {
 
     const startRoomGame = async () => {
         if (room?.id) await startDuel(room.id);
+    };
+
+    const restartRoom = async () => {
+        if (!room?.id) return;
+        setLoading(true);
+        try {
+            // Reset room status to WAITING
+            await supabase.from('duel_rooms').update({ status: 'WAITING' }).eq('id', room.id);
+            // Reset all players in this room: score back to 0, not ready
+            await supabase.from('duel_players').update({ score: 0, is_ready: false }).eq('room_id', room.id);
+
+            // Local reset for the state
+            setLocalScore(0);
+            scoreRef.current = 0;
+            setCorrectCount(0);
+            setGameTimer(60);
+            setCountdown(3);
+        } catch (err) {
+            console.error('Restart error:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) return (
@@ -336,17 +456,17 @@ export default function DuelRoomPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700/50 px-3 sm:px-6 py-2 sm:py-3 rounded-2xl flex items-center gap-3 shadow-xl">
+                        <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700/50 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl flex items-center gap-3 shadow-xl">
                             <Icon name="emoji_events" size={20} className="text-primary" filled />
                             <div className="flex flex-col items-start leading-none">
-                                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Score</span>
-                                <span className="font-black text-base sm:text-2xl text-slate-900 dark:text-white">{localScore}</span>
+                                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400">Score</span>
+                                <span className="font-black text-xl sm:text-2xl text-slate-900 dark:text-white">{localScore}</span>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-6xl mx-auto w-full relative z-10">
+                <main className="flex-1 flex flex-col items-center justify-start pt-2 sm:pt-4 md:pt-6 p-4 md:p-8 max-w-6xl mx-auto w-full relative z-10">
                     {/* Floating Leaderboard (Desktop) */}
                     <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col gap-3 w-64 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-5 rounded-[2.5rem] border border-white/20 shadow-2xl">
                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 italic mb-2">Live Rankings</h3>
@@ -370,33 +490,39 @@ export default function DuelRoomPage() {
                     </div>
 
                     {/* Power-ups Sidebar / Bottom Bar */}
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:right-12 lg:top-1/2 lg:-translate-y-1/2 z-40 w-[95%] max-w-[400px] lg:w-72 px-2 lg:px-0">
-                        <div className="flex flex-row lg:flex-col gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl p-2 sm:p-4 rounded-[2rem] sm:rounded-[3rem] border border-white/30 shadow-2xl">
-                            <h3 className="hidden lg:block text-xs font-black text-slate-400 uppercase tracking-widest px-3 italic mb-3">Crystals Arsenal</h3>
-                            <PowerUpButton
-                                icon="ac_unit"
-                                label="Stasis"
-                                count={inventory.timefreeze || 0}
-                                color="blue"
-                                onClick={() => handleUsePowerUp('stasis')}
-                                disabled={isFrozen || !inventory.timefreeze}
-                            />
-                            <PowerUpButton
-                                icon="visibility"
-                                label="Divine"
-                                count={inventory.autocorrect || 0}
-                                color="purple"
-                                onClick={() => handleUsePowerUp('divine')}
-                                disabled={isFrozen || !inventory.autocorrect || isDivineEyeActive > 0}
-                            />
-                            <PowerUpButton
-                                icon="bolt"
-                                label="Double"
-                                count={inventory.booster || 0}
-                                color="yellow"
-                                onClick={() => handleUsePowerUp('overflow')}
-                                disabled={isFrozen || !inventory.booster || activeBooster > 0}
-                            />
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:right-12 lg:top-1/2 lg:-translate-y-1/2 z-40 w-[95%] max-w-[500px] lg:w-72 px-2 lg:px-0">
+                        <div className="flex flex-row lg:flex-col gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl p-3 sm:p-5 rounded-[2rem] sm:rounded-[3rem] border border-white/30 shadow-2xl overflow-x-auto lg:overflow-visible no-scrollbar">
+                            <h3 className="hidden lg:block text-xs font-black text-slate-400 uppercase tracking-widest px-3 italic mb-3">Arsenal Skill</h3>
+                            {(room?.settings?.allowed_skills || ['stasis', 'divine', 'overflow']).includes('stasis') && (
+                                <PowerUpButton
+                                    icon="ac_unit"
+                                    label="Stasis"
+                                    count={inventory.timefreeze || 0}
+                                    color="blue"
+                                    onClick={() => handleUsePowerUp('stasis')}
+                                    disabled={isFrozen || !inventory.timefreeze || isEliminated}
+                                />
+                            )}
+                            {(room?.settings?.allowed_skills || ['stasis', 'divine', 'overflow']).includes('divine') && (
+                                <PowerUpButton
+                                    icon="visibility"
+                                    label="Divine"
+                                    count={inventory.autocorrect || 0}
+                                    color="purple"
+                                    onClick={() => handleUsePowerUp('divine')}
+                                    disabled={isFrozen || !inventory.autocorrect || isDivineEyeActive > 0 || isEliminated}
+                                />
+                            )}
+                            {(room?.settings?.allowed_skills || ['stasis', 'divine', 'overflow']).includes('overflow') && (
+                                <PowerUpButton
+                                    icon="bolt"
+                                    label="Double"
+                                    count={inventory.booster || 0}
+                                    color="yellow"
+                                    onClick={() => handleUsePowerUp('overflow')}
+                                    disabled={isFrozen || !inventory.booster || activeBooster > 0 || isEliminated}
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -418,7 +544,13 @@ export default function DuelRoomPage() {
                         </AnimatePresence>
 
                         <div className="flex flex-col items-center gap-10 sm:gap-14">
-                            <div className="flex gap-4">
+                            <div className="flex flex-wrap justify-center gap-4">
+                                {localLives > 0 && (
+                                    <div className="flex items-center gap-1.5 px-6 py-2.5 bg-error/90 text-white rounded-full font-black shadow-lg">
+                                        <Icon name="favorite" size={16} filled />
+                                        {localLives} LIVES
+                                    </div>
+                                )}
                                 {activeBooster > 0 && (
                                     <Badge variant="streak" icon="bolt" className="px-6 py-2.5 shadow-xl bg-yellow-500 text-white animate-pulse border-none">
                                         SCORE 2X ({activeBooster})
@@ -433,30 +565,42 @@ export default function DuelRoomPage() {
 
                             <div className="w-full text-center space-y-4">
                                 <span className="text-xs sm:text-sm font-black text-primary uppercase tracking-[0.4em]">Translate This</span>
-                                <motion.h2
-                                    key={currentQuestion?.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-tight"
-                                >
-                                    <NoTranslate>{currentQuestion?.english}</NoTranslate>
-                                </motion.h2>
-                                <div className="w-32 h-2 bg-primary/10 rounded-full mx-auto" />
+                                <AnimatePresence mode="wait">
+                                    {isEliminated ? (
+                                        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-20 flex flex-col items-center">
+                                            <Icon name="heart_broken" size={80} className="text-error mb-4" filled />
+                                            <h2 className="text-4xl md:text-6xl font-black text-error uppercase italic">ELIMINATED!</h2>
+                                            <p className="text-slate-400 font-bold mt-2">You ran out of lives. Waiting for others...</p>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.h2
+                                            key={currentQuestion?.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-tight px-4"
+                                        >
+                                            <NoTranslate>{currentQuestion?.english}</NoTranslate>
+                                        </motion.h2>
+                                    )}
+                                </AnimatePresence>
+                                {!isEliminated && <div className="w-32 h-2 bg-primary/10 rounded-full mx-auto" />}
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl">
-                                {options.map((opt, i) => (
-                                    <Button
-                                        key={i}
-                                        variant="secondary"
-                                        className="h-16 sm:h-26 md:h-36 text-lg sm:text-2xl md:text-3xl font-black rounded-2xl sm:rounded-[3rem] bg-white dark:bg-slate-900 hover:bg-primary hover:text-white hover:scale-[1.03] active:scale-95 border-b-[4px] sm:border-b-[12px] border-slate-200 dark:border-slate-800 active:border-b-0 transition-all uppercase shadow-2xl"
-                                        onClick={() => handleAnswer(opt)}
-                                        disabled={isFrozen}
-                                    >
-                                        <NoTranslate>{opt}</NoTranslate>
-                                    </Button>
-                                ))}
-                            </div>
+                            {!isEliminated && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 w-full max-w-4xl px-2">
+                                    {options.map((opt, i) => (
+                                        <Button
+                                            key={i}
+                                            variant="secondary"
+                                            className="h-14 sm:h-20 md:h-28 lg:h-32 text-base sm:text-xl md:text-2xl lg:text-3xl font-black rounded-2xl sm:rounded-[2.5rem] lg:rounded-[3rem] bg-white dark:bg-slate-900 hover:bg-primary hover:text-white hover:scale-[1.02] active:scale-95 border-b-[4px] sm:border-b-[8px] lg:border-b-[12px] border-slate-200 dark:border-slate-800 active:border-b-0 transition-all uppercase shadow-xl"
+                                            onClick={() => handleAnswer(opt)}
+                                            disabled={isFrozen}
+                                        >
+                                            <NoTranslate>{opt}</NoTranslate>
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </main>
@@ -471,75 +615,208 @@ export default function DuelRoomPage() {
                 {/* LOBBY PHASE */}
                 {gameState === 'WAITING' && (
                     <div className="space-y-12">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-10 border-b-2 border-slate-100 dark:border-slate-800 pb-12">
-                            <div className="text-center md:text-left space-y-2">
-                                <h1 className="text-4xl sm:text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
-                                    Sirkel <span className="text-primary italic">Ready?</span>
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 sm:pb-12">
+                            <div className="text-center md:text-left space-y-1 relative z-10">
+                                <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-none">
+                                    Sirkel- <span className="text-primary italic">Ready?</span>
                                 </h1>
-                                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg sm:text-xl">Waiting for everyone to lock in.</p>
+                                <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] sm:text-base">Waiting for everyone to lock in.</p>
                             </div>
 
-                            <div className="flex flex-col items-center gap-3 w-full md:w-auto">
-                                <div className="bg-slate-900 dark:bg-slate-800 text-white px-8 sm:px-12 py-5 sm:py-7 rounded-[2.5rem] flex items-center gap-6 shadow-2xl border-4 border-white/5">
-                                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400">Code</span>
-                                    <span className="text-4xl sm:text-6xl font-black tracking-[0.3em] font-mono text-primary">{roomCode}</span>
+                            <div className="flex flex-col items-center gap-2 w-full md:w-auto">
+                                <div className="bg-slate-900 dark:bg-slate-800 text-white px-5 sm:px-8 py-3 sm:py-5 rounded-xl sm:rounded-3xl flex items-center gap-4 shadow-xl border-2 border-white/5">
+                                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Code</span>
+                                    <span className="text-2xl sm:text-4xl font-black tracking-[0.2em] font-mono text-primary leading-none">{roomCode}</span>
                                 </div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Share with your homies</p>
+                                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Share with your homies</p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-10 items-start">
+                            {/* Players Column - Responsive Grid */}
+                            <div className="lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 w-full">
                                 {players.map((p, idx) => (
-                                    <Card key={p.id} className={`p-6 sm:p-10 flex items-center justify-between border-4 ${p.is_ready ? 'border-success/30 bg-success/5' : 'border-slate-100 dark:border-slate-800'}`}>
-                                        <div className="flex items-center gap-6">
-                                            <div className="size-16 rounded-[1.5rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-2xl text-slate-400">
+                                    <Card
+                                        key={p.id}
+                                        className={`group relative p-3 sm:p-4 flex items-center gap-3 sm:gap-4 border-2 sm:border-[3px] transition-all duration-300 min-h-[60px] sm:min-h-[80px] overflow-hidden ${p.is_ready
+                                            ? 'border-success/40 bg-success/5 shadow-md'
+                                            : 'border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50'
+                                            }`}
+                                    >
+                                        {/* Profile Photo & Avatar Border */}
+                                        <div className="relative shrink-0 mr-1 sm:mr-2">
+                                            <AvatarFrame
+                                                src={p.users?.image || null}
+                                                alt={p.name}
+                                                size="lg"
+                                                borderId={
+                                                    // Admin/Host check for special border
+                                                    p.name?.toLowerCase().includes('admin')
+                                                        ? 'admin_glitch'
+                                                        : (p.users?.equipped_border || 'default')
+                                                }
+                                                fallbackInitial={p.name.charAt(0)}
+                                            />
+                                            {/* Small Rank Badge */}
+                                            <div className="absolute -top-1 -left-1 size-5 sm:size-7 bg-slate-900 border-2 border-slate-800 rounded-lg flex items-center justify-center font-black text-[10px] sm:text-sm text-white z-30 shadow-lg italic">
                                                 {idx + 1}
                                             </div>
-                                            <div className="space-y-1">
-                                                <h4 className="font-black text-slate-900 dark:text-white text-xl uppercase italic">
-                                                    {sanitizeDisplayName(p.name, p.id)}
-                                                </h4>
-                                                <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">
-                                                    {p.is_ready ? 'Ready to Slay' : 'Waiting...'}
+                                        </div>
+
+                                        {/* Player Identity */}
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-base uppercase italic truncate leading-tight">
+                                                {sanitizeDisplayName(p.name, p.id)}
+                                            </h4>
+                                            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+                                                <div className={`size-1.5 sm:size-2 rounded-full shrink-0 ${p.is_ready ? 'bg-success' : 'bg-slate-300 dark:bg-slate-700 animate-pulse'}`} />
+                                                <p className="text-[8px] sm:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">
+                                                    {p.is_ready ? 'Ready' : 'Waiting...'}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className={`size-12 rounded-full flex items-center justify-center shrink-0 ${p.is_ready ? 'bg-success text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-300'}`}>
-                                            <Icon name={p.is_ready ? 'check' : 'hourglass_empty'} size={24} className={p.is_ready ? '' : 'animate-pulse'} />
-                                        </div>
                                     </Card>
                                 ))}
+
+                                {/* Empty Slots */}
                                 {[...Array(Math.max(0, 5 - players.length))].map((_, i) => (
-                                    <div key={i} className="p-10 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[2.5rem] flex items-center justify-center text-slate-300 dark:text-slate-800 font-black text-xs uppercase tracking-widest italic">
-                                        Empty Slot
+                                    <div
+                                        key={i}
+                                        className="h-[60px] sm:h-[80px] border-2 sm:border-[3px] border-dashed border-slate-100 dark:border-slate-800/50 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-800 group opacity-50"
+                                    >
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Icon name="person_add" size={12} mdSize={20} />
+                                            <span className="font-black text-[8px] sm:text-xs uppercase tracking-widest italic">Slot</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="bg-white dark:bg-slate-900 p-8 rounded-[3rem] border-2 border-slate-100 dark:border-slate-800 shadow-2xl h-fit space-y-6">
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest italic">Lobby Controls</h3>
-                                <Button
-                                    variant={players.find(p => p.id === currentPlayerId)?.is_ready ? 'secondary' : 'primary'}
-                                    fullWidth
-                                    className="py-6 h-auto text-xl rounded-[2rem]"
-                                    onClick={toggleReady}
-                                >
-                                    {players.find(p => p.id === currentPlayerId)?.is_ready ? 'I\'m Not Ready' : 'READY!'}
-                                </Button>
-                                {isHost && (
-                                    <Button
-                                        variant="success"
-                                        fullWidth
-                                        className="py-8 h-auto rounded-[2rem] shadow-2xl"
-                                        disabled={players.length < 2 || !allReady}
-                                        onClick={startRoomGame}
-                                    >
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-2xl font-black italic">START DUEL</span>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">2+ Players Ready</span>
+                            <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 shadow-2xl h-fit space-y-8">
+                                {isHost ? (
+                                    <div className="space-y-8">
+                                        <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-5">
+                                            <h3 className="text-sm sm:text-lg font-black text-slate-400 uppercase tracking-widest italic">Room Settings</h3>
+                                            <Badge variant="primary" className="text-xs">Host Only</Badge>
                                         </div>
-                                    </Button>
+
+                                        <div className="space-y-6">
+                                            {/* Time Limit */}
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center text-xs sm:text-sm font-black uppercase text-slate-500">
+                                                    <span>Time Limit</span>
+                                                    <span className="text-primary">{room?.time_limit || 60}s</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {[30, 60, 90, 120].map(t => (
+                                                        <button key={t} onClick={() => updateSettings(t, room?.settings || {})} className={`flex-1 py-3 sm:py-4 rounded-xl text-xs sm:text-sm font-black border-2 transition-all ${room?.time_limit === t ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400'}`}>
+                                                            {t}s
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Lives */}
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center text-xs sm:text-sm font-black uppercase text-slate-500">
+                                                    <span>Energy / HP</span>
+                                                    <span className="text-error">{(room?.settings?.lives || 0) === 0 ? '∞ INF' : room?.settings?.lives + ' HP'}</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {[0, 3, 5, 10].map(l => (
+                                                        <button key={l} onClick={() => updateSettings(room?.time_limit || 60, { ...room?.settings, lives: l })} className={`flex-1 py-3 sm:py-4 rounded-xl text-xs sm:text-sm font-black border-2 transition-all ${room?.settings?.lives === l ? 'bg-error border-error text-white shadow-lg shadow-error/20' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400'}`}>
+                                                            {l === 0 ? '∞' : l}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Skill Selection */}
+                                            <div className="space-y-1.5">
+                                                <div className="text-[9px] sm:text-[10px] font-black uppercase text-slate-500">Allowed Skills</div>
+                                                <div className="grid grid-cols-1 gap-1.5">
+                                                    {[
+                                                        { id: 'stasis', label: 'Stasis (Freeze)', icon: 'ac_unit' },
+                                                        { id: 'divine', label: 'Divine Eye (Auto)', icon: 'visibility' },
+                                                        { id: 'overflow', label: 'Double Score', icon: 'bolt' }
+                                                    ].map(skill => {
+                                                        const allowed = (room?.settings?.allowed_skills || ['stasis', 'divine', 'overflow']).includes(skill.id);
+                                                        return (
+                                                            <button
+                                                                key={skill.id}
+                                                                onClick={() => {
+                                                                    const current = room?.settings?.allowed_skills || ['stasis', 'divine', 'overflow'];
+                                                                    const next = allowed ? current.filter((s: string) => s !== skill.id) : [...current, skill.id];
+                                                                    updateSettings(room?.time_limit || 60, { ...room?.settings, allowed_skills: next });
+                                                                }}
+                                                                className={`flex items-center gap-2.5 p-2 rounded-xl border-2 transition-all ${allowed ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 opacity-50'}`}
+                                                            >
+                                                                <Icon name={skill.icon} size={14} />
+                                                                <span className="text-[9px] font-black uppercase">{skill.label}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-2 space-y-2">
+                                            <div className="h-px bg-slate-100 dark:bg-slate-800" />
+                                            <Button
+                                                variant="success"
+                                                fullWidth
+                                                className="py-4 h-auto rounded-2xl shadow-lg"
+                                                disabled={players.length < 2 || !allReady}
+                                                onClick={startRoomGame}
+                                            >
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-base sm:text-lg font-black italic leading-tight">START DUEL</span>
+                                                    <span className="text-[7px] font-bold uppercase tracking-widest opacity-70">Rules Locked In</span>
+                                                </div>
+                                            </Button>
+                                            <Button
+                                                variant={players.find(p => p.id === currentPlayerId)?.is_ready ? 'secondary' : 'primary'}
+                                                fullWidth
+                                                className="py-2.5 h-auto text-xs rounded-xl"
+                                                onClick={toggleReady}
+                                            >
+                                                {players.find(p => p.id === currentPlayerId)?.is_ready ? 'Not Ready' : 'Ready Up!'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                                            <h3 className="text-[9px] sm:text-xs font-black text-slate-400 uppercase tracking-widest italic">Room Info</h3>
+                                            <Badge variant="primary" className="text-[7px] sm:text-[9px] px-2 py-0.5">Guest</Badge>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div className="p-2.5 sm:p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-lg sm:rounded-xl border border-slate-100 dark:border-slate-800">
+                                                <p className="text-[6px] sm:text-[9px] font-black uppercase text-slate-400 mb-1">Current Rules</p>
+                                                <div className="space-y-1 sm:space-y-1.5">
+                                                    <div className="flex items-center gap-1.5 text-[9px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
+                                                        <Icon name="timer" size={10} mdSize={14} className="text-primary" /> {room?.time_limit || 60}s Time
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[9px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
+                                                        <Icon name="favorite" size={10} mdSize={14} className="text-error" /> {(room?.settings?.lives || 0) === 0 ? '∞ HP' : room?.settings?.lives + ' HP'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-1">
+                                            <Button
+                                                variant={players.find(p => p.id === currentPlayerId)?.is_ready ? 'secondary' : 'primary'}
+                                                fullWidth
+                                                className="py-2.5 sm:py-4 h-auto text-[10px] sm:text-lg rounded-lg sm:rounded-2xl"
+                                                onClick={toggleReady}
+                                            >
+                                                {players.find(p => p.id === currentPlayerId)?.is_ready ? 'Cancel' : 'READY!'}
+                                            </Button>
+                                            <p className="text-[6px] sm:text-[9px] mt-1.5 text-center font-bold text-slate-400 uppercase animate-pulse">Waiting for host...</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -565,10 +842,31 @@ export default function DuelRoomPage() {
                 {gameState === 'FINISHED' && (
                     <div className="max-w-4xl mx-auto space-y-8 sm:space-y-16 pb-10 sm:pb-20 text-center">
                         <div className="space-y-4 sm:space-y-6">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className={`size-24 sm:size-32 rounded-3xl mx-auto flex items-center justify-center shadow-2xl ${players.sort((a, b) => b.score - a.score)[0]?.id === currentPlayerId ? 'bg-yellow-400' : 'bg-slate-800'}`}
+                            >
+                                <Icon
+                                    name={players.sort((a, b) => b.score - a.score)[0]?.id === currentPlayerId ? 'emoji_events' : 'sentiment_very_dissatisfied'}
+                                    size={48}
+                                    mdSize={64}
+                                    className="text-white"
+                                    filled
+                                />
+                            </motion.div>
                             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-none">
-                                Sirkel <span className="text-primary">Conquered!</span>
+                                {players.sort((a, b) => b.score - a.score)[0]?.id === currentPlayerId ? (
+                                    <span className="text-yellow-500">YOU WON! 🏆</span>
+                                ) : (
+                                    <span className="text-slate-500">DEFEATED 💀</span>
+                                )}
                             </h1>
-                            <p className="text-slate-500 dark:text-slate-400 font-bold text-sm sm:text-lg md:text-xl px-4">The dust has settled. Who is the most gacor?</p>
+                            <p className="text-slate-500 dark:text-slate-400 font-bold text-sm sm:text-lg md:text-xl px-4">
+                                {players.sort((a, b) => b.score - a.score)[0]?.id === currentPlayerId
+                                    ? "Gokil! Kamu yang paling gacor di sirkel ini."
+                                    : "Nice try! Tingkatkan lagi biar jadi sepuh sesungguhnya."}
+                            </p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
@@ -589,23 +887,36 @@ export default function DuelRoomPage() {
                                                 {idx + 1}
                                             </div>
                                             <div className="text-left">
-                                                <h4 className="text-xl sm:text-2xl md:text-2xl font-black text-slate-900 dark:text-white uppercase italic truncate max-w-[120px] sm:max-w-none">
+                                                <h4 className="text-2xl font-black text-slate-900 dark:text-white uppercase italic truncate max-w-[150px] sm:max-w-none">
                                                     {sanitizeDisplayName(p.name, p.id)}
                                                 </h4>
-                                                {idx === 0 && <span className="text-[10px] sm:text-xs font-black uppercase text-yellow-500">🏆 The Actual Sepuh</span>}
+                                                {idx === 0 && <span className="text-xs font-black uppercase text-yellow-500">🏆 The Actual Sepuh</span>}
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-3xl sm:text-4xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{p.score}</p>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Final Score</p>
+                                            <p className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{p.score}</p>
+                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Final Score</p>
                                         </div>
                                     </Card>
                                 </motion.div>
                             ))}
                         </div>
 
-                        <div className="flex gap-4 justify-center">
-                            <Button variant="primary" className="py-4 sm:py-6 px-10 sm:px-16 h-auto text-sm sm:text-xl rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl" onClick={() => router.push('/duel')}>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            {isHost && (
+                                <Button
+                                    variant="success"
+                                    className="py-4 sm:py-6 px-10 sm:px-16 h-auto text-sm sm:text-xl rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl"
+                                    onClick={restartRoom}
+                                >
+                                    Coba Lagi! 🔄
+                                </Button>
+                            )}
+                            <Button
+                                variant="ghost"
+                                className="py-4 sm:py-6 px-10 sm:px-16 h-auto text-sm sm:text-lg rounded-[1.5rem] sm:rounded-[2rem] text-slate-400 font-black uppercase tracking-widest"
+                                onClick={() => router.push('/duel')}
+                            >
                                 Back to Arena Lobby
                             </Button>
                         </div>
@@ -627,16 +938,16 @@ const PowerUpButton = ({ icon, label, count, color, onClick, disabled }: any) =>
         <button
             onClick={onClick}
             disabled={disabled || count <= 0}
-            className={`flex items-center justify-between p-1.5 sm:p-4 rounded-xl sm:rounded-[2rem] border-2 transition-all group disabled:opacity-40 disabled:grayscale bg-gradient-to-br shadow-xl flex-1 lg:flex-none min-w-[70px] lg:min-w-[240px] ${colorClasses[color]}`}
+            className={`flex items-center justify-between p-2 sm:p-4 rounded-xl sm:rounded-[2rem] border-2 transition-all group disabled:opacity-40 disabled:grayscale bg-gradient-to-br shadow-xl flex-1 lg:flex-none min-w-[90px] sm:min-w-[120px] lg:min-w-[240px] ${colorClasses[color]}`}
         >
-            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
-                <div className="size-6 sm:size-12 rounded-lg sm:rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform shrink-0">
-                    <Icon name={icon} size={12} mdSize={28} filled className="group-hover:rotate-12 transition-transform" />
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                <div className="size-8 sm:size-12 rounded-lg sm:rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                    <Icon name={icon} size={16} mdSize={28} filled className="group-hover:rotate-12 transition-transform" />
                 </div>
                 <div className="text-left">
-                    <p className="text-[5px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 leading-tight">Use {label}</p>
-                    <p className="font-black text-[8px] sm:text-base leading-tight whitespace-nowrap">
-                        {count} <span className="opacity-60 font-bold uppercase text-[5px] sm:text-[10px]">Pcs</span>
+                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 leading-tight">Use {label}</p>
+                    <p className="font-black text-xs sm:text-base leading-tight whitespace-nowrap">
+                        {count} <span className="opacity-60 font-bold uppercase text-[7px] sm:text-[10px]">Pcs</span>
                     </p>
                 </div>
             </div>
