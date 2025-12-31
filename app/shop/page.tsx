@@ -327,7 +327,7 @@ export default function ShopPage() {
         try {
             const result = await redeemPromoCode(promoCode);
             if (result.success) {
-                playSound('LEVEL_UP');
+                playSound('SUCCESS');
                 confetti({
                     particleCount: 200,
                     spread: 100,
