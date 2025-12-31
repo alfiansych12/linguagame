@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const UpdateProfileSchema = z.object({
     name: z.string().min(2).max(50).optional(),
     image: z.string().url().optional(),
+    has_seen_tutorial: z.boolean().optional(),
     equippedBorder: z.string().optional(),
 });
 

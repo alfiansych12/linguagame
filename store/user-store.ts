@@ -195,9 +195,9 @@ export const useUserStore = create<UserState>()(
 
             setHasSeenTutorial: async (val) => {
                 set({ hasSeenTutorial: val });
-                const { data: session } = await supabase.auth.getSession();
-                if (session?.session?.user) {
-                    await supabase.from('users').update({ has_seen_tutorial: val }).eq('id', session.session.user.id);
+                const userId = get().userId;
+                if (userId && userId !== 'guest') {
+                    await updateProfile({ has_seen_tutorial: val });
                 }
             },
             setName: async (name) => {
