@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
+
+export const dynamic = 'force-dynamic';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { LearningPath } from '@/components/game/LearningPath';
 import { QuestGacor } from '@/components/game/QuestGacor';

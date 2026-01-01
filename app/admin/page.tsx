@@ -5,6 +5,8 @@ import { getAllUsers, getRedeemCodes, getAnnouncements } from '@/app/actions/adm
 import AdminClientWrapper from './AdminClientWrapper';
 import { Suspense } from 'react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboard() {
     const session = await getServerSession(authOptions);
 
