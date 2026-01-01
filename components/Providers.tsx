@@ -1,7 +1,7 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 
 import { LinguaAlert } from './ui/LinguaAlert';
 import { SystemNotifications } from './ui/SystemNotifications';
@@ -14,7 +14,9 @@ export default function Providers({ children }: { children: ReactNode }) {
             <UserPulseTracker />
             {children}
             <LinguaAlert />
-            <SystemNotifications />
+            <Suspense fallback={null}>
+                <SystemNotifications />
+            </Suspense>
         </SessionProvider>
     );
 }
