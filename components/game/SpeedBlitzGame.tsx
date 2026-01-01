@@ -289,9 +289,9 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                         <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-4 -right-4 bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg">High Intensity</motion.div>
                     </div>
 
-                    <div className="space-y-3 md:space-y-4">
-                        <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8 decoration-skip-ink-none">Kilatan Cepat</h1>
-                        <p className="text-slate-400 font-bold text-sm md:text-xl px-2 md:px-12">Hanya 5 detik tiap soal! Refleks kamu harus sangat cepat agar tidak kalah. Kuasai tata bahasanya!</p>
+                    <div className="space-y-4 md:space-y-6">
+                        <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8 decoration-skip-ink-none px-4">Kilatan Cepat</h1>
+                        <p className="text-slate-400 font-bold text-sm md:text-base lg:text-xl px-4 md:px-12 leading-relaxed">Hanya 5 detik tiap soal! Refleks kamu harus sangat cepat agar tidak kalah. Kuasai tata bahasanya!</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 md:gap-4 text-left">
@@ -327,12 +327,12 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                         <Icon name="bolt" className="text-error" size={80} filled />
                     </div>
                     <div className="space-y-4">
-                        <h2 className="text-3xl md:text-6xl font-black text-white tracking-tighter italic uppercase">Nyawa Habis! ⚡️</h2>
-                        <p className="text-slate-400 font-bold text-sm md:text-lg leading-relaxed">Refleks kamu kurang cepat hari ini! Kamu butuh fokus lebih agar bisa bertahan lama.</p>
+                        <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter italic uppercase">Nyawa Habis! ⚡️</h2>
+                        <p className="text-slate-400 font-bold text-sm md:text-base lg:text-lg leading-relaxed px-6">Refleks kamu kurang cepat hari ini! Kamu butuh fokus lebih agar bisa bertahan lama.</p>
                     </div>
                     <div className="flex flex-col gap-3 md:gap-4">
                         <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-lg shadow-xl shadow-primary/20" onClick={restartLevel}>ULANGI KILATAN</Button>
-                        <Button variant="ghost" fullWidth className="py-3 md:py-4 font-black uppercase tracking-widest text-xs md:text-sm text-slate-500" onClick={() => router.push('/')}>Kembali ke Peta</Button>
+                        <Button variant="ghost" fullWidth className="py-3 md:py-4 font-black uppercase tracking-widest text-xs md:text-sm text-slate-500" onClick={() => router.back()}>Kembali ke Peta</Button>
                     </div>
                 </motion.div>
             </div>
@@ -350,53 +350,53 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                     {isPassed ? (
                         <>
                             <div className="relative">
-                                <div className="size-28 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-3xl md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-[0_0_60px_rgba(8,126,255,0.4)] border-4 md:border-8 border-white/10">
-                                    <span className="text-[8px] md:text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">Skor Kilatan</span>
+                                <div className="size-32 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-[2.5rem] md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-[0_0_60px_rgba(8,126,255,0.4)] border-4 md:border-8 border-white/10">
+                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">Skor Kilatan</span>
                                     <span className="text-4xl md:text-7xl font-black text-white tracking-tighter">{score}</span>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-3xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8">KILATAN SELESAI! ✨</h2>
-                                <p className="text-slate-400 font-bold text-sm md:text-lg">Refleks kamu luar biasa! Status Master Tata Bahasa: Terbuka.</p>
+                                <h2 className="text-3xl md:text-6xl lg:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-primary decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8 px-4">KILATAN SELESAI! ✨</h2>
+                                <p className="text-slate-400 font-bold text-sm md:text-lg px-4">Refleks kamu luar biasa! Status Master Tata Bahasa: Terbuka.</p>
                             </div>
                         </>
                     ) : (
                         <>
-                            <div className="size-48 bg-error/20 text-error rounded-[4rem] flex flex-col items-center justify-center mx-auto border-8 border-error/20 relative space-y-2">
-                                <Icon name="bolt_outline" size={80} />
-                                <span className="text-3xl font-black">{Math.round(accuracy * 100)}%</span>
+                            <div className="size-32 md:size-48 bg-error/20 text-error rounded-[2.5rem] md:rounded-[4rem] flex flex-col items-center justify-center mx-auto border-4 md:border-8 border-error/20 relative space-y-2">
+                                <Icon name="bolt_outline" size={40} mdSize={80} />
+                                <span className="text-2xl md:text-3xl font-black">{Math.round(accuracy * 100)}%</span>
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-3xl md:text-7xl font-black text-white tracking-tighter italic uppercase text-error">KILATAN GAGAL! ⚡️</h2>
-                                <p className="text-slate-400 font-bold text-sm md:text-lg px-2 md:px-8">
+                                <h2 className="text-3xl md:text-6xl font-black text-white tracking-tighter italic uppercase text-error px-4">KILATAN GAGAL! ⚡️</h2>
+                                <p className="text-slate-400 font-bold text-sm md:text-lg px-4 leading-relaxed">
                                     Akurasi kamu hanya <span className="text-error font-black">{Math.round(accuracy * 100)}%</span>. Minimal harus 70% untuk lulus Kilatan ini. Ayo coba lagi!
                                 </p>
                             </div>
                         </>
                     )}
 
-                    <div className="grid grid-cols-3 gap-3 md:gap-4">
-                        <div className="bg-white/5 p-3 md:p-6 rounded-xl md:rounded-[2.5rem] border border-white/10">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 px-2">
+                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
                             <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
-                            <p className="text-lg md:text-2xl font-black text-white">{levelData?.stars || 0}</p>
+                            <p className="text-xl md:text-2xl font-black text-white">{levelData?.stars || 0}</p>
                             <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Bintang</p>
                         </div>
-                        <div className="bg-white/5 p-3 md:p-6 rounded-xl md:rounded-[2.5rem] border border-white/10">
+                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
                             <Icon name="diamond" className="text-blue-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
-                            <p className="text-lg md:text-2xl font-black text-white">+{30 + (levelData?.stars || 0) * 20}</p>
+                            <p className="text-xl md:text-2xl font-black text-white">+{30 + (levelData?.stars || 0) * 20}</p>
                             <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Kristal</p>
                         </div>
-                        <div className="bg-white/5 p-3 md:p-6 rounded-xl md:rounded-[2.5rem] border border-white/10">
+                        <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10 col-span-2 md:col-span-1">
                             <Icon name="speed" className="text-primary mb-1 md:mb-2" size={20} mdSize={32} filled />
-                            <p className="text-lg md:text-2xl font-black text-white">{maxStreak > 5 ? 'Cepat' : 'Sedang'}</p>
+                            <p className="text-xl md:text-2xl font-black text-white">{maxStreak > 5 ? 'Cepat' : 'Sedang'}</p>
                             <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Refleks</p>
                         </div>
                     </div>
 
                     {isPassed ? (
-                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl shadow-[0_20px_50px_rgba(8,126,255,0.2)]" onClick={() => router.push('/')}>Lanjut!</Button>
+                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl shadow-[0_20px_50px_rgba(8,126,255,0.2)]" onClick={() => router.back()}>Lanjut!</Button>
                     ) : (
                         <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl bg-error hover:bg-error-dark shadow-xl" onClick={restartLevel}>Coba Lagi</Button>
                     )}
@@ -407,7 +407,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
 
     return (
         <div className="min-h-screen bg-[#06060a] flex flex-col selection:bg-primary/30">
-            <GameHeader progress={((currentIndex + 1) / tasks.length) * 100} lives={lives} onPause={() => router.push('/')} />
+            <GameHeader progress={((currentIndex + 1) / tasks.length) * 100} lives={lives} onPause={() => router.back()} />
             <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-2xl mx-auto w-full">
                 <AnimatePresence mode="wait">
                     <motion.div key={currentIndex} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="w-full space-y-12">
@@ -420,7 +420,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 <span className={`text-xs font-black w-8 ${isTimeFrozen ? 'text-blue-400 animate-pulse' : 'text-white'}`}>{(timeLeft).toFixed(1)}s</span>
                                 {isTimeFrozen && <Icon name="ac_unit" size={16} className="text-blue-400 animate-spin" />}
                             </div>
-                            <h1 className="text-3xl md:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-4 md:decoration-8 underline-offset-8 md:underline-offset-12">
+                            <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-white tracking-tighter italic uppercase underline decoration-white/10 decoration-4 md:decoration-8 underline-offset-8 md:underline-offset-12 px-4">
                                 <NoTranslate>{currentTask.english}</NoTranslate>
                             </h1>
 

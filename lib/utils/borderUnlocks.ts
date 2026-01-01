@@ -52,12 +52,16 @@ export function checkBorderUnlocked(
         duel_wins: number;
         current_streak: number;
         unlocked_achievements?: string[];
+        unlocked_borders?: string[];
         email?: string;
         name?: string;
     }
 ): boolean {
     const condition = BORDER_UNLOCK_CONDITIONS[borderId];
     if (!condition) return false;
+
+    // Default always unlocked
+    if (borderId === 'default') return true;
 
     switch (condition.type) {
         case 'xp':
@@ -73,8 +77,8 @@ export function checkBorderUnlocked(
         case 'achievement':
             return user.unlocked_achievements?.includes(condition.achievementId || '') || false;
         case 'purchase':
-            // Will be checked against user.unlocked_borders in DB
-            return false;
+            // Check if the border is in user's unlocked_borders array
+            return user.unlocked_borders?.includes(borderId) || false;
         default:
             return false;
     }

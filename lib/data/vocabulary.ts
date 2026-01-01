@@ -32,7 +32,7 @@ export const VOCABULARY_DATA: Word[] = [
     { id: 'w24', levelId: 'vocab-3', english: 'Rice', indonesian: 'Nasi', exampleSentence: 'Rice is a staple food in many countries.' },
     { id: 'w25', levelId: 'vocab-3', english: 'Milk', indonesian: 'Susu', exampleSentence: 'The cat is drinking milk.' },
     { id: 'w26', levelId: 'vocab-3', english: 'Coffee', indonesian: 'Kopi', exampleSentence: 'I need a cup of coffee.' },
-    { id: 'w27', levelId: 'vocab-3', english: 'Sugar', indonesian: 'Gula', exampleSentence: 'Dont put too much sugar.' },
+    { id: 'w27', levelId: 'vocab-3', english: 'Sugar', indonesian: 'Gula', exampleSentence: 'Don\'t put too much sugar.' },
     { id: 'w28', levelId: 'vocab-3', english: 'Salt', indonesian: 'Garam', exampleSentence: 'The soup needs more salt.' },
     { id: 'w29', levelId: 'vocab-3', english: 'Fruit', indonesian: 'Buah', exampleSentence: 'I love eating fresh fruit.' },
     { id: 'w30', levelId: 'vocab-3', english: 'Vegetable', indonesian: 'Sayur', exampleSentence: 'Eat your vegetables.' },
@@ -40,7 +40,7 @@ export const VOCABULARY_DATA: Word[] = [
     // Level 4: Feelings & Emotions (10 words) - NEW
     { id: 'w31', levelId: 'vocab-4', english: 'Happy', indonesian: 'Senang', exampleSentence: 'I am so happy to see you!' },
     { id: 'w32', levelId: 'vocab-4', english: 'Sad', indonesian: 'Sedih', exampleSentence: 'He felt sad after the movie.' },
-    { id: 'w33', levelId: 'vocab-4', english: 'Angry', indonesian: 'Marah', exampleSentence: 'Please dont be angry with me.' },
+    { id: 'w33', levelId: 'vocab-4', english: 'Angry', indonesian: 'Marah', exampleSentence: 'Please don\'t be angry with me.' },
     { id: 'w34', levelId: 'vocab-4', english: 'Surprised', indonesian: 'Terkejut', exampleSentence: 'I was surprised by the news.' },
     { id: 'w35', levelId: 'vocab-4', english: 'Bored', indonesian: 'Bosan', exampleSentence: 'The lecture made me feel bored.' },
     { id: 'w36', levelId: 'vocab-4', english: 'Excited', indonesian: 'Semangat', exampleSentence: 'We are excited about the trip.' },
@@ -67,7 +67,7 @@ export const VOCABULARY_DATA: Word[] = [
     { id: 'w53', levelId: 'vocab-6', english: 'Ticket', indonesian: 'Tiket', exampleSentence: 'Do you have your flight ticket?' },
     { id: 'w54', levelId: 'vocab-6', english: 'Destination', indonesian: 'Tujuan', exampleSentence: 'Our destination is Tokyo.' },
     { id: 'w55', levelId: 'vocab-6', english: 'Adventure', indonesian: 'Petualangan', exampleSentence: 'Life is a big adventure.' },
-    { id: 'w56', levelId: 'vocab-6', english: 'Passport', indonesian: 'Paspor', exampleSentence: 'Dont forget your passport.' },
+    { id: 'w56', levelId: 'vocab-6', english: 'Passport', indonesian: 'Paspor', exampleSentence: 'Don\'t forget your passport.' },
     { id: 'w57', levelId: 'vocab-6', english: 'Luggage', indonesian: 'Bagasi', exampleSentence: 'The luggage is too heavy.' },
     { id: 'w58', levelId: 'vocab-6', english: 'Tourist', indonesian: 'Wisatawan', exampleSentence: 'The city is full of tourists.' },
     { id: 'w59', levelId: 'vocab-6', english: 'Map', indonesian: 'Peta', exampleSentence: 'Check the map for directions.' },
@@ -113,13 +113,13 @@ export const VOCABULARY_DATA: Word[] = [
     { id: 'w91', levelId: 'vocab-10', english: 'Kind', indonesian: 'Baik Hati', exampleSentence: 'She is a very kind person.' },
     { id: 'w92', levelId: 'vocab-10', english: 'Brave', indonesian: 'Berani', exampleSentence: 'Be brave in difficult times.' },
     { id: 'w93', levelId: 'vocab-10', english: 'Smart', indonesian: 'Pintar', exampleSentence: 'You are so smart!' },
-    { id: 'w94', levelId: 'vocab-10', english: 'Lazy', indonesian: 'Malas', exampleSentence: 'Dont be lazy; get up!' },
+    { id: 'w94', levelId: 'vocab-10', english: 'Lazy', indonesian: 'Malas', exampleSentence: 'Don\'t be lazy; get up!' },
     { id: 'w95', levelId: 'vocab-10', english: 'Honest', indonesian: 'Jujur', exampleSentence: 'An honest man is respected.' },
     { id: 'w96', levelId: 'vocab-10', english: 'Creative', indonesian: 'Kreatif', exampleSentence: 'She has creative ideas.' },
     { id: 'w97', levelId: 'vocab-10', english: 'Friendly', indonesian: 'Ramah', exampleSentence: 'The people are very friendly.' },
     { id: 'w98', levelId: 'vocab-10', english: 'Stubborn', indonesian: 'Keras Kepala', exampleSentence: 'He is quite stubborn.' },
     { id: 'w99', levelId: 'vocab-10', english: 'Patient', indonesian: 'Sabar', exampleSentence: 'Please be patient with me.' },
-    { id: 'w100', levelId: 'vocab-10', english: 'Diligent', indonesian: 'Rajin', exampleSentence: 'Diligent students get A.' },
+    { id: 'w100', levelId: 'vocab-10', english: 'Diligent', indonesian: 'Rajin', exampleSentence: 'Diligent students get an A.' },
 
     // Adding another 40 words to reach 140 words (100 new + 40 existing)
     // Level 11: Advanced Actions
@@ -150,7 +150,7 @@ export const VOCABULARY_DATA: Word[] = [
     { id: 'w121', levelId: 'vocab-13', english: 'Knowledge', indonesian: 'Pengetahuan', exampleSentence: 'Knowledge is power.' },
     { id: 'w122', levelId: 'vocab-13', english: 'Education', indonesian: 'Pendidikan', exampleSentence: 'Education is key.' },
     { id: 'w123', levelId: 'vocab-13', english: 'Lesson', indonesian: 'Pelajaran', exampleSentence: 'I learned a valuable lesson.' },
-    { id: 'w124', levelId: 'vocab-13', english: 'University', indonesian: 'Universitas', exampleSentence: 'She study at university.' },
+    { id: 'w124', levelId: 'vocab-13', english: 'University', indonesian: 'Universitas', exampleSentence: 'She studies at university.' },
     { id: 'w125', levelId: 'vocab-13', english: 'Library', indonesian: 'Perpustakaan', exampleSentence: 'Keep quiet in the library.' },
     { id: 'w126', levelId: 'vocab-13', english: 'Degree', indonesian: 'Gelar', exampleSentence: 'I got my bachelors degree.' },
     { id: 'w127', levelId: 'vocab-13', english: 'Subject', indonesian: 'Mata Pelajaran', exampleSentence: 'Math is my favorite subject.' },
@@ -193,7 +193,7 @@ export const VOCABULARY_DATA: Word[] = [
     { id: 'w157', levelId: 'vocab-16', english: 'Exercise', indonesian: 'Olahraga', exampleSentence: 'Regular exercise is good.' },
     { id: 'w158', levelId: 'vocab-16', english: 'Therapy', indonesian: 'Terapi', exampleSentence: 'She attends physical therapy.' },
     { id: 'w159', levelId: 'vocab-16', english: 'Recovery', indonesian: 'Pemulihan', exampleSentence: 'Wish you a speedy recovery.' },
-    { id: 'w160', levelId: 'vocab-16', english: 'Digestive', indonesian: 'Pencernaan', exampleSentence: 'Apple is good for digestive.' },
+    { id: 'w160', levelId: 'vocab-16', english: 'Digestion', indonesian: 'Pencernaan', exampleSentence: 'Apples are good for digestion.' },
 
     // Level 17: Social Media & Trends
     { id: 'w161', levelId: 'vocab-17', english: 'Influencer', indonesian: 'Pemengaruh', exampleSentence: 'Shes a famous influencer.' },
@@ -248,12 +248,12 @@ export const VOCABULARY_DATA: Word[] = [
     { id: 'w201', levelId: 'vocab-21', english: 'Call off', indonesian: 'Membatalkan', exampleSentence: 'They called off the meeting.' },
     { id: 'w202', levelId: 'vocab-21', english: 'Look into', indonesian: 'Menyelidiki', exampleSentence: 'I will look into the matter.' },
     { id: 'w203', levelId: 'vocab-21', english: 'Carry out', indonesian: 'Melaksanakan', exampleSentence: 'Carry out the instructions.' },
-    { id: 'w204', levelId: 'vocab-21', english: 'Put off', indonesian: 'Menunda', exampleSentence: 'Dont put off your work.' },
+    { id: 'w204', levelId: 'vocab-21', english: 'Put off', indonesian: 'Menunda', exampleSentence: 'Don\'t put off your work.' },
     { id: 'w205', levelId: 'vocab-21', english: 'Bring up', indonesian: 'Mengangkat (Topik)', exampleSentence: 'He brought up a new point.' },
     { id: 'w206', levelId: 'vocab-21', english: 'Set up', indonesian: 'Mendirikan/Mengatur', exampleSentence: 'Set up the equipment.' },
     { id: 'w207', levelId: 'vocab-21', english: 'Find out', indonesian: 'Menemukan/Cari Tahu', exampleSentence: 'I need to find out why.' },
     { id: 'w208', levelId: 'vocab-21', english: 'Go over', indonesian: 'Memeriksa Kembali', exampleSentence: 'Go over the report again.' },
-    { id: 'w209', levelId: 'vocab-21', english: 'Take over', indonesian: 'Mengambil Alih', exampleSentence: 'He will take over the CEO.' },
+    { id: 'w209', levelId: 'vocab-21', english: 'Take over', indonesian: 'Mengambil Alih', exampleSentence: 'He will take over as CEO.' },
     { id: 'w210', levelId: 'vocab-21', english: 'Turn down', indonesian: 'Menolak', exampleSentence: 'She turned down the offer.' },
 
     // Level 22: Strategy & Finance

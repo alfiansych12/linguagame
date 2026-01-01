@@ -16,7 +16,7 @@ export interface CrystalInventory {
 
 import { supabase } from '@/lib/db/supabase';
 import { ACHIEVEMENTS } from '@/lib/data/achievements';
-import { updateProfile, consumeCrystal } from '@/app/actions/userActions';
+import { updateProfile, consumeCrystal, applyReferral as applyReferralAction, unlockAchievement } from '@/app/actions/userActions';
 import { useAlertStore } from './alert-store';
 
 interface UserState {
@@ -259,38 +259,13 @@ export const useUserStore = create<UserState>()(
                 const userId = get().userId;
                 if (!userId || userId === 'guest') return { success: false, message: 'Harus login dulu sirkel!' };
 
-                // 1. Cek apakah user sudah pernah di-refer
-                const { data: currentUser } = await supabase
-                    .from('users')
-                    .select('referred_by')
-                    .eq('id', userId)
-                    .single();
+                const result = await applyReferralAction(code);
 
-                if (currentUser?.referred_by) return { success: false, message: 'Kamu sudah pernah pakai kode referral!' };
-
-                // 2. Cari siapa pemilik kode
-                const { data: inviter, error } = await supabase
-                    .from('users')
-                    .select('id, referral_count, referral_code')
-                    .eq('referral_code', code.toUpperCase())
-                    .single();
-
-                if (error || !inviter) return { success: false, message: 'Kode tidak valid nih.' };
-                if (inviter.id === userId) return { success: false, message: 'Masa pakai kode sendiri? Kocak geming.' };
-
-                try {
-                    // 3. Update penginvit (+1 referral_count)
-                    await supabase.rpc('increment_referral_count', { user_id: inviter.id });
-
-                    // 4. Update diri sendiri (set referred_by)
-                    await supabase.from('users').update({ referred_by: inviter.id }).eq('id', userId);
-
-                    // 5. Kasih reward instan ke diri sendiri
-                    await get().addGems(250);
-
-                    return { success: true, message: 'Berhasil! Bonus 250 Crystal cair.' };
-                } catch (e) {
-                    return { success: false, message: 'Gagal sinkron, coba lagi nanti.' };
+                if (result.success) {
+                    await get().syncWithDb(userId);
+                    return { success: true, message: result.message || 'Berhasil!' };
+                } else {
+                    return { success: false, message: result.error || 'Gagal sirkel.' };
                 }
             },
 
@@ -332,12 +307,12 @@ export const useUserStore = create<UserState>()(
                     duelWins, totalSpent, unlockedAchievements, userId
                 } = get();
 
-                const newUnlocked = [...unlockedAchievements];
-                let hasNew = false;
-                let lastUnlockedTitle = '';
+                if (!userId || userId === 'guest') return;
+
+                const newReachedIds: string[] = [];
 
                 ACHIEVEMENTS.forEach(ach => {
-                    if (newUnlocked.includes(ach.id)) return;
+                    if (unlockedAchievements.includes(ach.id)) return;
 
                     let reached = false;
                     switch (ach.type) {
@@ -350,30 +325,35 @@ export const useUserStore = create<UserState>()(
                     }
 
                     if (reached) {
-                        newUnlocked.push(ach.id);
-                        hasNew = true;
-                        lastUnlockedTitle = ach.title;
+                        newReachedIds.push(ach.id);
                     }
                 });
 
-                if (hasNew) {
-                    set({ unlockedAchievements: newUnlocked });
+                if (newReachedIds.length > 0) {
+                    for (const achId of newReachedIds) {
+                        const ach = ACHIEVEMENTS.find(a => a.id === achId);
+                        if (!ach) continue;
 
-                    if (userId && userId !== 'guest') {
-                        await supabase.from('users').update({
-                            unlocked_achievements: newUnlocked
-                        }).eq('id', userId);
-                    }
+                        const result = await unlockAchievement(achId);
 
-                    // Tampilkan Alert Gacor
-                    const { showAlert } = useAlertStore.getState();
-                    if (showAlert) {
-                        showAlert({
-                            title: 'Achievement Unlocked! 🏆',
-                            message: `Selamat sirkel! Kamu dapet badge "${lastUnlockedTitle}". Literally sepuh!`,
-                            type: 'xp', // Icon Bolt buat prestasi
-                            autoClose: 5000
-                        });
+                        if (result.success) {
+                            // Update local state
+                            set((state) => ({
+                                unlockedAchievements: [...state.unlockedAchievements, achId],
+                                gems: state.gems + (result.reward || 0)
+                            }));
+
+                            // Show Alert with Reward Info
+                            const { showAlert } = useAlertStore.getState();
+                            if (showAlert) {
+                                showAlert({
+                                    title: 'Achievement Unlocked! 🏆',
+                                    message: `Selamat sirkel! Kamu dapet badge "${ach.title}" dan bonus ${result.reward} Crystal. Literally sepuh!`,
+                                    type: 'xp',
+                                    autoClose: 5000
+                                });
+                            }
+                        }
                     }
                 }
             },

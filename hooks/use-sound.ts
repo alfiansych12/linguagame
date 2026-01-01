@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from 'react';
 
-type SoundType = 'CORRECT' | 'WRONG' | 'CLICK' | 'CRYSTAL' | 'SUCCESS' | 'GAMEOVER' | 'START' | 'SPECIAL_WIN';
+type SoundType = 'CORRECT' | 'WRONG' | 'CLICK' | 'CRYSTAL' | 'SUCCESS' | 'GAMEOVER' | 'START' | 'SPECIAL_WIN' | 'INTRUDER';
 
 const SOUND_FILES: Record<SoundType, string[]> = {
     CORRECT: ['/sounds/correct.mp3', '/sounds/correct.2.mp3', '/sounds/correct.3.mp3', '/sounds/correct.4.mp3'],
@@ -13,6 +13,7 @@ const SOUND_FILES: Record<SoundType, string[]> = {
     GAMEOVER: ['/sounds/gameover.mp3', '/sounds/gameover.2.mp3', '/sounds/gameover.3.mp3', '/sounds/gameover.4.mp3'],
     START: ['/sounds/start.mp3'],
     SPECIAL_WIN: ['/sounds/special-win.1.mp3', '/sounds/special-win.2.mp3'],
+    INTRUDER: ['/sounds/intruder.mp3'],
 };
 
 // Global audio cache to prevent "lag" and excessive garbage collection
@@ -29,7 +30,6 @@ export const useSound = () => {
 
             if (typeof Audio === 'undefined') return;
 
-            // USE CACHE: Reuse audio object instead of creating new one
             let audio = audioCache[soundPath];
 
             if (!audio) {
@@ -37,7 +37,6 @@ export const useSound = () => {
                 audio.volume = 0.5;
                 audioCache[soundPath] = audio;
             } else {
-                // Reset to start if already playing
                 audio.currentTime = 0;
             }
 
@@ -45,8 +44,17 @@ export const useSound = () => {
 
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    if (error.name !== 'NotAllowedError' && error.name !== 'NotSupportedError') {
-                        console.log('Audio play failed:', type, error.name);
+                    if (error.name === 'NotAllowedError') {
+                        console.warn(`[SoundSystem] Blocked for ${type}. Queuing for next interaction.`);
+
+                        // Fallback: Play on next click anywhere on the document
+                        const playOnInteraction = () => {
+                            audio.play().catch(() => { });
+                            document.removeEventListener('click', playOnInteraction);
+                        };
+                        document.addEventListener('click', playOnInteraction);
+                    } else {
+                        console.error(`[SoundSystem] Error playing ${type}:`, error);
                     }
                 });
             }

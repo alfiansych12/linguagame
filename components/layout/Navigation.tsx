@@ -7,6 +7,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/db/supabase';
 import { useSound } from '@/hooks/use-sound';
+import { NotificationCenter } from '../ui/NotificationCenter';
 
 interface HeaderProps {
     user: {
@@ -20,10 +21,35 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ user }) => {
     const { data: session, status } = useSession();
     const [mounted, setMounted] = useState(false);
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
+    const [hasUnread, setHasUnread] = useState(false);
 
     useEffect(() => {
         setMounted(true);
+        checkUnread();
     }, []);
+
+    const checkUnread = async () => {
+        const lastSeen = localStorage.getItem('last_seen_announcement');
+        const { data } = await supabase
+            .from('announcements')
+            .select('created_at')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (data?.[0]) {
+            const latestDate = new Date(data[0].created_at).getTime();
+            if (!lastSeen || latestDate > parseInt(lastSeen)) {
+                setHasUnread(true);
+            }
+        }
+    };
+
+    const handleOpenNotif = () => {
+        setIsNotifOpen(true);
+        setHasUnread(false);
+        localStorage.setItem('last_seen_announcement', Date.now().toString());
+    };
 
     const isAuthenticated = status === 'authenticated' && mounted;
 
@@ -57,17 +83,29 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                     </div>
 
                     {isAuthenticated ? (
-                        <Link href="/profile">
-                            <div className="size-10 rounded-xl bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-600 shadow-sm overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all">
-                                {session.user?.image ? (
-                                    <img src={session.user.image} alt={session.user.name || ''} className="size-full object-cover" />
-                                ) : (
-                                    <div className="size-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
-                                        <Icon name="person" className="text-slate-400" size={24} />
-                                    </div>
+                        <>
+                            <button
+                                onClick={handleOpenNotif}
+                                className="relative size-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors mr-1"
+                            >
+                                <Icon name="notifications" size={20} className="text-slate-500" />
+                                {hasUnread && (
+                                    <span className="absolute top-2.5 right-2.5 size-2 bg-error rounded-full ring-2 ring-white dark:ring-slate-800" />
                                 )}
-                            </div>
-                        </Link>
+                            </button>
+
+                            <Link href="/profile">
+                                <div className="size-10 rounded-xl bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-600 shadow-sm overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all">
+                                    {session.user?.image ? (
+                                        <img src={session.user.image} alt={session.user.name || ''} className="size-full object-cover" />
+                                    ) : (
+                                        <div className="size-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
+                                            <Icon name="person" className="text-slate-400" size={24} />
+                                        </div>
+                                    )}
+                                </div>
+                            </Link>
+                        </>
                     ) : (
                         <Link href="/login">
                             <Button size="sm" className="rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-primary text-white hover:bg-primary-dark">
@@ -77,6 +115,8 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                     )}
                 </div>
             </div>
+
+            <NotificationCenter isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
         </header>
     );
 };
@@ -103,7 +143,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
 
     return (
         <aside className="hidden lg:flex flex-col w-72 xl:w-80 h-screen sticky top-0 border-r border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-[#0a0a0f]/40 p-8 z-50 transition-all duration-300">
-            <Link href="/" className="flex items-center gap-3 group mb-16 px-2">
+            <Link href="/" className="flex items-center gap-3 group mb-8 px-2">
                 <div className="size-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform duration-500">
                     <Icon name="translate" className="text-white" size={28} />
                 </div>
@@ -178,41 +218,41 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                 </div>
             )}
 
-            <div className="mt-auto pt-8">
+            <div className="mt-auto pt-3">
                 {isAuthenticated ? (
-                    <div className="p-6 rounded-[2.5rem] bg-gradient-to-br from-primary to-primary-dark text-white shadow-xl shadow-primary/30 overflow-hidden relative group cursor-pointer hover:shadow-2xl transition-all duration-500">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/20 overflow-hidden relative group cursor-pointer hover:shadow-xl transition-all duration-500">
                         <div className="relative z-10">
-                            <div className="size-10 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Icon name="workspace_premium" size={24} />
+                            <div className="size-6 rounded-lg bg-white/20 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                                <Icon name="workspace_premium" size={14} />
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">DuoPlus</p>
-                            <p className="text-base font-black mb-4 leading-tight">Zero Ads, <br />Energy Unlimited!</p>
+                            <p className="text-[7px] font-black uppercase tracking-widest opacity-80 mb-0.5">DuoPlus</p>
+                            <p className="text-xs font-black mb-1.5 leading-tight">Zero Ads, Energy Unlimited!</p>
                             <button
                                 onClick={() => {
                                     useSound().playSound('CLICK');
                                     // Subscription logic
                                 }}
-                                className="w-full py-3 bg-white text-primary text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-xl group-hover:bg-slate-50 transition-colors"
+                                className="w-full py-1.5 bg-white text-primary text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg group-hover:bg-slate-50 transition-colors"
                             >
                                 Upgrade Now
                             </button>
                         </div>
-                        <Icon name="bolt" size={120} className="absolute -bottom-8 -right-8 opacity-10 rotate-12 group-hover:rotate-45 transition-transform duration-1000" filled />
+                        <Icon name="bolt" size={60} className="absolute -bottom-4 -right-4 opacity-10 rotate-12 group-hover:rotate-45 transition-transform duration-1000" filled />
                     </div>
                 ) : (
-                    <div className="p-6 rounded-[2.5rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                        <Icon name="info" className="text-slate-400 mb-2" size={24} />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Guest Mode</p>
-                        <p className="text-xs font-bold text-slate-400 mt-1 line-clamp-2">Login buat save progress & unlock arena!</p>
+                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+                        <Icon name="info" className="text-slate-400 mb-1.5" size={18} />
+                        <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Guest Mode</p>
+                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 line-clamp-2">Login buat save progress & unlock arena!</p>
                     </div>
                 )}
 
                 {isAuthenticated && (
                     <button
                         onClick={() => signOut()}
-                        className="w-full mt-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-error transition-colors"
+                        className="w-full mt-2 flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-error transition-colors py-1"
                     >
-                        <Icon name="logout" size={16} />
+                        <Icon name="logout" size={14} />
                         Logout
                     </button>
                 )}

@@ -6,6 +6,8 @@ import { Card, Icon, Badge, Button } from '@/components/ui/UIComponents';
 import { useSession } from 'next-auth/react';
 import { AvatarFrame } from './AvatarFrame';
 import { BorderSelector } from './BorderSelector';
+import { RedeemSection } from './RedeemSection';
+import Link from 'next/link';
 
 interface UserProfileOverlayProps {
     user: any | null;
@@ -158,8 +160,20 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                     </div>
                                 </div>
 
+                                {isMe && <RedeemSection />}
+
+                                {/* Admin Link */}
+                                {isMe && session?.user?.isAdmin && (
+                                    <Link href="/admin" className="w-full mt-4">
+                                        <Button variant="primary" fullWidth size="sm" className="bg-slate-900 text-[10px] font-black italic tracking-widest border-none h-10 rounded-xl hover:bg-black transition-all">
+                                            <Icon name="shield" size={14} className="mr-2" filled />
+                                            ADMIN DASHBOARD
+                                        </Button>
+                                    </Link>
+                                )}
+
                                 {/* Footer */}
-                                <div className="w-full pt-4 border-t border-slate-100 dark:border-white/5 text-center">
+                                <div className="w-full pt-4 border-t border-slate-100 dark:border-white/5 text-center mt-4">
                                     <p className="text-[10px] text-slate-400 font-bold italic">
                                         "Terus grinding biar jadi sepuh!"
                                     </p>

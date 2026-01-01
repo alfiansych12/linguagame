@@ -3,7 +3,7 @@
 import { VocabularyGame } from '@/components/game/VocabularyGame';
 import { GrammarGame } from '@/components/game/GrammarGame';
 import { SpeedBlitzGame } from '@/components/game/SpeedBlitzGame';
-import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
+import { ALL_LEVELS } from '@/lib/data/mockLevels';
 import { VOCABULARY_DATA } from '@/lib/data/vocabulary';
 import { GRAMMAR_DATA } from '@/lib/data/grammar';
 import { BLITZ_DATA } from '@/lib/data/blitz';
@@ -23,7 +23,7 @@ export default function GamePage({ params }: { params: Promise<{ levelId: string
     const { playSound } = useSound();
 
     // 1. Find the level
-    const level = CURRICULUM_LEVELS.find(l => l.id === levelId);
+    const level = ALL_LEVELS.find(l => l.id === levelId);
 
     useEffect(() => {
         if (!level || !isLevelUnlocked(levelId)) {
@@ -88,7 +88,7 @@ export default function GamePage({ params }: { params: Promise<{ levelId: string
         let words = [];
 
         if (level.isExam) {
-            const phaseLevels = CURRICULUM_LEVELS.filter(l => l.phase === level.phase && !l.isExam).map(l => l.id);
+            const phaseLevels = ALL_LEVELS.filter(l => l.phase === level.phase && !l.isExam).map(l => l.id);
             const allPhaseWords = VOCABULARY_DATA.filter(w => phaseLevels.includes(w.levelId));
             words = allPhaseWords.sort(() => Math.random() - 0.5).slice(0, 20);
         } else {

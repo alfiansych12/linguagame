@@ -36,10 +36,77 @@ export const CURRICULUM_LEVELS: Level[] = [
     { id: 'vocab-30', title: 'Digital Frontier', description: 'AI, Blockchain, and Cybersecurity', difficulty: 5, orderIndex: 28, icon: 'terminal', isPublished: true, phase: 3 },
     { id: 'vocab-12', title: 'Professional Talk', description: 'Communication in the workplace', difficulty: 5, orderIndex: 29, icon: 'business_center', isPublished: true, phase: 3 },
     { id: 'vocab-exam-3', title: 'Phase 3 Final Exam', description: 'Prove you are a literal Sepuh!', difficulty: 5, orderIndex: 30, icon: 'verified_user', isPublished: true, phase: 3, isExam: true },
-
-    // GRAMMAR TIME MACHINE
-    { id: 'grammar-1', title: 'Present Tense', description: 'Talking about now and habits', difficulty: 3, orderIndex: 31, icon: 'update', isPublished: true },
-    { id: 'grammar-2', title: 'Past Tense', description: 'Sharing your memories and history', difficulty: 4, orderIndex: 32, icon: 'history', isPublished: true },
-    { id: 'grammar-3', title: 'Future Tense', description: 'Planning your dreams and goals', difficulty: 4, orderIndex: 33, icon: 'rocket_launch', isPublished: true },
-    { id: 'grammar-blitz', title: 'Speed Blitz', description: 'Quick-fire grammar challenge!', difficulty: 5, orderIndex: 34, icon: 'bolt', isPublished: true }
 ];
+
+// GENERATE GRAMMAR LEVELS (PHASE 1)
+const CATEGORIES = ['Simple Present', 'Present Continuous', 'Present Perfect'];
+const SUB_TYPES = ['POSITIVE', 'NEGATIVE', 'QUESTION'] as const;
+
+// Custom Titles & Descriptions for Grammar Missions
+const GRAMMAR_METADATA: Record<string, { title: string; desc: string }[]> = {
+    'Simple Present-POSITIVE': [
+        { title: 'Kebiasaan Pribadi', desc: 'Kata kerja umum buat rutinitasmu (I/You/We/They)' },
+        { title: 'Kehidupan Sehari-hari', desc: 'Kuasai aturan akhiran -s/es buat Dia (She/He/It)' },
+        { title: 'Nama & Orang Lain', desc: 'Cara ngomongin rutinitas teman atau benda spesifik' },
+        { title: 'Dunia Kerja & Sekolah', desc: 'Kebiasaan di kantor, kampus, atau tempat belajar' },
+        { title: 'Selalu & Gak Pernah', desc: 'Pake kata frekuensi buat ceritain rutinitasmu' },
+        { title: 'Hobi & Hiburan', desc: 'Ungkapin apa yang biasa kamu lakuin buat asik-asikan' },
+        { title: 'Pola Hidup Sehat', desc: 'Rutinitas makan, tidur, dan kesehatanmu' },
+        { title: 'Gaya Hidup Digital', desc: 'Kebiasaan main game dan sosmed di dunia nyata' },
+        { title: 'Alam & Fakta Umum', desc: 'Kebenaran umum tentang dunia di sekitar kita' },
+        { title: 'Misi Penguasaan', desc: 'Ujian pamungkas buat tes skill Habit-mu!' },
+    ],
+    'Simple Present-NEGATIVE': [
+        { title: 'Bukan Kebiasaanku', desc: 'Pake "don\'t" buat I, You, We, dan They' },
+        { title: 'Bukan Kebiasaannya', desc: 'Pake "doesn\'t" buat Dia (She, He, It)' },
+        { title: 'Cek Fakta', desc: 'Menyangkal fakta yang emang gak bener' },
+        { title: 'Libur Kerja', desc: 'Hal-hal yang biasanya gak kita lakuin di kantor' },
+        { title: 'Aturan Ketat', desc: 'Hal yang gak bakal pernah terjadi di sirkel kita' },
+        { title: 'Makanan Gak Suka', desc: 'Ungkapin makanan yang gak doyan kamu makan' },
+        { title: 'Masalah Teknologi', desc: 'Pas gadget gak berfungsi sesuai keinginan' },
+        { title: 'Fakta Hewan', desc: 'Hal-hal yang sebenernya gak dilakuin hewan-hewan' },
+        { title: 'Mitos Terpecahkan', desc: 'Membuktikan mitos rutinitas itu salah' },
+        { title: 'Master Negatif', desc: 'Tantangan terakhir buat kalimat Negatif!' },
+    ],
+    'Simple Present-QUESTION': [
+        { title: 'Tanya Jawab Simpel', desc: 'Tanya "Do you...?" buat cari tahu rutinitas' },
+        { title: 'Kepo-in Dia', desc: 'Pake "Does...?" buat nanyain kebiasaan Dia' },
+        { title: 'Wawancara Harian', desc: 'Nanyain temen soal kebiasaan unik mereka' },
+        { title: 'Bantuan Teknologi', desc: 'Nanyain gimana cara kerja alat-alat digital' },
+        { title: 'Seputar Traveling', desc: 'Tanya-tanya soal perjalanan yang sering dilakuin' },
+        { title: 'Kepo Sosial', desc: 'Apakah kita kenal mereka? Apakah mereka suka kita?' },
+        { title: 'Pertanyaan Mendalam', desc: 'Nanyain soal tujuan hidup dan mimpi besar' },
+        { title: 'Kuis Alam', desc: 'Apakah burung terbang? Apakah matahari terbit?' },
+        { title: 'Cek Rutinitas', desc: 'Apakah Budi makan nasi? Apakah Ani belajar?' },
+        { title: 'Master Teka-Teki', desc: 'Kuis akhir buat skill kalimat tanya!' },
+    ],
+};
+
+export const GRAMMAR_LEVELS: Level[] = [];
+
+let orderIndex = 100;
+CATEGORIES.forEach(cat => {
+    SUB_TYPES.forEach(type => {
+        const metadataKey = `${cat}-${type}`;
+        const metadata = GRAMMAR_METADATA[metadataKey];
+
+        for (let i = 1; i <= 10; i++) {
+            const custom = metadata?.[i - 1];
+
+            GRAMMAR_LEVELS.push({
+                id: `grammar-p1-${cat.toLowerCase().replace(' ', '-')}-${type.toLowerCase()}-${i}`,
+                title: custom ? custom.title : `${cat} ${i}`,
+                description: custom ? custom.desc : `${type === 'POSITIVE' ? 'Kalimat Positif' : type === 'NEGATIVE' ? 'Kalimat Negatif' : 'Kalimat Tanya'} - Misi ${i}`,
+                difficulty: cat === 'Simple Present' ? 1 : cat === 'Present Continuous' ? 2 : 3,
+                orderIndex: orderIndex++,
+                icon: type === 'POSITIVE' ? 'add_circle' : type === 'NEGATIVE' ? 'do_not_disturb_on' : 'help_center',
+                isPublished: true,
+                phase: 1,
+                category: cat,
+                subType: type
+            });
+        }
+    });
+});
+
+export const ALL_LEVELS = [...CURRICULUM_LEVELS, ...GRAMMAR_LEVELS];

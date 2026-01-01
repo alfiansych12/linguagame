@@ -102,11 +102,19 @@ export default function AchievementsPage() {
                                             </p>
                                         </div>
 
-                                        <div className="flex items-center justify-between md:justify-end gap-2 md:gap-3 shrink-0">
-                                            <div className="text-right">
-                                                <div className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Status</div>
-                                                <div className="text-[9px] md:text-sm font-black text-slate-900 dark:text-white leading-none">
-                                                    {progress.current} <span className="text-slate-400 italic">/ {ach.target}</span>
+                                        <div className="flex items-center justify-between md:justify-end gap-2 md:gap-5 shrink-0">
+                                            <div className="text-right flex items-center gap-4">
+                                                <div className="hidden md:flex flex-col items-center justify-center p-2 rounded-xl bg-primary/5 border border-primary/10">
+                                                    <div className="flex items-center gap-1">
+                                                        <Icon name="diamond" size={14} className="text-primary" filled />
+                                                        <span className="text-xs font-black text-primary">{ach.reward}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Status</div>
+                                                    <div className="text-[9px] md:text-sm font-black text-slate-900 dark:text-white leading-none">
+                                                        {progress.current} <span className="text-slate-400 italic">/ {ach.target}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             {isUnlocked ? (

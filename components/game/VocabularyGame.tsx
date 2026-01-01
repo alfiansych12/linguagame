@@ -12,7 +12,7 @@ import { useProgressStore } from '@/store/progress-store';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/db/supabase';
 import { calculateXp, calculateStars } from '@/lib/game-logic/xp-calculator';
-import { submitGameScore } from '@/app/actions/gameActions';
+import { submitGameScore, resetLevelProgress } from '@/app/actions/gameActions';
 import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
 import { highlightVocabInSentence } from '@/lib/utils/vocab-highlight';
@@ -270,8 +270,8 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                         <Icon name={level.icon || 'school'} className="text-primary" size={24} mdSize={32} />
                     </div>
                     <div className="space-y-4">
-                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.title}</h1>
-                        <p className="text-slate-500 font-bold text-sm md:text-base lg:text-lg">{level.description}</p>
+                        <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase px-2">{level.title}</h1>
+                        <p className="text-slate-500 font-bold text-sm md:text-base lg:text-lg px-4">{level.description}</p>
                     </div>
 
                     <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl lg:rounded-[2.5rem] border border-slate-200/50 text-left">
@@ -321,12 +321,12 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                     animate={{ opacity: 1, scale: 1 }}
                     className="max-w-md w-full space-y-6 md:space-y-8"
                 >
-                    <div className="size-20 md:size-24 lg:size-32 bg-error/10 rounded-xl md:rounded-2xl lg:rounded-[2.5rem] flex items-center justify-center mx-auto mb-4 md:mb-6">
-                        <Icon name="heart_broken" size={40} mdSize={60} className="text-error" filled />
+                    <div className="size-20 md:size-24 lg:size-32 bg-error/10 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center mx-auto mb-4 md:mb-6">
+                        <Icon name="heart_broken" size={40} mdSize={64} className="text-error" filled />
                     </div>
                     <div>
-                        <h2 className="text-2xl md:text-3xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter italic uppercase">Nyawa Habis!</h2>
-                        <p className="text-slate-500 font-bold text-base md:text-lg">Kamu harus mulai ulang dari awal untuk memperbaiki kesalahan.</p>
+                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter italic uppercase">Nyawa Habis!</h2>
+                        <p className="text-base md:text-lg text-slate-500 font-bold px-4">Kamu harus mulai ulang dari awal untuk memperbaiki kesalahan.</p>
                     </div>
                     <div className="flex flex-col gap-2 md:gap-3">
                         <Button variant="primary" fullWidth className="py-4 md:py-5 lg:py-6 rounded-xl md:rounded-[1.5rem] font-black uppercase tracking-widest text-sm md:text-base shadow-xl" onClick={restartLevel}>
@@ -341,15 +341,20 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         );
     }
 
-    const handleResetPhase = () => {
+    const handleResetPhase = async () => {
         const phaseLevels = CURRICULUM_LEVELS.filter(l => l.phase === level.phase && !l.isExam);
         const levelIdsToReset = phaseLevels.map(l => l.id);
 
-        // Reset in Zusant Store
+        // 1. Sync to Database
+        if (userId !== 'guest') {
+            await resetLevelProgress(levelIdsToReset);
+        }
+
+        // 2. Reset in Zustand Store
         const { resetPhaseProgress } = useProgressStore.getState();
         resetPhaseProgress(levelIdsToReset);
 
-        // Go back to the first level of the phase
+        // 3. Go back to the first level of the phase
         if (phaseLevels.length > 0) {
             router.push(`/game/${phaseLevels[0].id}`);
         } else {
@@ -392,7 +397,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-2 md:gap-3 lg:gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 px-2">
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
                                     <Icon name="star" className="text-yellow-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
                                     <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">{levelData?.stars || 0}</p>
@@ -403,7 +408,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                     <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{25 + (levelData?.stars || 0) * 10}</p>
                                     <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Kristal</p>
                                 </div>
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50 col-span-2 md:col-span-1">
                                     <Icon name="timer" className="text-purple-500 mb-1 md:mb-2" size={24} mdSize={32} filled />
                                     <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">{xpBreakdown?.speed > 15 ? 'Fast' : 'Mid'}</p>
                                     <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Kecepatan</p>
@@ -418,8 +423,8 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             </div>
 
                             <div className="space-y-4">
-                                <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.isExam ? 'Ujian Gagal!' : 'Level Gag al!'}</h2>
-                                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg leading-relaxed">
+                                <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">{level.isExam ? 'Ujian Gagal!' : 'Level Gagal!'}</h2>
+                                <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 font-bold leading-relaxed px-6">
                                     {level.isExam
                                         ? `Minimal harus 80% untuk lanjut ke Fase berikutnya. Karena gagal, kamu harus mengulang Fase ini dari awal.`
                                         : `Akurasi kamu hanya ${Math.round(accuracy * 100)}%. Minimal harus 70% untuk lulus level ini. Coba lagi!`
@@ -439,7 +444,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                     )}
 
                     {isPassed && (
-                        <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.push('/')}>
+                        <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.back()}>
                             Lanjut!
                         </Button>
                     )}
@@ -453,7 +458,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
             <GameHeader
                 progress={progress}
                 lives={lives}
-                onPause={() => router.push('/')}
+                onPause={() => router.back()}
             />
 
             <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 max-w-2xl mx-auto w-full">
@@ -468,10 +473,10 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                         >
                             <div className="space-y-4">
                                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary">Kata Baru</span>
-                                <h2 className="text-3xl md:text-5xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter px-4">
                                     <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h2>
-                                <p className="text-lg md:text-2xl lg:text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
+                                <p className="text-base md:text-2xl lg:text-3xl font-bold text-slate-400 dark:text-slate-500 italic">
                                     {words[currentIndex].indonesian}
                                 </p>
                             </div>
@@ -507,9 +512,9 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                             animate={{ opacity: 1, scale: 1 }}
                             className="w-full space-y-8 md:space-y-10 lg:space-y-12"
                         >
-                            <div className="text-center space-y-3 md:space-y-4 relative">
+                            <div className="text-center space-y-2 md:space-y-4 relative px-4">
                                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-purple-500">Pilih Artinya</span>
-                                <h1 className="text-3xl md:text-4xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
                                     <NoTranslate>{words[currentIndex].english}</NoTranslate>
                                 </h1>
 

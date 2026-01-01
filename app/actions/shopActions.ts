@@ -7,6 +7,8 @@ import { PurchaseBorderSchema, PurchaseCrystalSchema } from '@/lib/validations/s
 import { revalidatePath } from 'next/cache';
 import { strictRatelimit } from '@/lib/ratelimit';
 
+import { CRYSTAL_PRICES, BORDER_PRICES } from '@/lib/data/shop';
+
 /**
  * SECURE: Purchase Crystal Action
  * Includes server-side balance check and IDOR protection.
@@ -23,7 +25,12 @@ export async function purchaseCrystal(data: any) {
         const validation = PurchaseCrystalSchema.safeParse(data);
         if (!validation.success) return { success: false, error: 'Data tidak valid' };
 
-        const { crystalId, quantity, costPerItem } = validation.data;
+        const { crystalId, quantity } = validation.data;
+
+        // SERVER-SIDE PRICE LOOKUP
+        const costPerItem = CRYSTAL_PRICES[crystalId];
+        if (!costPerItem) return { success: false, error: 'Item tidak valid' };
+
         const totalCost = costPerItem * quantity;
         const userId = session.user.id;
 
@@ -68,7 +75,12 @@ export async function purchaseBorder(data: any) {
         const validation = PurchaseBorderSchema.safeParse(data);
         if (!validation.success) return { success: false, error: 'Data tidak valid' };
 
-        const { borderId, cost } = validation.data;
+        const { borderId } = validation.data;
+
+        // SERVER-SIDE PRICE LOOKUP
+        const cost = BORDER_PRICES[borderId];
+        if (!cost) return { success: false, error: 'Border tidak valid' };
+
         const userId = session.user.id;
 
         const { data: user } = await supabase.from('users').select('gems, unlocked_borders').eq('id', userId).single();

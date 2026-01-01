@@ -172,6 +172,25 @@ export const LearningPath: React.FC<LearningPathProps> = ({
                                 </div>
                             )}
 
+                            {/* GRAMMAR MISSION TYPE HEADERS */}
+                            {level.subType && (!prevLevel || prevLevel.subType !== level.subType) && (
+                                <div className="my-8 md:my-12 flex items-center gap-4">
+                                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200 dark:to-slate-800"></div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className={`px-4 py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border ${level.subType === 'POSITIVE' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                                            level.subType === 'NEGATIVE' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' :
+                                                'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                            }`}>
+                                            {level.subType === 'POSITIVE' ? 'Misi Kalimat Positif' :
+                                                level.subType === 'NEGATIVE' ? 'Misi Kalimat Negatif' :
+                                                    'Misi Kalimat Tanya'}
+                                        </div>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Tantangan 1-10: Mastering Habits</p>
+                                    </div>
+                                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-200 dark:to-slate-800"></div>
+                                </div>
+                            )}
+
                             <LevelCard
                                 level={level}
                                 progress={progress}
@@ -183,7 +202,7 @@ export const LearningPath: React.FC<LearningPathProps> = ({
                         </React.Fragment>
                     );
                 })}
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

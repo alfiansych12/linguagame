@@ -25,6 +25,8 @@ export interface Level {
     words?: Word[];
     phase?: number;
     isExam?: boolean;
+    category?: string; // e.g. 'Simple Present'
+    subType?: 'POSITIVE' | 'NEGATIVE' | 'QUESTION';
 }
 
 export interface UserProgress {

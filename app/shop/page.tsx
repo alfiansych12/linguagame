@@ -211,8 +211,7 @@ export default function ShopPage() {
 
         const result = await purchaseCrystal({
             crystalId: item.id as any,
-            quantity: qty,
-            costPerItem: item.cost
+            quantity: qty
         });
 
         if (result.success) {
@@ -283,8 +282,7 @@ export default function ShopPage() {
         playSound('SUCCESS');
 
         const result = await purchaseBorder({
-            borderId: item.id,
-            cost: item.cost
+            borderId: item.id
         });
 
         if (result.success) {
@@ -360,51 +358,57 @@ export default function ShopPage() {
 
     return (
         <PageLayout activeTab="shop">
-            <div className="max-w-6xl mx-auto py-4 md:py-8 px-4 sm:px-6 lg:px-8">
-                {/* Hero Header */}
-                <div className="relative mb-8 md:mb-16 text-center">
+            <div className="max-w-6xl mx-auto py-3 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8">
+                {/* Hero Header - Responsive */}
+                <div className="relative mb-6 sm:mb-12 lg:mb-16 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="space-y-3 md:space-y-4"
+                        className="space-y-2 sm:space-y-3 lg:space-y-4"
                     >
-                        <Badge variant="diamond" icon="diamond" className="mx-auto px-3 md:px-6 py-1 md:py-2 text-[10px] md:text-lg">
+                        <Badge
+                            variant="diamond"
+                            icon="diamond"
+                            className="mx-auto px-2 sm:px-4 lg:px-6 py-0.5 sm:py-1 lg:py-2 text-[8px] sm:text-xs lg:text-lg"
+                        >
                             {gems} Crystals Available
                         </Badge>
-                        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
-                            SHOP <span className="text-primary border-b-2 md:border-b-8 border-primary/20">ARENA</span>
+                        <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
+                            SHOP <span className="text-primary border-b-2 sm:border-b-4 lg:border-b-8 border-primary/20">ARENA</span>
                         </h1>
-                        <p className="text-xs md:text-xl text-slate-500 font-bold max-w-2xl mx-auto px-2">
+                        <p className="text-[10px] sm:text-sm lg:text-xl text-slate-500 font-bold max-w-2xl mx-auto px-2">
                             Pilih perlengkapan tempur sirkel lo. <br className="hidden sm:block" />
                             Upgrade skill atau penampilan, <span className="text-primary italic underline decoration-wavy decoration-2 underline-offset-4">literally mehwah.</span>
                         </p>
                     </motion.div>
 
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-64 md:size-96 bg-primary/5 blur-[80px] md:blur-[120px] -z-10 rounded-full"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 sm:size-64 lg:size-96 bg-primary/5 blur-[60px] sm:blur-[80px] lg:blur-[120px] -z-10 rounded-full"></div>
                 </div>
 
-                {/* Category Tabs */}
-                <div className="flex justify-center mb-8 md:mb-12">
-                    <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl md:rounded-3xl flex gap-1 md:gap-2 border border-slate-200 dark:border-slate-700">
+                {/* Category Tabs - Responsive */}
+                <div className="flex justify-center mb-6 sm:mb-10 lg:mb-12">
+                    <div className="bg-slate-100 dark:bg-slate-800 p-1 sm:p-1.5 lg:p-2 rounded-xl sm:rounded-2xl lg:rounded-3xl flex gap-1 sm:gap-1.5 lg:gap-2 border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
                         <button
                             onClick={() => setCategory('skills')}
-                            className={`flex items-center gap-2 px-4 md:px-8 py-2 md:py-4 rounded-xl md:rounded-[1.25rem] font-black text-[10px] md:text-sm uppercase tracking-widest transition-all ${category === 'skills' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-[1.25rem] font-black text-[9px] sm:text-xs lg:text-sm uppercase tracking-widest transition-all ${category === 'skills' ? 'bg-primary text-white shadow-lg scale-[1.02]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
-                            <Icon name="bolt" size={16} mdSize={20} filled={category === 'skills'} />
-                            Skill Crystals
+                            <Icon name="bolt" size={14} className="sm:size-4 lg:size-5" filled={category === 'skills'} />
+                            <span className="hidden sm:inline">Skill Crystals</span>
+                            <span className="sm:hidden">Skills</span>
                         </button>
                         <button
                             onClick={() => setCategory('borders')}
-                            className={`flex items-center gap-2 px-4 md:px-8 py-2 md:py-4 rounded-xl md:rounded-[1.25rem] font-black text-[10px] md:text-sm uppercase tracking-widest transition-all ${category === 'borders' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-[1.25rem] font-black text-[9px] sm:text-xs lg:text-sm uppercase tracking-widest transition-all ${category === 'borders' ? 'bg-primary text-white shadow-lg scale-[1.02]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
-                            <Icon name="palette" size={16} mdSize={20} filled={category === 'borders'} />
-                            Avatar Borders
+                            <Icon name="palette" size={14} className="sm:size-4 lg:size-5" filled={category === 'borders'} />
+                            <span className="hidden sm:inline">Avatar Borders</span>
+                            <span className="sm:hidden">Borders</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Content Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {/* Content Grid - Mobile: 1 col, Tablet: 2 cols, Desktop: 3 cols */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                     <AnimatePresence mode="wait">
                         {category === 'skills' ? (
                             CRYSTAL_ITEMS.map((item, idx) => (
@@ -415,21 +419,21 @@ export default function ShopPage() {
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <Card className={`h-full p-4 md:p-8 flex flex-col items-center text-center relative overflow-hidden group border-2 hover:border-primary/30 transition-all duration-500 ${item.glow}`}>
+                                    <Card className={`h-full p-3 sm:p-5 lg:p-8 flex flex-col items-center text-center relative overflow-hidden group border border-slate-200 dark:border-slate-700 sm:border-2 hover:border-primary/30 transition-all duration-500 ${item.glow}`}>
                                         <AnimatePresence>
                                             {inventory[item.id] > 0 && (
-                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-2 right-2 md:top-4 md:right-4 size-6 md:size-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full flex items-center justify-center text-[8px] md:text-base font-black shadow-lg z-20">
+                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 lg:top-4 lg:right-4 size-5 sm:size-7 lg:size-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full flex items-center justify-center text-[8px] sm:text-xs lg:text-base font-black shadow-lg z-20">
                                                     {inventory[item.id]}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
-                                        <div className={`size-14 md:size-24 rounded-2xl md:rounded-[2.5rem] bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center mb-4 md:mb-8 group-hover:rotate-12 transition-transform duration-500 relative`}>
-                                            <Icon name={item.icon} size={28} mdSize={48} className={item.color} filled />
-                                            <div className={`absolute inset-0 rounded-2xl md:rounded-[2.5rem] ${item.color.replace('text', 'bg')}/10 animate-pulse`}></div>
+                                        <div className={`size-12 sm:size-16 lg:size-24 rounded-xl sm:rounded-2xl lg:rounded-[2.5rem] bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center mb-3 sm:mb-5 lg:mb-8 group-hover:rotate-12 transition-transform duration-500 relative`}>
+                                            <Icon name={item.icon} size={24} className={`sm:size-8 lg:size-12 ${item.color}`} filled />
+                                            <div className={`absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-[2.5rem] ${item.color.replace('text', 'bg')}/10 animate-pulse`}></div>
                                         </div>
-                                        <div className="space-y-1 md:space-y-3 flex-1 mb-4 md:mb-8 w-full">
-                                            <h3 className="text-sm md:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic truncate">{item.name}</h3>
-                                            <p className="text-slate-500 font-bold text-[9px] md:text-sm leading-relaxed px-1">
+                                        <div className="space-y-1 sm:space-y-2 lg:space-y-3 flex-1 mb-3 sm:mb-5 lg:mb-8 w-full">
+                                            <h3 className="text-xs sm:text-sm lg:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic truncate">{item.name}</h3>
+                                            <p className="text-slate-500 font-bold text-[8px] sm:text-[10px] lg:text-sm leading-relaxed px-1 line-clamp-3">
                                                 {item.description}
                                             </p>
                                         </div>
@@ -439,13 +443,13 @@ export default function ShopPage() {
                                             loading={purchasingId === item.id}
                                             disabled={gems < item.cost}
                                             onClick={() => handlePurchaseCrystal(item)}
-                                            className="py-3 md:py-5 shadow-xl"
+                                            className="py-2 sm:py-3 lg:py-5 shadow-xl text-[9px] sm:text-xs lg:text-base"
                                         >
-                                            <div className="flex items-center justify-center gap-2">
-                                                <span className="text-xs md:text-base leading-none">{gems < item.cost ? 'Gagal' : 'Forge'}</span>
-                                                <div className="flex items-center gap-1 bg-white/20 px-1.5 md:px-2 py-0.5 rounded-md md:rounded-lg">
-                                                    <Icon name="diamond" size={12} mdSize={14} filled />
-                                                    <span className="font-black tracking-tighter text-xs md:text-base">{item.cost}</span>
+                                            <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                                                <span className="leading-none">{gems < item.cost ? 'Gagal' : 'Forge'}</span>
+                                                <div className="flex items-center gap-0.5 sm:gap-1 bg-white/20 px-1 sm:px-1.5 lg:px-2 py-0.5 rounded-md lg:rounded-lg">
+                                                    <Icon name="diamond" size={10} className="sm:size-3 lg:size-3.5" filled />
+                                                    <span className="font-black tracking-tighter">{item.cost}</span>
                                                 </div>
                                             </div>
                                         </Button>
@@ -461,25 +465,25 @@ export default function ShopPage() {
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <Card className={`h-full p-4 md:p-8 flex flex-col items-center text-center relative overflow-hidden group border-2 border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-all duration-500`}>
-                                        <div className="mb-6 md:mb-10 scale-125 md:scale-[1.75] py-4">
+                                    <Card className={`h-full p-3 sm:p-5 lg:p-8 flex flex-col items-center text-center relative overflow-hidden group border border-slate-200 dark:border-slate-700 sm:border-2 hover:border-primary/30 transition-all duration-500`}>
+                                        <div className="mb-4 sm:mb-6 lg:mb-10 scale-110 sm:scale-125 lg:scale-[1.75] py-2 sm:py-3 lg:py-4">
                                             <AvatarFrame
                                                 borderId={item.id}
                                                 size="lg"
                                                 fallbackInitial={item.name.charAt(0)}
                                             />
                                         </div>
-                                        <div className="space-y-1 md:space-y-3 flex-1 mb-4 md:mb-8 w-full">
+                                        <div className="space-y-1 sm:space-y-2 lg:space-y-3 flex-1 mb-3 sm:mb-5 lg:mb-8 w-full">
                                             <div className="flex justify-center mb-1">
                                                 <Badge
                                                     variant={item.tier === 'mythic' ? 'diamond' : item.tier === 'legendary' ? 'streak' : 'primary'}
-                                                    className="text-[8px] md:text-[10px] uppercase font-black px-2"
+                                                    className="text-[7px] sm:text-[8px] lg:text-[10px] uppercase font-black px-1.5 sm:px-2"
                                                 >
                                                     {item.tier}
                                                 </Badge>
                                             </div>
-                                            <h3 className="text-sm md:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic truncate">{item.name}</h3>
-                                            <p className="text-slate-500 font-bold text-[9px] md:text-sm leading-relaxed px-1">
+                                            <h3 className="text-xs sm:text-sm lg:text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic truncate">{item.name}</h3>
+                                            <p className="text-slate-500 font-bold text-[8px] sm:text-[10px] lg:text-sm leading-relaxed px-1 line-clamp-3">
                                                 {item.description}
                                             </p>
                                         </div>
@@ -489,19 +493,19 @@ export default function ShopPage() {
                                             loading={purchasingId === item.id}
                                             disabled={gems < item.cost && !unlockedBorders.includes(item.id)}
                                             onClick={() => handlePurchaseBorder(item)}
-                                            className={`py-3 md:py-5 shadow-xl ${unlockedBorders.includes(item.id) ? 'border-primary/20 text-primary opacity-60 cursor-default' : ''}`}
+                                            className={`py-2 sm:py-3 lg:py-5 shadow-xl text-[9px] sm:text-xs lg:text-base ${unlockedBorders.includes(item.id) ? 'border-primary/20 text-primary opacity-60 cursor-default' : ''}`}
                                         >
                                             {unlockedBorders.includes(item.id) ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Icon name="check_circle" size={16} />
-                                                    <span className="text-xs md:text-base">OWNED</span>
+                                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                                    <Icon name="check_circle" size={14} className="sm:size-4" />
+                                                    <span>OWNED</span>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <span className="text-xs md:text-base leading-none">Unlock</span>
-                                                    <div className="flex items-center gap-1 bg-white/20 px-1.5 md:px-2 py-0.5 rounded-md md:rounded-lg">
-                                                        <Icon name="diamond" size={12} mdSize={14} filled />
-                                                        <span className="font-black tracking-tighter text-xs md:text-base">{item.cost}</span>
+                                                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                                                    <span className="leading-none">Unlock</span>
+                                                    <div className="flex items-center gap-0.5 sm:gap-1 bg-white/20 px-1 sm:px-1.5 lg:px-2 py-0.5 rounded-md lg:rounded-lg">
+                                                        <Icon name="diamond" size={10} className="sm:size-3 lg:size-3.5" filled />
+                                                        <span className="font-black tracking-tighter">{item.cost}</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -513,30 +517,30 @@ export default function ShopPage() {
                     </AnimatePresence>
                 </div>
 
-                {/* Promo Code Section */}
-                <div className="mt-16 md:mt-24 mb-8">
-                    <Card className="max-w-3xl mx-auto p-6 md:p-12 border-4 border-dashed border-primary/20 bg-primary/5 relative overflow-hidden group">
+                {/* Promo Code Section - Responsive */}
+                <div className="mt-10 sm:mt-16 lg:mt-24 mb-6 sm:mb-8">
+                    <Card className="max-w-3xl mx-auto p-4 sm:p-8 lg:p-12 border-2 sm:border-4 border-dashed border-primary/20 bg-primary/5 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform duration-700">
-                            <Icon name="confirmation_number" size={120} />
+                            <Icon name="confirmation_number" size={80} className="sm:size-24 lg:size-32" />
                         </div>
 
-                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                            <div className="flex-1 text-center md:text-left space-y-2">
-                                <h3 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white uppercase italic">Punya Kode Promo?</h3>
-                                <p className="text-xs md:text-lg text-slate-500 font-bold">Masukin kodenya dapet Crystal instan. <br className="hidden md:block" /> Rejeki anak sirkel nggak kemana!</p>
+                        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
+                            <div className="flex-1 text-center sm:text-left space-y-1 sm:space-y-2">
+                                <h3 className="text-base sm:text-xl lg:text-3xl font-black text-slate-900 dark:text-white uppercase italic">Punya Kode Promo?</h3>
+                                <p className="text-[10px] sm:text-sm lg:text-lg text-slate-500 font-bold">Masukin kodenya dapet Crystal instan. <br className="hidden sm:block" /> Rejeki anak sirkel nggak kemana!</p>
                             </div>
 
-                            <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                            <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 <input
                                     type="text"
                                     placeholder="KODE..."
                                     value={promoCode}
                                     onChange={(e) => setPromoCode(e.target.value)}
-                                    className="px-6 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-black text-center md:text-left focus:border-primary outline-none transition-all uppercase tracking-widest text-lg w-full md:w-48 placeholder:text-slate-300 dark:text-white"
+                                    className="px-4 sm:px-5 lg:px-6 py-3 sm:py-3.5 lg:py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl font-black text-center sm:text-left focus:border-primary outline-none transition-all uppercase tracking-widest text-sm sm:text-base lg:text-lg w-full sm:w-40 lg:w-48 placeholder:text-slate-300 dark:text-white"
                                 />
                                 <Button
                                     variant="primary"
-                                    className="px-8 py-4 h-full rounded-2xl shadow-xl whitespace-nowrap"
+                                    className="px-6 sm:px-7 lg:px-8 py-3 sm:py-3.5 lg:py-4 h-full rounded-xl sm:rounded-2xl shadow-xl whitespace-nowrap text-[10px] sm:text-xs lg:text-sm"
                                     onClick={handleRedeemPromo}
                                     loading={isRedeeming}
                                     disabled={!promoCode.trim()}
@@ -549,23 +553,23 @@ export default function ShopPage() {
                 </div>
 
                 {/* Mystery Box Placeholder */}
-                <div className="mt-12 opacity-30 text-center border-t border-slate-200 dark:border-slate-800 pt-8">
-                    <p className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Next drop: Secret mythical borders arriving soon...</p>
+                <div className="mt-8 sm:mt-10 lg:mt-12 opacity-30 text-center border-t border-slate-200 dark:border-slate-800 pt-6 sm:pt-8">
+                    <p className="text-[9px] sm:text-xs lg:text-sm font-black uppercase tracking-widest text-slate-400">Next drop: Secret mythical borders arriving soon...</p>
                 </div>
 
-                {/* Lab Decoration Footer */}
-                <div className="mt-8 md:mt-32 p-5 md:p-12 rounded-[1.5rem] md:rounded-[4rem] bg-slate-900 text-white relative overflow-hidden">
-                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 text-center md:text-left">
-                        <div className="space-y-1.5 md:space-y-4 max-w-lg">
-                            <h2 className="text-xl md:text-5xl font-black tracking-tighter italic uppercase underline decoration-primary decoration-2 md:decoration-8 underline-offset-2 md:underline-offset-8">The Alchemy Lab</h2>
-                            <p className="text-slate-400 font-bold text-[10px] md:text-lg leading-relaxed">
-                                Crystals can be activated during any lesson to give you that extra edge. <br className="hidden md:block" />
+                {/* Lab Decoration Footer - Responsive */}
+                <div className="mt-6 sm:mt-16 lg:mt-32 p-4 sm:p-8 lg:p-12 rounded-2xl sm:rounded-[2.5rem] lg:rounded-[4rem] bg-slate-900 text-white relative overflow-hidden">
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6 lg:gap-8 text-center sm:text-left">
+                        <div className="space-y-1 sm:space-y-2 lg:space-y-4 max-w-lg">
+                            <h2 className="text-lg sm:text-2xl lg:text-5xl font-black tracking-tighter italic uppercase underline decoration-primary decoration-2 sm:decoration-4 lg:decoration-8 underline-offset-2 sm:underline-offset-4 lg:underline-offset-8">The Alchemy Lab</h2>
+                            <p className="text-slate-400 font-bold text-[9px] sm:text-xs lg:text-lg leading-relaxed">
+                                Crystals can be activated during any lesson to give you that extra edge. <br className="hidden sm:block" />
                                 <span className="text-primary">#GacorLiterally #SlayTheGrammar</span>
                             </p>
                         </div>
-                        <div className="flex gap-4">
-                            <div className="size-14 md:size-16 rounded-2xl md:rounded-3xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-help">
-                                <Icon name="help_outline" size={28} mdSize={32} />
+                        <div className="flex gap-3 sm:gap-4">
+                            <div className="size-11 sm:size-12 lg:size-16 rounded-xl sm:rounded-2xl lg:rounded-3xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-help">
+                                <Icon name="help_outline" size={20} className="sm:size-6 lg:size-8" />
                             </div>
                         </div>
                     </div>

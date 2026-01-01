@@ -12,12 +12,13 @@ const splineSans = Spline_Sans({
 export const metadata: Metadata = {
   title: "LinguaGame - Learn English through play",
   description: "The most fun way to master English vocabulary",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({

@@ -192,6 +192,28 @@ export const AvatarFrame: React.FC<AvatarFrameProps> = memo(({
                     <div key={i} className="absolute inset-0 border-2 border-emerald-400/20 rounded-full" style={{ transform: `scale(${0.8 + i * 0.1}) skew(${i * 10}deg)` }} />
                 ))}
             </motion.div>
+
+            {/* LUXURY PARTICLES */}
+            {[...Array(12)].map((_, i) => (
+                <motion.div
+                    key={`p-${i}`}
+                    initial={{ opacity: 0, scale: 0, y: 0 }}
+                    animate={{
+                        opacity: [0, 0.8, 0],
+                        scale: [0, 1.2, 0],
+                        y: [-10, -60],
+                        x: [0, (i % 2 === 0 ? 30 : -30) * Math.random()]
+                    }}
+                    transition={{
+                        duration: 2 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: i * 0.3,
+                        ease: "easeOut"
+                    }}
+                    className="absolute top-1/2 left-1/2 size-1 bg-emerald-400 rounded-full blur-[1px] shadow-[0_0_10px_#10b981]"
+                />
+            ))}
+
             {[...Array(4)].map((_, i) => (
                 <motion.div key={i} animate={{ rotate: 360, y: [-8, 8, -8] }} transition={{ duration: 20, repeat: Infinity, ease: "linear", delay: i * 5 }} className="absolute inset-0" style={{ transform: `rotate(${i * 90}deg)` }}>
                     <div className="absolute top-0 left-1/2 -ml-3 w-6 h-8 bg-emerald-400 border border-emerald-200/50 shadow-[0_0_20px_#10b981]" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }} />
@@ -200,7 +222,7 @@ export const AvatarFrame: React.FC<AvatarFrameProps> = memo(({
             <div className="absolute inset-[18%] rounded-full border-[6px] border-emerald-500 shadow-[0_0_40px_rgba(16,185,129,0.7),inset_0_0_20px_rgba(16,185,129,0.3)] overflow-hidden">
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent,rgba(52,211,153,0.4),transparent)]" />
             </div>
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-emerald-900 border border-emerald-400 rounded-full text-[8px] text-emerald-100 font-black tracking-widest shadow-[0_0_15px_#10b981]">MYTHIC SOUL</div>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-3 py-0.5 bg-emerald-900 border border-emerald-400 rounded-full text-[8px] text-emerald-100 font-black tracking-widest shadow-[0_0_15px_#10b981]">MYTHIC SOUL</div>
         </div>
     );
 
@@ -210,11 +232,29 @@ export const AvatarFrame: React.FC<AvatarFrameProps> = memo(({
             <div className="absolute inset-0 overflow-hidden rounded-full">
                 <motion.div animate={{ scale: [1, 1.2, 1], rotate: 360, opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} className="absolute inset-[-50%] bg-[radial-gradient(circle,rgba(88,28,135,0.4)_0%,transparent_70%)] blur-[25px]" />
             </div>
-            <div className="absolute inset-0">
-                {[...Array(5)].map((_, i) => (
-                    <motion.div key={i} animate={{ opacity: [0, 1, 0, 0.8, 0], scale: [0.8, 1.2, 0.9] }} transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 2 + i }} className="absolute size-px bg-purple-300 shadow-[0_0_15px_white,0_0_30px_purple] rounded-full" style={{ left: `${20 + Math.random() * 60}%`, top: `${20 + Math.random() * 60}%` }} />
-                ))}
-            </div>
+
+            {/* VOID PARTICLES */}
+            {[...Array(15)].map((_, i) => (
+                <motion.div
+                    key={`v-${i}`}
+                    initial={{ scale: 0, x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100, opacity: 0 }}
+                    animate={{
+                        scale: [0, 1.5, 0],
+                        x: 0,
+                        y: 0,
+                        opacity: [0, 1, 0],
+                        rotate: 360
+                    }}
+                    transition={{
+                        duration: 3 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                        ease: "circIn"
+                    }}
+                    className="absolute top-1/2 left-1/2 size-1 bg-purple-400 rounded-full shadow-[0_0_8px_purple] blur-[0.5px]"
+                />
+            ))}
+
             <div className="absolute inset-[8%] rounded-full border-[7px] border-transparent shadow-[inset_0_0_30px_black]"
                 style={{
                     background: 'linear-gradient(135deg, #000 0%, #3b0764 25%, #7e22ce 50%, #3b0764 75%, #000 100%) border-box',
@@ -223,7 +263,7 @@ export const AvatarFrame: React.FC<AvatarFrameProps> = memo(({
                     maskComposite: 'exclude'
                 }}
             />
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-black border border-purple-600 rounded-lg text-[9px] text-purple-400 font-black italic tracking-tighter shadow-[0_0_20px_purple] uppercase">Obsidian Wrath</div>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 px-3 py-1 bg-black border border-purple-600 rounded-lg text-[9px] text-purple-400 font-black italic tracking-tighter shadow-[0_0_20px_purple] uppercase">Obsidian Wrath</div>
         </div>
     );
 
@@ -271,12 +311,32 @@ export const AvatarFrame: React.FC<AvatarFrameProps> = memo(({
                     maskComposite: 'exclude'
                 }}
             />
+
+            {/* DIVINE PARTICLES */}
             <div className="absolute inset-[15%]">
-                {[...Array(15)].map((_, i) => (
-                    <motion.div key={i} animate={{ y: [-25, 25], opacity: [0, 1, 0], scale: [0, 1, 0] }} transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: i * 0.2 }} className="absolute size-2 bg-yellow-200 rounded-full shadow-[0_0_15px_gold]" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} />
+                {[...Array(20)].map((_, i) => (
+                    <motion.div
+                        key={`d-${i}`}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{
+                            opacity: [0, 1, 0],
+                            scale: [0, Math.random() * 1.5, 0],
+                            y: [0, -40, -80],
+                            x: [(Math.random() - 0.5) * 60, (Math.random() - 0.5) * 100],
+                            rotate: [0, 180, 360]
+                        }}
+                        transition={{
+                            duration: 2 + Math.random() * 3,
+                            repeat: Infinity,
+                            delay: i * 0.15,
+                            ease: "easeOut"
+                        }}
+                        className="absolute top-1/2 left-1/2 size-1.5 md:size-2 bg-yellow-100 rounded-full shadow-[0_0_12px_#fbbf24] blur-[0.5px]"
+                    />
                 ))}
             </div>
-            <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 px-5 py-2 bg-gradient-to-r from-amber-700 via-yellow-400 to-amber-700 border-2 border-white rounded-full text-xs md:text-sm text-black font-black uppercase italic tracking-tighter shadow-[0_0_30px_gold] flex items-center gap-2">
+
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-40 px-5 py-2 bg-gradient-to-r from-amber-700 via-yellow-400 to-amber-700 border-2 border-white rounded-full text-xs md:text-sm text-black font-black uppercase italic tracking-tighter shadow-[0_0_30px_gold] flex items-center gap-2">
                 <Icon name="verified" size={16} />
                 Celestial Sovereign
             </div>

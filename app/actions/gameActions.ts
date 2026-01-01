@@ -104,6 +104,10 @@ export async function submitDuelWin() {
 
         const userId = session.user.id;
 
+        // 0. Rate Limit (Prevent Spamming Wins)
+        const { success: limitSuccess } = await strictRatelimit.limit(`duel_win_${userId}`);
+        if (!limitSuccess) return { success: false, error: 'Sabar sirkel, jangan farming terus! (Rate Limited)' };
+
         // 1. Fetch current duel wins
         const { data: userData, error: fetchError } = await supabase
             .from('users')
@@ -136,6 +140,36 @@ export async function submitDuelWin() {
         return { success: true };
     } catch (error) {
         console.error('submitDuelWin error:', error);
+        return { success: false, error: 'Internal Error' };
+    }
+}
+
+/**
+ * SECURE: Reset Level Progress
+ * Used when failing an exam to reset the current phase.
+ */
+export async function resetLevelProgress(levelIds: string[]) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const userId = session.user.id;
+
+        const { error } = await supabase
+            .from('user_progress')
+            .delete()
+            .eq('user_id', userId)
+            .in('level_id', levelIds);
+
+        if (error) {
+            console.error('Error resetting progress:', error);
+            return { success: false, error: 'Failed to reset progress' };
+        }
+
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error('resetLevelProgress error:', error);
         return { success: false, error: 'Internal Error' };
     }
 }

@@ -13,7 +13,7 @@ export default async function LeaderboardPage() {
     // Fetch top users from Supabase with richer data
     const { data: users, error } = await supabase
         .from('users')
-        .select('id, name, total_xp, current_streak, image, vocab_count, duel_wins')
+        .select('id, name, total_xp, current_streak, image, vocab_count, duel_wins, equipped_border')
         .gt('total_xp', 0)
         .order('total_xp', { ascending: false })
         .limit(25);

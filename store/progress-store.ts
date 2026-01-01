@@ -26,7 +26,19 @@ interface ProgressState {
 import { supabase } from '@/lib/db/supabase';
 
 // Initial unlocked levels (usually just the first one)
-const INITIAL_UNLOCKED = ['vocab-1', 'vocab-2']; // Giving a headstart
+const INITIAL_UNLOCKED = [
+    'vocab-1',
+    'vocab-2',
+    'grammar-1',
+    'grammar-p1-simple-present-positive-1',
+    'grammar-p1-present-continuous-positive-1',
+    'grammar-p1-present-perfect-positive-1',
+    'grammar-past-1',
+    'grammar-past-2',
+    'grammar-past-3',
+    'grammar-past-4',
+    'grammar-3'
+]; // Providing access to both paths
 
 export const useProgressStore = create<ProgressState>()(
     persist(
@@ -99,6 +111,24 @@ export const useProgressStore = create<ProgressState>()(
         }),
         {
             name: 'linguagame-progress-storage',
+            version: 4,
+            migrate: (persistedState: any, version: number) => {
+                const state = persistedState as any;
+                if (version < 4 && state && state.unlockedLevelIds) {
+                    const newIds = [
+                        'grammar-p1-simple-present-positive-1',
+                        'grammar-p1-present-continuous-positive-1',
+                        'grammar-p1-present-perfect-positive-1'
+                    ];
+                    newIds.forEach((id: string) => {
+                        if (!state.unlockedLevelIds.includes(id)) {
+                            state.unlockedLevelIds.push(id);
+                        }
+                    });
+                    return state;
+                }
+                return persistedState;
+            }
         }
     )
 );
