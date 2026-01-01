@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getAllUsers, getRedeemCodes, getAnnouncements } from '@/app/actions/adminActions';
 import AdminClientWrapper from './AdminClientWrapper';
+import { Suspense } from 'react';
 
 export default async function AdminDashboard() {
     const session = await getServerSession(authOptions);
@@ -16,10 +17,12 @@ export default async function AdminDashboard() {
     const { data: announcements = [] } = await getAnnouncements();
 
     return (
-        <AdminClientWrapper
-            users={users}
-            codes={codes}
-            announcements={announcements}
-        />
+        <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-[#06060a] text-primary font-black uppercase tracking-widest animate-pulse">Initializing Admin Frame...</div>}>
+            <AdminClientWrapper
+                users={users}
+                codes={codes}
+                announcements={announcements}
+            />
+        </Suspense>
     );
 }

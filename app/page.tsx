@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { LearningPath } from '@/components/game/LearningPath';
 import { QuestGacor } from '@/components/game/QuestGacor';
@@ -16,9 +16,9 @@ import { useSound } from '@/hooks/use-sound';
 import Link from 'next/link';
 
 /**
- * Home Page - Main learning path entry point
+ * Home Page Content - Actual implementation
  */
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -251,5 +251,24 @@ export default function Home() {
         onClose={() => setIsLoginModalOpen(false)}
       />
     </PageLayout>
+  );
+}
+
+/**
+ * Home Page - Main learning path entry point
+ * Wrapped in Suspense to handle useSearchParams during static generation
+ */
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-background-light dark:bg-background-dark">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-black uppercase tracking-widest text-primary animate-pulse">Initializing Data...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
