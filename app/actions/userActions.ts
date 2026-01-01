@@ -337,3 +337,133 @@ export async function updateUserPulse() {
         return { success: false };
     }
 }
+
+/**
+ * SECURE: Initialize Daily Quests
+ * Creates 3 daily quests if they don't exist for today.
+ */
+export async function initializeUserQuests() {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const userId = session.user.id;
+        const today = new Date().toISOString().split('T')[0];
+
+        // 1. Check if already initialized for today
+        const { data: existing } = await supabase
+            .from('user_quests')
+            .select('id')
+            .eq('user_id', userId)
+            .gte('created_at', `${today}T00:00:00`);
+
+        if (existing && existing.length > 0) return { success: true, alreadyExists: true };
+
+        // 2. Insert new daily quests
+        const newQuests = [
+            { user_id: userId, quest_id: 'xp', target: 500, reward_gems: 100 },
+            { user_id: userId, quest_id: 'vocab', target: 20, reward_gems: 150 },
+            { user_id: userId, quest_id: 'streak', target: 1, reward_gems: 50 }
+        ];
+
+        const { error } = await supabase.from('user_quests').insert(newQuests);
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error) {
+        console.error('initializeUserQuests error:', error);
+        return { success: false, error: 'Failed to initialize quests' };
+    }
+}
+
+/**
+ * SECURE: Update Quest Progress
+ * Increments progress for active quests.
+ */
+export async function updateQuestProgressServer(type: 'xp' | 'vocab' | 'streak', amount: number) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const userId = session.user.id;
+        const today = new Date().toISOString().split('T')[0];
+
+        // 1. Fetch active quests for today
+        const { data: quests } = await supabase
+            .from('user_quests')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('quest_id', type)
+            .eq('status', 'ACTIVE')
+            .gte('created_at', `${today}T00:00:00`);
+
+        if (!quests || quests.length === 0) return { success: true, noActiveQuest: true };
+
+        const quest = quests[0];
+        const newProgress = Math.min(quest.target, quest.progress + amount);
+
+        // 2. Update progress
+        const { error } = await supabase
+            .from('user_quests')
+            .update({ progress: newProgress })
+            .eq('id', quest.id);
+
+        if (error) throw error;
+
+        // Check if just finished
+        const justFinished = newProgress >= quest.target && quest.progress < quest.target;
+
+        return { success: true, justFinished, rewardGems: quest.reward_gems };
+    } catch (error) {
+        console.error('updateQuestProgressServer error:', error);
+        return { success: false, error: 'Failed to update quest' };
+    }
+}
+
+/**
+ * SECURE: Claim Quest Reward
+ */
+export async function claimQuestReward(questId: string) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const userId = session.user.id;
+
+        // 1. Fetch quest to verify
+        const { data: quest } = await supabase
+            .from('user_quests')
+            .select('*')
+            .eq('id', questId)
+            .eq('user_id', userId)
+            .single();
+
+        if (!quest) return { success: false, error: 'Quest not found' };
+        if (quest.status === 'CLAIMED') return { success: false, error: 'Reward already claimed' };
+        if (quest.progress < quest.target) return { success: false, error: 'Misi belum selesai sirkel!' };
+
+        // 2. Claim reward (Update quest status & add gems to user)
+        // Set to CLAIMED
+        const { error: questError } = await supabase
+            .from('user_quests')
+            .update({ status: 'CLAIMED' })
+            .eq('id', questId);
+
+        if (questError) throw questError;
+
+        // Add crystals to user
+        const { data: user } = await supabase.from('users').select('gems').eq('id', userId).single();
+        const { error: userError } = await supabase
+            .from('users')
+            .update({ gems: (user?.gems || 0) + quest.reward_gems })
+            .eq('id', userId);
+
+        if (userError) throw userError;
+
+        revalidatePath('/');
+        return { success: true, reward: quest.reward_gems };
+    } catch (error) {
+        console.error('claimQuestReward error:', error);
+        return { success: false, error: 'Failed to claim reward' };
+    }
+}

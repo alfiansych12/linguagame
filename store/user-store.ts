@@ -16,7 +16,14 @@ export interface CrystalInventory {
 
 import { supabase } from '@/lib/db/supabase';
 import { ACHIEVEMENTS } from '@/lib/data/achievements';
-import { updateProfile, consumeCrystal, applyReferral as applyReferralAction, unlockAchievement } from '@/app/actions/userActions';
+import {
+    updateProfile,
+    consumeCrystal,
+    applyReferral as applyReferralAction,
+    unlockAchievement,
+    initializeUserQuests,
+    updateQuestProgressServer
+} from '@/app/actions/userActions';
 import { useAlertStore } from './alert-store';
 
 interface UserState {
@@ -131,64 +138,34 @@ export const useUserStore = create<UserState>()(
                     // Otomatis cek reward kalau ada progres baru
                     get().checkReferralMilestones();
                     get().checkAchievements();
-                    get().initializeQuests();
+
+                    // Initialize Quests via secure server action
+                    await initializeUserQuests();
                 }
                 set({ isLoading: false });
             },
 
             initializeQuests: async () => {
-                const userId = get().userId;
-                if (!userId || userId === 'guest') return;
-
-                const today = new Date().toISOString().split('T')[0];
-                const { data: existing } = await supabase
-                    .from('user_quests')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .gte('created_at', `${today}T00:00:00`);
-
-                if (existing && existing.length > 0) return;
-
-                const newQuests = [
-                    { user_id: userId, quest_id: 'xp', target: 500, reward_gems: 100 },
-                    { user_id: userId, quest_id: 'vocab', target: 20, reward_gems: 150 },
-                    { user_id: userId, quest_id: 'streak', target: 1, reward_gems: 50 }
-                ];
-
-                await supabase.from('user_quests').insert(newQuests);
+                // Moved to server action initializeUserQuests, 
+                // but kept for backward compatibility if needed internally
+                await initializeUserQuests();
             },
 
             updateQuestProgress: async (type, amount) => {
                 const userId = get().userId;
                 if (!userId || userId === 'guest') return;
 
-                const today = new Date().toISOString().split('T')[0];
-                const { data: quests } = await supabase
-                    .from('user_quests')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('quest_id', type)
-                    .eq('status', 'ACTIVE')
-                    .gte('created_at', `${today}T00:00:00`);
+                // Use secure server action
+                const result = await updateQuestProgressServer(type, amount);
 
-                if (quests && quests.length > 0) {
-                    const quest = quests[0];
-                    const newProgress = Math.min(quest.target, quest.progress + amount);
-
-                    await supabase
-                        .from('user_quests')
-                        .update({ progress: newProgress })
-                        .eq('id', quest.id);
-
-                    if (newProgress >= quest.target && quest.progress < quest.target) {
-                        const { showAlert } = useAlertStore.getState();
-                        if (showAlert) {
-                            showAlert({
-                                title: 'Quest Cleared! 🔥',
-                                message: `Misi selesai sirkel! Siap-siap ambil reward ${quest.reward_gems} Crystal.`,
-                                type: 'success'
-                            });
-                        }
+                if (result.success && result.justFinished) {
+                    const { showAlert } = useAlertStore.getState();
+                    if (showAlert) {
+                        showAlert({
+                            title: 'Quest Cleared! 🔥',
+                            message: `Misi selesai sirkel! Siap-siap ambil reward ${result.rewardGems} Crystal.`,
+                            type: 'success'
+                        });
                     }
                 }
             },
@@ -245,7 +222,7 @@ export const useUserStore = create<UserState>()(
                 set({ currentStreak: days });
                 const userId = get().userId;
                 if (userId && userId !== 'guest') {
-                    await supabase.from('users').update({ current_streak: days }).eq('id', userId);
+                    await updateProfile({ current_streak: days });
                 }
                 get().checkAchievements();
             },

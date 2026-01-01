@@ -8,6 +8,7 @@ import { supabase } from '@/lib/db/supabase';
 import { useSession } from 'next-auth/react';
 import { useSound } from '@/hooks/use-sound';
 import { useAlertStore } from '@/store/alert-store';
+import { claimQuestReward } from '@/app/actions/userActions';
 
 interface Quest {
     id: string;
@@ -61,21 +62,24 @@ export function QuestGacor() {
     const handleClaim = async (quest: Quest) => {
         if (quest.current >= quest.target && !quest.claimed) {
             try {
-                const { error } = await supabase
-                    .from('user_quests')
-                    .update({ status: 'CLAIMED' })
-                    .eq('id', quest.id);
+                const result = await claimQuestReward(quest.id);
 
-                if (error) throw error;
+                if (!result.success) throw new Error(result.error);
 
                 playSound('SUCCESS');
                 addGems(quest.reward);
                 setQuests(prev => prev.map(q => q.id === quest.id ? { ...q, claimed: true } : q));
-            } catch (err) {
+
+                showAlert({
+                    title: 'Reward Cair! 💎',
+                    message: `Berhasil ambil ${quest.reward} Crystal. Gass terus sirkel!`,
+                    type: 'success'
+                });
+            } catch (err: any) {
                 console.error('Error claiming quest:', err);
                 showAlert({
                     title: 'Waduh Sirkel...',
-                    message: 'Gagal ambil reward. Coba cek sinyal atau login ulang!',
+                    message: err.message || 'Gagal ambil reward. Coba cek sinyal atau login ulang!',
                     type: 'error'
                 });
             }
@@ -108,15 +112,15 @@ export function QuestGacor() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl lg:rounded-3xl border-2 transition-all ${quest.claimed
-                                    ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 opacity-60'
-                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:shadow-lg'
+                                ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 opacity-60'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:shadow-lg'
                                 }`}
                         >
                             {/* Quest Header */}
                             <div className="flex items-start gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4">
                                 <div className={`size-8 sm:size-10 lg:size-12 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center shrink-0 ${quest.claimed
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'bg-primary/10 text-primary'
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-primary/10 text-primary'
                                     }`}>
                                     <Icon
                                         name={quest.claimed ? 'check' : quest.icon}
