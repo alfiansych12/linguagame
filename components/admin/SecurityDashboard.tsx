@@ -192,7 +192,7 @@ export const SecurityDashboard: React.FC = () => {
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <Badge variant="error" className="text-xs font-black">
+                                                    <Badge variant="primary" className="text-xs font-black">
                                                         {activity.reason}
                                                     </Badge>
                                                     <span className="text-xs text-slate-400">
