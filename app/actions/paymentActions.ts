@@ -30,7 +30,9 @@ export async function createPaymentToken(planId: string, userId: string, userNam
 
     const price = planId === 'weekly' ? 3000 : 10000;
     const durationDays = planId === 'weekly' ? 7 : 30;
-    const orderId = `LINGUA-PRO-${planId}-${userId}-${Date.now()}`;
+    // MIDTRANS LIMIT: order_id max 50 chars. 
+    // Format: LP-[timestamp]-[random]
+    const orderId = `LP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const payload = {
         transaction_details: {
@@ -46,6 +48,8 @@ export async function createPaymentToken(planId: string, userId: string, userNam
         customer_details: {
             first_name: userName,
         },
+        custom_field1: userId,
+        custom_field2: planId,
         metadata: {
             userId: userId,
             planId: planId

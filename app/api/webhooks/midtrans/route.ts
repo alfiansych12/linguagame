@@ -34,12 +34,14 @@ export async function POST(req: Request) {
             if (fraudStatus === 'challenge') {
                 console.log(`[Webhook] Transaction ${order_id} is challenged by FDS`);
             } else {
-                // SUCCESS: Parse order_id: LINGUA-PRO-{planId}-{userId}-{timestamp}
-                const parts = order_id.split('-');
-                if (parts.length >= 4) {
-                    const planId = parts[2]; // 'weekly' or 'monthly'
-                    const userId = parts[3];
+                // SUCCESS: Midtrans sends metadata back in custom fields if configured, 
+                // but let's use the safer way: they send custom fields.
+                // In paymentActions, we need to make sure we send them.
 
+                const userId = body.custom_field1;
+                const planId = body.custom_field2;
+
+                if (userId && planId) {
                     const durationDays = planId === 'weekly' ? 7 : 30;
                     const now = new Date();
                     const proUntil = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
@@ -60,6 +62,8 @@ export async function POST(req: Request) {
                     }
 
                     console.log(`[Webhook] User ${userId} successfully upgraded to PRO`);
+                } else {
+                    console.error('[Webhook] Missing userId or planId in notification body');
                 }
             }
         }
