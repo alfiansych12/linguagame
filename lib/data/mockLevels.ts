@@ -61,7 +61,7 @@ const GRAMMAR_METADATA: Record<string, { title: string; desc: string }[]> = {
         { title: 'Bukan Kebiasaannya', desc: 'Pake "doesn\'t" buat Dia (She, He, It)' },
         { title: 'Cek Fakta', desc: 'Menyangkal fakta yang emang gak bener' },
         { title: 'Libur Kerja', desc: 'Hal-hal yang biasanya gak kita lakuin di kantor' },
-        { title: 'Aturan Ketat', desc: 'Hal yang gak bakal pernah terjadi di sirkel kita' },
+        { title: 'Aturan Ketat', desc: 'Hal yang gak bakal pernah terjadi di bro kita' },
         { title: 'Makanan Gak Suka', desc: 'Ungkapin makanan yang gak doyan kamu makan' },
         { title: 'Masalah Teknologi', desc: 'Pas gadget gak berfungsi sesuai keinginan' },
         { title: 'Fakta Hewan', desc: 'Hal-hal yang sebenernya gak dilakuin hewan-hewan' },

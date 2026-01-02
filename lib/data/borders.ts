@@ -10,7 +10,7 @@ export interface BorderDef {
 export const BORDERS: Record<string, BorderDef> = {
     'default': {
         id: 'default',
-        name: 'Sirkel Basic',
+        name: 'Bro Basic',
         description: 'Bingkai standar untuk pemula.',
         rarity: 'common',
         price: 0

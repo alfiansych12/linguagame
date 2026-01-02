@@ -618,7 +618,7 @@ export default function DuelRoomPage() {
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 sm:pb-12">
                             <div className="text-center md:text-left space-y-1 relative z-10">
                                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-none">
-                                    Sirkel- <span className="text-primary italic">Ready?</span>
+                                    Bro- <span className="text-primary italic">Ready?</span>
                                 </h1>
                                 <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] sm:text-base">Waiting for everyone to lock in.</p>
                             </div>
@@ -864,7 +864,7 @@ export default function DuelRoomPage() {
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400 font-bold text-sm sm:text-lg md:text-xl px-4">
                                 {players.sort((a, b) => b.score - a.score)[0]?.id === currentPlayerId
-                                    ? "Gokil! Kamu yang paling gacor di sirkel ini."
+                                    ? "Gokil! Kamu yang paling gacor di bro ini."
                                     : "Nice try! Tingkatkan lagi biar jadi sepuh sesungguhnya."}
                             </p>
                         </div>

@@ -18,7 +18,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Saya makan makanan bergizi.',
         solution: ['I', 'eat', 'nutritious', 'food'],
         distractors: ['eats', 'eating', 'ate'],
-        explanation: 'Gampang sirkel! Subjeknya "I", jadi kata kerjanya (eat) tetep asli. Nutritious itu kosa kata level 16 lho!'
+        explanation: 'Gampang bro! Subjeknya "I", jadi kata kerjanya (eat) tetep asli. Nutritious itu kosa kata level 16 lho!'
     },
     {
         id: 'pres_2',
@@ -57,7 +57,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Saya melaksanakan rencana tersebut.',
         solution: ['I', 'implemented', 'the', 'plan'],
         distractors: ['implement', 'implements', 'implementing'],
-        explanation: 'Kejadian lampau sirkel! Pake Verb 2 (implemented). Implement itu kosa kata level 11!'
+        explanation: 'Kejadian lampau bro! Pake Verb 2 (implemented). Implement itu kosa kata level 11!'
     },
     {
         id: 'past_1_2',
@@ -75,7 +75,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kami mencapai potensi kami.',
         solution: ['We', 'reached', 'our', 'potential'],
         distractors: ['reach', 'reaches', 'reaching'],
-        explanation: 'Reach jadi Reached. Potential itu kata keren dari level 23. Sikat sirkel!'
+        explanation: 'Reach jadi Reached. Potential itu kata keren dari level 23. Sikat bro!'
     },
 
     // --- PHASE 3: PAST CONTINUOUS (In Progress) ---
@@ -96,7 +96,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Mereka sedang mendiskusikan strategi.',
         solution: ['They', 'were', 'discussing', 'strategy'],
         distractors: ['was', 'are', 'discuss'],
-        explanation: 'Subjek banyak (They) pake WERE. Strategy itu kata kuncinya bisnis sirkel!'
+        explanation: 'Subjek banyak (They) pake WERE. Strategy itu kata kuncinya bisnis bro!'
     },
 
     // --- PHASE 4: PAST PERFECT (Before another action) ---
@@ -150,7 +150,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Hidup akan menjadi sebuah petualangan.',
         solution: ['Life', 'will', 'be', 'an', 'adventure'],
         distractors: ['is', 'being', 'was'],
-        explanation: 'Kalau ceritain keadaan masa depan, pake Will Be. Adventure itu dari level 6 juga sirkel!'
+        explanation: 'Kalau ceritain keadaan masa depan, pake Will Be. Adventure itu dari level 6 juga bro!'
     },
 
     // --- PHASE 1: SIMPLE PRESENT - MISSION: POSITIVE (Habits & Facts) ---
@@ -183,7 +183,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kami sarapan bersama.',
         solution: ['We', 'eat', 'breakfast', 'together'],
         distractors: ['eats', 'eating', 'ate'],
-        explanation: 'Kebiasaan: "We" + "eat". Rutinitas pagi sirkel mabar nih!'
+        explanation: 'Kebiasaan: "We" + "eat". Rutinitas pagi bro mabar nih!'
     },
     {
         id: 'sp_pos_1_4',
@@ -192,7 +192,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Saya bangun jam lima pagi.',
         solution: ['I', 'wake', 'up', 'at', 'five', 'am'],
         distractors: ['wakes', 'woke', 'am'],
-        explanation: 'Rutinitas: "I" + "wake up". Morning person sirkel!'
+        explanation: 'Rutinitas: "I" + "wake up". Morning person bro!'
     },
     {
         id: 'sp_pos_1_5',
@@ -210,7 +210,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Mereka mengunjungi nenek mereka.',
         solution: ['They', 'visit', 'their', 'grandma'],
         distractors: ['visits', 'visiting', 'do'],
-        explanation: 'Keluarga: "They" + "visit". Cucu yang berbakti sirkel!'
+        explanation: 'Keluarga: "They" + "visit". Cucu yang berbakti bro!'
     },
     {
         id: 'sp_pos_1_7',
@@ -237,7 +237,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kamu membaca buku sebelum tidur.',
         solution: ['You', 'read', 'a', 'book', 'before', 'bed'],
         distractors: ['reads', 'reading', 'are'],
-        explanation: 'Edukasi: "You" + "read". Biar pinter sirkel!'
+        explanation: 'Edukasi: "You" + "read". Biar pinter bro!'
     },
     {
         id: 'sp_pos_1_10',
@@ -257,7 +257,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Dia bermain game setiap hari.',
         solution: ['She', 'plays', 'game', 'every', 'day'],
         distractors: ['play', 'playing', 'is'],
-        explanation: 'Rule: "She" (Subjek Tunggal) + "plays" (V1 + s). Ini aturan baku buat grup elit sirkel!'
+        explanation: 'Rule: "She" (Subjek Tunggal) + "plays" (V1 + s). Ini aturan baku buat grup elit bro!'
     },
     {
         id: 'sp_pos_2_2',
@@ -266,7 +266,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Dia minum air segar.',
         solution: ['He', 'drinks', 'fresh', 'water'],
         distractors: ['drink', 'drinking', 'drank'],
-        explanation: 'Kesehatan: "He" + "drinks". Jangan lupa tambahin "s" ya sirkel!'
+        explanation: 'Kesehatan: "He" + "drinks". Jangan lupa tambahin "s" ya bro!'
     },
     {
         id: 'sp_pos_2_3',
@@ -275,7 +275,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Itu bekerja dengan sempurna.',
         solution: ['It', 'works', 'perfectly'],
         distractors: ['work', 'working', 'worked'],
-        explanation: 'Mesin/Benda: "It" + "works". Semuanya lancar jaya sirkel!'
+        explanation: 'Mesin/Benda: "It" + "works". Semuanya lancar jaya bro!'
     },
     {
         id: 'sp_pos_2_4',
@@ -284,7 +284,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Dia memasak makan malam setiap malam.',
         solution: ['She', 'cooks', 'dinner', 'every', 'night'],
         distractors: ['cook', 'cooking', 'is'],
-        explanation: 'Masak-masak: "She" + "cooks". Harum banget aroma-aroma kelulusan sirkel!'
+        explanation: 'Masak-masak: "She" + "cooks". Harum banget aroma-aroma kelulusan bro!'
     },
     {
         id: 'sp_pos_2_5',
@@ -302,7 +302,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Hujan turun setiap siang.',
         solution: ['It', 'rains', 'every', 'afternoon'],
         distractors: ['rain', 'raining', 'was'],
-        explanation: 'Cuaca: "It" + "rains". Jangan lupa bawa payung sirkel!'
+        explanation: 'Cuaca: "It" + "rains". Jangan lupa bawa payung bro!'
     },
     {
         id: 'sp_pos_2_7',
@@ -329,7 +329,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Matahari bersinar dengan terang.',
         solution: ['The', 'sun', 'shines', 'brightly'],
         distractors: ['shine', 'shining', 'are'],
-        explanation: 'Fakta Alam: "The sun" (It) + "shines". Dunia jadi cerah sirkel!'
+        explanation: 'Fakta Alam: "The sun" (It) + "shines". Dunia jadi cerah bro!'
     },
     {
         id: 'sp_pos_2_10',
@@ -338,7 +338,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Dia menyanyikan sebuah lagu yang indah.',
         solution: ['She', 'sings', 'a', 'beautiful', 'song'],
         distractors: ['sing', 'singing', 'is'],
-        explanation: 'Talenta: "She" + "sings". Merdu banget kayak sirkel!'
+        explanation: 'Talenta: "She" + "sings". Merdu banget kayak bro!'
     },
 
     // MISSION 3: Nama & Orang Lain
@@ -349,7 +349,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Budi makan nasi.',
         solution: ['Budi', 'eats', 'rice'],
         distractors: ['eat', 'eating', 'ate'],
-        explanation: 'Budi = He. Jadi "eats" pake "s". Fakta dasar banget sirkel!'
+        explanation: 'Budi = He. Jadi "eats" pake "s". Fakta dasar banget bro!'
     },
     {
         id: 'sp_pos_3_2',
@@ -358,7 +358,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kucing-kucing itu tidur di atas kasur.',
         solution: ['The', 'cats', 'sleep', 'on', 'the', 'bed'],
         distractors: ['sleeps', 'sleeping', 'slept'],
-        explanation: 'Cats (Jamak) = They. Jadi balik polos "sleep". Awas ketukar sirkel!'
+        explanation: 'Cats (Jamak) = They. Jadi balik polos "sleep". Awas ketukar bro!'
     },
     {
         id: 'sp_pos_3_3',
@@ -367,7 +367,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Ani menyayangi kucingnya.',
         solution: ['Ani', 'loves', 'her', 'cat'],
         distractors: ['love', 'loving', 'is'],
-        explanation: 'Ani = She. Jadi "loves" pake "s". Sayang banget sirkel!'
+        explanation: 'Ani = She. Jadi "loves" pake "s". Sayang banget bro!'
     },
     {
         id: 'sp_pos_3_4',
@@ -376,7 +376,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Ayahku bekerja keras.',
         solution: ['My', 'father', 'works', 'hard'],
         distractors: ['work', 'working', 'am'],
-        explanation: 'Father = He. Jadi "works" pake "s". Semangat sirkel!'
+        explanation: 'Father = He. Jadi "works" pake "s". Semangat bro!'
     },
     {
         id: 'sp_pos_3_5',
@@ -385,7 +385,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Guru itu menjelaskan pelajarannya.',
         solution: ['The', 'teacher', 'explains', 'the', 'lesson'],
         distractors: ['explain', 'explaining', 'are'],
-        explanation: 'Teacher (Tunggal) = He/She. Jadi "explains" pake "s". Biar paham sirkel!'
+        explanation: 'Teacher (Tunggal) = He/She. Jadi "explains" pake "s". Biar paham bro!'
     },
     {
         id: 'sp_pos_3_6',
@@ -394,7 +394,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Budi dan Ani bermain bersama.',
         solution: ['Budi', 'and', 'Ani', 'play', 'together'],
         distractors: ['plays', 'playing', 'do'],
-        explanation: 'Budi & Ani (Dua orang) = They. Jadi balik polos "play". Mabar bareng sirkel!'
+        explanation: 'Budi & Ani (Dua orang) = They. Jadi balik polos "play". Mabar bareng bro!'
     },
     {
         id: 'sp_pos_3_7',
@@ -403,7 +403,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Tuan Smith berbicara bahasa Inggris.',
         solution: ['Mr', 'Smith', 'speaks', 'English'],
         distractors: ['speak', 'speaking', 'is'],
-        explanation: 'Mr Smith = He. Jadi "speaks" pake "s". Cas-cis-cus sirkel!'
+        explanation: 'Mr Smith = He. Jadi "speaks" pake "s". Cas-cis-cus bro!'
     },
     {
         id: 'sp_pos_3_8',
@@ -412,7 +412,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Adikku menggambar sebuah gambar.',
         solution: ['My', 'sister', 'draws', 'a', 'picture'],
         distractors: ['draw', 'drawing', 'am'],
-        explanation: 'Sister = She. Jadi "draws" pake "s". Artistik sirkel!'
+        explanation: 'Sister = She. Jadi "draws" pake "s". Artistik bro!'
     },
     {
         id: 'sp_pos_3_9',
@@ -421,7 +421,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Anjing itu menggonggong pada orang asing.',
         solution: ['The', 'dog', 'barks', 'at', 'strangers'],
         distractors: ['bark', 'barking', 'is'],
-        explanation: 'Dog (Tunggal) = It. Jadi "barks" pake "s". Waspada sirkel!'
+        explanation: 'Dog (Tunggal) = It. Jadi "barks" pake "s". Waspada bro!'
     },
     {
         id: 'sp_pos_3_10',
@@ -430,7 +430,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Air mendidih pada suhu seratus derajat.',
         solution: ['The', 'water', 'boils', 'at', 'one', 'hundred', 'degrees'],
         distractors: ['boil', 'boiling', 'are'],
-        explanation: 'Fakta Sains: Water (Uncountable) = It. Jadi "boils" pake "s". Panas sirkel!'
+        explanation: 'Fakta Sains: Water (Uncountable) = It. Jadi "boils" pake "s". Panas bro!'
     },
 
     // MISSION 4: Dunia Kerja & Sekolah
@@ -459,7 +459,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Mereka bekerja di sebuah rumah sakit.',
         solution: ['They', 'work', 'in', 'a', 'hospital'],
         distractors: ['works', 'working', 'do'],
-        explanation: 'Profesi: "They" + "work". Melayani masyarakat sirkel!'
+        explanation: 'Profesi: "They" + "work". Melayani masyarakat bro!'
     },
     {
         id: 'sp_pos_4_4',
@@ -468,7 +468,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kami menghadiri kuliah tersebut.',
         solution: ['We', 'attend', 'the', 'lecture'],
         distractors: ['attends', 'attending', 'are'],
-        explanation: 'Kampus: "We" + "attend". Cari ilmu biar sirkel makin berwawasan!'
+        explanation: 'Kampus: "We" + "attend". Cari ilmu biar bro makin berwawasan!'
     },
     {
         id: 'sp_pos_4_5',
@@ -477,7 +477,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Rekan kerjaku membantuku.',
         solution: ['My', 'coworker', 'helps', 'me'],
         distractors: ['help', 'helping', 'am'],
-        explanation: 'Solidaritas: Coworker (He/She) = "helps". Support system sirkel!'
+        explanation: 'Solidaritas: Coworker (He/She) = "helps". Support system bro!'
     },
     {
         id: 'sp_pos_4_6',
@@ -495,7 +495,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kamu menyelesaikan tugas tepat waktu.',
         solution: ['You', 'finish', 'the', 'task', 'on', 'time'],
         distractors: ['finishes', 'finishing', 'are'],
-        explanation: 'Produktif: "You" + "finish". No deadline-deadline club sirkel!'
+        explanation: 'Produktif: "You" + "finish". No deadline-deadline club bro!'
     },
     {
         id: 'sp_pos_4_8',
@@ -504,7 +504,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Siswa-siswa itu mengenakan seragam.',
         solution: ['The', 'students', 'wear', 'uniforms'],
         distractors: ['wears', 'wearing', 'do'],
-        explanation: 'Sekolah: Students (Jamak) = "wear". Kompak selalu sirkel!'
+        explanation: 'Sekolah: Students (Jamak) = "wear". Kompak selalu bro!'
     },
     {
         id: 'sp_pos_4_9',
@@ -513,7 +513,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Saya mengirim email setiap hari.',
         solution: ['I', 'send', 'emails', 'every', 'day'],
         distractors: ['sends', 'sending', 'am'],
-        explanation: 'Korespondensi: "I" + "send". Komunikasi lancar sirkel!'
+        explanation: 'Korespondensi: "I" + "send". Komunikasi lancar bro!'
     },
     {
         id: 'sp_pos_4_10',
@@ -522,7 +522,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Sarah mengelola proyek tersebut.',
         solution: ['Sarah', 'manages', 'the', 'project'],
         distractors: ['manage', 'managing', 'is'],
-        explanation: 'Leadership: Sarah (She) = "manages". Manager material sirkel!'
+        explanation: 'Leadership: Sarah (She) = "manages". Manager material bro!'
     },
 
     // MISSION 5: Always & Never (Frequency)
@@ -544,7 +544,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Kami minum cukup air.',
         solution: ['We', 'drink', 'enough', 'water'],
         distractors: ['drinks', 'drinking', 'are'],
-        explanation: 'Fakta kesehatan: "We" (Kami) + "drink" (polos). Tetap sehat tetep santuy sirkel!'
+        explanation: 'Fakta kesehatan: "We" (Kami) + "drink" (polos). Tetap sehat tetep santuy bro!'
     },
 
     // MISSION 8: Digital Life
@@ -599,7 +599,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Dia tidak minum kopi.',
         solution: ['He', 'does', 'not', 'drink', 'coffee'],
         distractors: ['do', 'drinks', 'is'],
-        explanation: 'Ingat sirkel: "He" + "does not" + "drink" (tanpa s). "S"-nya sudah pindah ke "does"!'
+        explanation: 'Ingat bro: "He" + "does not" + "drink" (tanpa s). "S"-nya sudah pindah ke "does"!'
     },
 
     // --- PHASE 1: SIMPLE PRESENT - MISSION: QUESTION (Do & Does) ---
@@ -623,7 +623,7 @@ export const GRAMMAR_DATA: GrammarTask[] = [
         indonesian: 'Apakah mereka bermain sepak bola?',
         solution: ['Do', 'they', 'play', 'football', '?'],
         distractors: ['Does', 'Is', 'Are'],
-        explanation: 'Sirkel mabar: "Do" + "they" + "play". Gampang kan?'
+        explanation: 'Bro mabar: "Do" + "they" + "play". Gampang kan?'
     },
 
     // MISSION 2: Check on Him/Her (Does)

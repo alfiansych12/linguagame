@@ -13,10 +13,10 @@ export function UserPulseTracker() {
         // Pulse immediately on mount
         updateUserPulse();
 
-        // Pulse every 5 minutes
+        // Pulse every 1 minute
         const interval = setInterval(() => {
             updateUserPulse();
-        }, 5 * 60 * 1000);
+        }, 1 * 60 * 1000);
 
         return () => clearInterval(interval);
     }, [session]);

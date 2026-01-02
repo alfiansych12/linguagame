@@ -85,7 +85,7 @@ export async function joinDuelRoom(code: string, playerName: string, userId: str
         .eq('room_id', room.id);
 
     if (countError) throw countError;
-    if (count && count >= room.max_players) throw new Error('Sirkel full! Room is at max capacity.');
+    if (count && count >= room.max_players) throw new Error('Bro full! Room is at max capacity.');
 
     // 3. Add the player
     const playerPayload: any = {

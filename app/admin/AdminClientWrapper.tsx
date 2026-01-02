@@ -20,7 +20,7 @@ export default function AdminClientWrapper({ users, codes, announcements }: { us
                     <div className="flex flex-row flex-nowrap gap-1.5 md:gap-6 w-full overflow-hidden">
                         <StatCard
                             title="Pulse Count"
-                            value={users.length}
+                            value={users.length.toLocaleString('id-ID')}
                             sub="Active Users"
                             icon="groups"
                             color="text-primary"
@@ -28,7 +28,7 @@ export default function AdminClientWrapper({ users, codes, announcements }: { us
                         />
                         <StatCard
                             title="Xp Flux"
-                            value={users.reduce((acc, u) => acc + (u.total_xp || 0), 0).toLocaleString()}
+                            value={users.reduce((acc, u) => acc + (u.total_xp || 0), 0).toLocaleString('id-ID')}
                             sub="Total XP Generated"
                             icon="bolt"
                             color="text-amber-500"
@@ -36,7 +36,7 @@ export default function AdminClientWrapper({ users, codes, announcements }: { us
                         />
                         <StatCard
                             title="Forge Cycles"
-                            value={codes.length}
+                            value={codes.length.toLocaleString('id-ID')}
                             sub="Active Promo Codes"
                             icon="confirmation_number"
                             color="text-purple-500"
@@ -44,7 +44,7 @@ export default function AdminClientWrapper({ users, codes, announcements }: { us
                         />
                         <StatCard
                             title="Broadcasts"
-                            value={announcements.length}
+                            value={announcements.length.toLocaleString('id-ID')}
                             sub="Signals Sent"
                             icon="campaign"
                             color="text-emerald-500"
@@ -72,7 +72,7 @@ export default function AdminClientWrapper({ users, codes, announcements }: { us
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-slate-200">User <span className="text-primary">{u.name}</span> active in Mainframe</p>
-                                            <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest">{u.total_xp} XP • {u.gems} Gems</p>
+                                            <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest">{u.total_xp.toLocaleString('id-ID')} XP • {u.gems.toLocaleString('id-ID')} Crystals</p>
                                         </div>
                                     </div>
                                     <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">Connected</span>

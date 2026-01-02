@@ -16,7 +16,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     isOpen,
     onClose,
     title = "Sabar Dulu, Slay!",
-    description = "Kamu harus login dulu biar progress kamu literally ke-save dan bisa pamer di Sirkel Board."
+    description = "Kamu harus login dulu biar progress kamu literally ke-save dan bisa pamer di Bro Board."
 }) => {
     return (
         <AnimatePresence>

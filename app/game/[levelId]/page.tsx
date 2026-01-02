@@ -59,7 +59,7 @@ export default function GamePage({ params }: { params: Promise<{ levelId: string
                     <div className="space-y-2">
                         <h2 className="text-3xl font-black text-white tracking-tighter italic uppercase leading-none">JANGAN CURANG!</h2>
                         <p className="text-red-500 font-bold text-sm leading-relaxed">
-                            Selesaiin misi lo dari awal sirkel! <br />
+                            Selesaiin misi lo dari awal bro! <br />
                             Gak sopan main loncat-loncat. 💅
                         </p>
                     </div>

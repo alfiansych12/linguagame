@@ -16,6 +16,10 @@ import { calculateXp, calculateStars } from '@/lib/game-logic/xp-calculator';
 import { submitGameScore } from '@/app/actions/gameActions';
 import { ALL_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
+import { getTacticalFeedback } from '@/app/actions/aiActions';
+import { TacticalAITutor } from './TacticalAITutor';
+import { PremiumAIModal } from './PremiumAIModal';
+import { AdSenseContainer } from '../ui/AdSenseContainer';
 
 interface GrammarGameProps {
     level: Level;
@@ -37,7 +41,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
     const [xpBreakdown, setXpBreakdown] = useState<any>(null);
     const [finalScore, setFinalScore] = useState(0);
 
-    const { addGems, addXp, addVocab, inventory, useCrystal } = useUserStore();
+    const { addGems, addXp, addVocab, inventory, useCrystal, isPro } = useUserStore();
     const { completeLevel, unlockLevel, getLevelProgress } = useProgressStore();
     const { playSound } = useSound();
     const { data: session } = useSession();
@@ -46,6 +50,10 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
     const [shieldActive, setShieldActive] = useState(false);
     const [boosterActive, setBoosterActive] = useState(false);
     const [pendingHintPiece, setPendingHintPiece] = useState<string | null>(null);
+    const [showOracle, setShowOracle] = useState(false);
+    const [aiFeedback, setAiFeedback] = useState<{ explanation: string; tip: string } | null>(null);
+    const [showAiTutor, setShowAiTutor] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
 
     const currentTask = tasks[currentIndex];
 
@@ -64,6 +72,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             setFeedback(null);
             setShieldActive(false);
             setPendingHintPiece(null);
+            setShowOracle(false);
         }
     }, [currentIndex, tasks]);
 
@@ -124,7 +133,23 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                 setFeedback({ type: 'error', message: 'Energy habis! Tetap semangat, gas lagi yuk.' });
                 setTimeout(() => setPhase('GAMEOVER'), 1500);
             } else {
-                setFeedback({ type: 'error', message: 'Wah, susunannya masih kurang tepat sirkel. Ayo coba bongkar pasang lagi!' });
+                setFeedback({ type: 'error', message: 'Wah, susunannya masih kurang tepat bro. Ayo coba bongkar pasang lagi!' });
+
+                // QUANTUM AI TUTOR: Fetch feedback on grammar mistake
+                getTacticalFeedback(
+                    currentTask.indonesian,
+                    selectedPieces.join(' '),
+                    currentTask.solution.join(' '),
+                    'grammar',
+                    userId
+                ).then((res: any) => {
+                    if (res.success) {
+                        setAiFeedback({ explanation: res.explanation, tip: res.tip });
+                        setShowAiTutor(true);
+                    } else if (res.isNotPro) {
+                        setShowPremiumModal(true);
+                    }
+                });
             }
         }
     };
@@ -176,6 +201,37 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
         }
     };
 
+    const handleUseEraser = async () => {
+        if (inventory.eraser > 0 && !feedback) {
+            const used = await useCrystal('eraser');
+            if (used) {
+                playSound('CRYSTAL');
+                setAvailablePieces(prev => prev.filter(p => currentTask.solution.includes(p)));
+                setSelectedPieces(prev => prev.filter(p => currentTask.solution.includes(p)));
+            }
+        }
+    };
+
+    const handleUseTimeWarp = async () => {
+        if (inventory.timewarp > 0 && lives < 10) {
+            const used = await useCrystal('timewarp');
+            if (used) {
+                playSound('SUCCESS');
+                setLives(prev => Math.min(10, prev + 5));
+            }
+        }
+    };
+
+    const handleUseOracle = async () => {
+        if (inventory.oracle > 0 && !showOracle && !feedback) {
+            const used = await useCrystal('oracle');
+            if (used) {
+                playSound('CRYSTAL');
+                setShowOracle(true);
+            }
+        }
+    };
+
     const handleLevelComplete = async () => {
         const timeTaken = (Date.now() - startTime) / 1000;
         const maxTime = tasks.length * 20;
@@ -186,7 +242,8 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
             timeRemaining: Math.max(0, maxTime - timeTaken),
             maxTime,
             maxStreak: 0,
-            crystalActive: boosterActive
+            crystalActive: boosterActive,
+            isPro: isPro
         });
 
         const accuracy = (tasks.length - Math.min(tasks.length, mistakes)) / tasks.length;
@@ -322,7 +379,12 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                         <>
                             <div className="size-32 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-[2rem] md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-2xl border-4 md:border-8 border-white/10 relative">
                                 <span className="text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">XP Earned</span>
-                                <span className="text-4xl md:text-6xl font-black text-white tracking-tighter">{finalScore}</span>
+                                <span className="text-4xl md:text-6xl font-black text-white tracking-tighter">{finalScore.toLocaleString('id-ID')}</span>
+                                {isPro && (
+                                    <div className="absolute -bottom-2 bg-primary text-[8px] font-black px-2 py-0.5 rounded-full border border-white/20 shadow-lg">
+                                        PRO 1.5X BOOST
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -340,7 +402,7 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                             <div className="space-y-2">
                                 <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase px-4">Era Failed!</h2>
                                 <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 font-bold leading-relaxed px-4">
-                                    Akurasi kamu cuma <span className="text-error font-black">{accuracyPercentage}%</span>. Minimal harus 60% buat kalibrasi era ini. Coba lagi sirkel!
+                                    Akurasi kamu cuma <span className="text-error font-black">{accuracyPercentage}%</span>. Minimal harus 60% buat kalibrasi era ini. Coba lagi bro!
                                 </p>
                             </div>
                         </>
@@ -354,8 +416,8 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                         </div>
                         <div className="bg-white dark:bg-slate-900/40 p-3 md:p-6 rounded-xl md:rounded-[2rem] border border-slate-200/50">
                             <Icon name="diamond" className="text-blue-500 mb-1 md:mb-2" size={20} mdSize={32} filled />
-                            <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{30 + (levelData?.stars || 0) * 15}</p>
-                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Gems</p>
+                            <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{(30 + (levelData?.stars || 0) * 15).toLocaleString('id-ID')}</p>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Crystal</p>
                         </div>
                         <div className="bg-white dark:bg-slate-900/40 p-3 md:p-6 rounded-xl md:rounded-[2rem] border border-slate-200/50 col-span-2 md:col-span-1">
                             <Icon name="speed" className="text-purple-500 mb-1 md:mb-2" size={20} mdSize={32} filled />
@@ -365,16 +427,30 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                     </div>
 
                     {isPassed ? (
-                        <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.back()}>
-                            Gas Terus!
-                        </Button>
+                        <div className="space-y-6">
+                            <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.back()}>
+                                Gas Terus!
+                            </Button>
+
+                            {/* TACTICAL ADSENSE UNIT */}
+                            <AdSenseContainer
+                                slot="grammar_results_bottom"
+                                className="rounded-2xl border border-slate-700/30"
+                            />
+                        </div>
                     ) : (
-                        <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl bg-error hover:bg-error-dark" onClick={restartLevel}>
-                            Retry Era
-                        </Button>
+                        <div className="space-y-6">
+                            <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl bg-error hover:bg-error-dark" onClick={restartLevel}>
+                                Retry Era
+                            </Button>
+                            <AdSenseContainer
+                                slot="grammar_fail_bottom"
+                                className="rounded-2xl border border-slate-700/30"
+                            />
+                        </div>
                     )}
                 </motion.div>
-            </div>
+            </div >
         );
     }
 
@@ -386,6 +462,29 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                     <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Time: {theme.highlight} Era</span>
                     <h1 className="text-2xl md:text-3xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase px-2">{currentTask.indonesian}</h1>
                 </div>
+
+                {/* Oracle Hint */}
+                <AnimatePresence>
+                    {showOracle && currentTask.explanation && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="w-full mb-8 p-4 md:p-6 bg-amber-500/10 border-2 border-dashed border-amber-500/30 rounded-xl md:rounded-[2rem] text-center relative overflow-hidden group shadow-lg"
+                        >
+                            <div className="absolute top-0 left-0 p-2 opacity-10">
+                                <Icon name="visibility" size={40} className="text-amber-500" />
+                            </div>
+                            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2">Pencerahan Mata Batin</p>
+                            <p className="text-sm md:text-lg font-bold text-slate-700 dark:text-slate-300 italic px-4">
+                                {currentTask.explanation}
+                            </p>
+                            <div className="absolute bottom-0 right-0 p-2 opacity-10">
+                                <Icon name="psychology" size={40} className="text-amber-500" />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className="w-full bg-slate-50 dark:bg-slate-900/50 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-2 border-slate-200/50 dark:border-slate-800/50 min-h-[120px] md:min-h-[160px] flex flex-wrap gap-2 md:gap-3 items-center justify-center mb-6 md:mb-12 shadow-sm">
                     <AnimatePresence>
@@ -483,6 +582,28 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                                         disabled={!!feedback || boosterActive}
                                     />
                                     <CrystalButton
+                                        icon="update"
+                                        count={inventory.timewarp || 0}
+                                        label="Recovery"
+                                        onClick={handleUseTimeWarp}
+                                        disabled={lives >= 10}
+                                    />
+                                    <CrystalButton
+                                        icon="auto_fix_high"
+                                        count={inventory.eraser || 0}
+                                        label="Eraser"
+                                        onClick={handleUseEraser}
+                                        disabled={!!feedback}
+                                    />
+                                    <CrystalButton
+                                        icon="visibility"
+                                        count={inventory.oracle || 0}
+                                        label="Oracle"
+                                        onClick={handleUseOracle}
+                                        active={showOracle}
+                                        disabled={!!feedback || showOracle}
+                                    />
+                                    <CrystalButton
                                         icon="auto_awesome"
                                         count={inventory.slay}
                                         label="Phoenix"
@@ -490,11 +611,21 @@ export const GrammarGame: React.FC<GrammarGameProps> = ({ level, tasks }) => {
                                         disabled={true}
                                     />
                                 </div>
+
+
+                                {/* Construction Area */}
                             </div>
                         )}
                     </AnimatePresence>
                 </div>
             </main>
+
+            <TacticalAITutor
+                isVisible={showAiTutor}
+                explanation={aiFeedback?.explanation || ''}
+                tip={aiFeedback?.tip || ''}
+                onClose={() => setShowAiTutor(false)}
+            />
         </div>
     );
 };

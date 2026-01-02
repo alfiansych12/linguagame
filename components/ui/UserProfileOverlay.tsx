@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Icon, Badge, Button } from '@/components/ui/UIComponents';
 import { useSession } from 'next-auth/react';
+import { addFriend } from '@/app/actions/socialActions';
 import { AvatarFrame } from './AvatarFrame';
 import { BorderSelector } from './BorderSelector';
 import { RedeemSection } from './RedeemSection';
@@ -17,6 +18,8 @@ interface UserProfileOverlayProps {
 export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, onClose }) => {
     const { data: session } = useSession();
     const [showBorderSelector, setShowBorderSelector] = useState(false);
+    const [friendshipLoading, setFriendshipLoading] = useState(false);
+    const [friendshipSent, setFriendshipSent] = useState(false);
 
     // Check if viewing own profile
     const isMe = session?.user?.id === user?.id;
@@ -93,7 +96,7 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                     {user.name}
                                 </h2>
                                 <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-4 bg-primary/10 px-3 py-0.5 rounded-full">
-                                    Sirkel Member
+                                    Bro Member
                                 </span>
 
                                 {/* Edit Border Button - Only for me */}
@@ -109,6 +112,25 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                     </Button>
                                 )}
 
+                                {/* Add Friend Button - For others */}
+                                {!isMe && session?.user?.id && (
+                                    <Button
+                                        variant={friendshipSent ? "success" : "primary"}
+                                        size="sm"
+                                        disabled={friendshipLoading || friendshipSent}
+                                        onClick={async () => {
+                                            setFriendshipLoading(true);
+                                            const res = await addFriend(user.id);
+                                            if (res.success) setFriendshipSent(true);
+                                            setFriendshipLoading(false);
+                                        }}
+                                        className="mb-5 py-2 px-6 h-auto text-[10px] rounded-xl font-black italic tracking-widest"
+                                    >
+                                        <Icon name={friendshipSent ? "check" : "person_add"} size={14} className="mr-2" />
+                                        {friendshipLoading ? 'MENGHUBUNGKAN...' : friendshipSent ? 'PERMINTAAN TERKIRIM!' : 'TAMBAH TEMAN'}
+                                    </Button>
+                                )}
+
                                 {/* Stats Grid */}
                                 <div className="w-full grid grid-cols-2 gap-2 mb-4">
                                     <div className="bg-slate-50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5 flex flex-col items-center text-center">
@@ -116,7 +138,7 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                             <Icon name="translate" size={16} />
                                         </div>
                                         <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                                            {user.vocab_count || 0}
+                                            {(user.vocab_count || 0).toLocaleString('id-ID')}
                                         </span>
                                         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                             Vocab
@@ -128,7 +150,7 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                             <Icon name="emoji_events" size={16} />
                                         </div>
                                         <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                                            {user.duel_wins || 0}
+                                            {(user.duel_wins || 0).toLocaleString('id-ID')}
                                         </span>
                                         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                             Wins
@@ -140,7 +162,7 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                             <Icon name="bolt" size={16} filled />
                                         </div>
                                         <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                                            {user.total_xp || 0}
+                                            {(user.total_xp || 0).toLocaleString('id-ID')}
                                         </span>
                                         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                             Total XP
@@ -152,13 +174,50 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                                             <Icon name="local_fire_department" size={16} filled />
                                         </div>
                                         <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                                            {user.current_streak || 0}
+                                            {(user.current_streak || 0).toLocaleString('id-ID')}
                                         </span>
                                         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                             Streak
                                         </span>
                                     </div>
                                 </div>
+
+                                {/* Crystal Inventory - Only for Me */}
+                                {isMe && (
+                                    <div className="w-full mb-4">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Inventory Crystal</p>
+                                        <div className="grid grid-cols-6 gap-2 bg-slate-50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+                                            {[
+                                                { id: 'shield', icon: 'security', color: 'text-blue-500' },
+                                                { id: 'booster', icon: 'bolt', color: 'text-amber-500' },
+                                                { id: 'hint', icon: 'psychology', color: 'text-purple-500' },
+                                                { id: 'focus', icon: 'timer_off', color: 'text-sky-500' },
+                                                { id: 'timefreeze', icon: 'ac_unit', color: 'text-cyan-400' },
+                                                { id: 'eraser', icon: 'auto_fix_high', color: 'text-indigo-400' },
+                                                { id: 'timewarp', icon: 'update', color: 'text-sky-400' },
+                                                { id: 'oracle', icon: 'visibility', color: 'text-amber-400' },
+                                                { id: 'slay', icon: 'auto_awesome', color: 'text-rose-500' },
+                                                { id: 'autocorrect', icon: 'remove_red_eye', color: 'text-emerald-500' },
+                                                { id: 'adminvision', icon: 'visibility', color: 'text-fuchsia-500' },
+                                            ].map((item) => {
+                                                const count = user.inventory?.[item.id] || 0;
+                                                if (count === 0 && !['shield', 'booster', 'hint'].includes(item.id)) return null;
+                                                return (
+                                                    <div key={item.id} className="flex flex-col items-center group relative cursor-help">
+                                                        <div className={`size-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center ${item.color} shadow-sm transition-transform group-hover:scale-110`}>
+                                                            <Icon name={item.icon} size={16} filled={count > 0} />
+                                                        </div>
+                                                        <span className={`text-[10px] font-black mt-1 ${count > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                                                            {count}
+                                                        </span>
+                                                        {/* Tooltip-like effect on hover could go here */}
+                                                    </div>
+                                                );
+                                            })}
+                                            {/* Fill remaining slots if needed or just let it grid */}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {isMe && <RedeemSection />}
 
@@ -182,7 +241,7 @@ export const UserProfileOverlay: React.FC<UserProfileOverlayProps> = ({ user, on
                         </div>
                     </motion.div>
                 </motion.div>
-            </AnimatePresence>
+            </AnimatePresence >
 
             {/* Border Selector Modal */}
             {

@@ -26,6 +26,8 @@ export const BorderSelector: React.FC<BorderSelectorProps> = ({ onClose }) => {
         unlockedAchievements,
         unlockedBorders,
         equippedBorder,
+        isPro,
+        proUntil,
         setEquippedBorder
     } = useUserStore();
     const { showAlert } = useAlertStore();
@@ -40,6 +42,9 @@ export const BorderSelector: React.FC<BorderSelectorProps> = ({ onClose }) => {
         duel_wins: duelWins,
         current_streak: currentStreak,
         unlocked_achievements: unlockedAchievements,
+        unlocked_borders: unlockedBorders,
+        is_pro: isPro,
+        pro_until: proUntil,
         name: name
     };
 
@@ -188,10 +193,18 @@ export const BorderSelector: React.FC<BorderSelectorProps> = ({ onClose }) => {
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl z-10 backdrop-blur-sm">
                                                 <div className="text-center">
                                                     <Icon name="lock" size={24} className="text-white mb-2 mx-auto" />
-                                                    <p className="text-[10px] text-white font-black uppercase tracking-widest">
-                                                        {condition.type === 'xp' && `${condition.value} XP`}
-                                                        {condition.type === 'purchase' && `Forge @ Shop`}
-                                                        {condition.type === 'admin' && 'ADMIN ONLY'}
+                                                    <p className="text-[10px] text-white font-black uppercase tracking-widest px-2 leading-tight">
+                                                        {condition.requiresPro && !isPro ? (
+                                                            <span className="text-primary flex items-center justify-center gap-1">
+                                                                <Icon name="workspace_premium" size={10} /> PRO ONLY
+                                                            </span>
+                                                        ) : (
+                                                            <>
+                                                                {condition.type === 'xp' && `${condition.value} XP`}
+                                                                {condition.type === 'purchase' && `Forge @ Shop`}
+                                                                {condition.type === 'admin' && 'ADMIN ONLY'}
+                                                            </>
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>

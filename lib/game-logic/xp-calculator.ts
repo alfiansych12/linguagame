@@ -16,6 +16,7 @@ interface XPParams {
     maxTime?: number;       // seconds
     maxStreak: number;
     crystalActive?: boolean;
+    isPro?: boolean;
 }
 
 export function calculateXp({
@@ -25,8 +26,9 @@ export function calculateXp({
     timeRemaining = 0,
     maxTime = 1,
     maxStreak,
-    crystalActive = false
-}: XPParams): { total: number; breakdown: { base: number; accuracy: number; speed: number; combo: number; multiplier: number } } {
+    crystalActive = false,
+    isPro = false
+}: XPParams): { total: number; breakdown: { base: number; accuracy: number; speed: number; combo: number; multiplier: number; isProMultiplier: boolean } } {
 
     // 1. Accuracy Bonus (0 to 50)
     const correctCount = Math.max(0, totalTasks - mistakes);
@@ -43,9 +45,13 @@ export function calculateXp({
 
     const subtotal = baseXp + accuracyBonus + speedBonus + comboBonus;
 
-    // 4. Multipliers (e.g. 2x XP crystal)
-    const multiplier = crystalActive ? 2 : 1;
-    const total = Math.round(subtotal * multiplier);
+    // 4. Multipliers (e.g. 2x XP crystal, 1.5x PRO boost)
+    let multiplier = crystalActive ? 2 : 1;
+    let total = Math.round(subtotal * multiplier);
+
+    if (isPro) {
+        total = Math.round(total * 1.5);
+    }
 
     return {
         total,
@@ -54,7 +60,8 @@ export function calculateXp({
             accuracy: accuracyBonus,
             speed: speedBonus,
             combo: comboBonus,
-            multiplier
+            multiplier,
+            isProMultiplier: isPro
         }
     };
 }

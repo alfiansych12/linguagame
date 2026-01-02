@@ -11,9 +11,10 @@ interface LeaderboardClientProps {
     top3: any[];
     others: any[];
     currentUserId?: string;
+    type: 'xp' | 'duel';
 }
 
-export default function LeaderboardClient({ top3, others, currentUserId }: LeaderboardClientProps) {
+export default function LeaderboardClient({ top3, others, currentUserId, type }: LeaderboardClientProps) {
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
     const { playSound } = useSound();
 
@@ -39,7 +40,7 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
 
     return (
         <PageLayout activeTab="leaderboard">
-            <div className="flex flex-col lg:flex-row lg:gap-10 xl:gap-12 lg:items-start max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row lg:gap-10 xl:gap-12 lg:items-start max-w-7xl mx-auto px-4 md:px-8">
 
                 {/* LEFT SIDE: Header + Podium - Responsive */}
                 <div className="lg:w-[45%] lg:sticky lg:top-0 space-y-4 sm:space-y-6 lg:space-y-10">
@@ -48,11 +49,33 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
                             <span className="text-[7px] sm:text-[8px] lg:text-[9px] font-black text-primary uppercase tracking-[0.2em] leading-none">Weekly Tournament</span>
                         </div>
                         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-1.5 sm:mb-2 tracking-tighter leading-none italic uppercase">
-                            HALL OF <span className="text-primary">FAME</span>
+                            HALL OF <span className="text-primary">{type === 'xp' ? 'FAME' : 'BATTLE'}</span>
                         </h1>
                         <p className="text-[8px] sm:text-[9px] lg:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest max-w-sm leading-relaxed">
-                            Sirkel paling kenceng grinding-nya minggu ini. Literally tak terbendung!
+                            {type === 'xp' ? 'Bro paling kenceng grinding-nya minggu ini. Literally tak terbendung!' : 'Para gladiator arena yang sudah mengumpulkan kemenangan terbanyak.'}
                         </p>
+
+                        {/* MODE SELECTOR */}
+                        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 w-fit mt-4">
+                            <button
+                                onClick={() => {
+                                    playSound('CLICK');
+                                    window.location.href = '/leaderboard?type=xp';
+                                }}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${type === 'xp' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                XP RANKING
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('CLICK');
+                                    window.location.href = '/leaderboard?type=duel';
+                                }}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${type === 'duel' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                TACTICAL DUELS
+                            </button>
+                        </div>
                     </div>
 
                     {/* Premium Podium Section - Ultra Compact for Mobile */}
@@ -76,7 +99,9 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
                             </div>
                             <div className="w-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-t-md sm:rounded-t-lg p-0.5 sm:p-1.5 lg:p-3 text-center h-8 sm:h-12 lg:h-20 shadow-lg relative overflow-hidden group">
                                 <h3 className="text-[6px] sm:text-[7px] lg:text-xs font-black truncate text-slate-800 dark:text-white mb-0 uppercase tracking-tight italic">{top3[1]?.name || 'Empty'}</h3>
-                                <div className="text-[7px] sm:text-[9px] lg:text-sm font-black text-primary">{top3[1]?.total_xp || 0} XP</div>
+                                <div className="text-[7px] sm:text-[9px] lg:text-sm font-black text-primary">
+                                    {type === 'xp' ? `${(top3[1]?.total_xp || 0).toLocaleString('id-ID')} XP` : `${top3[1]?.duel_wins || 0} WINS`}
+                                </div>
                             </div>
                         </div>
 
@@ -97,7 +122,9 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
                             </div>
                             <div className="w-full bg-white dark:bg-slate-900 border-x border-t-2 border-yellow-400/40 rounded-t-lg sm:rounded-t-xl p-1 sm:p-2 lg:p-4 text-center h-10 sm:h-16 lg:h-28 shadow-2xl relative overflow-hidden group">
                                 <h3 className="text-[7px] sm:text-[9px] lg:text-sm font-black truncate text-slate-900 dark:text-white mb-0 uppercase italic tracking-tighter group-hover:text-yellow-500">{top3[0]?.name || 'Empty'}</h3>
-                                <div className="text-[8px] sm:text-xs lg:text-xl font-black text-yellow-500">{top3[0]?.total_xp || 0} XP</div>
+                                <div className="text-[8px] sm:text-xs lg:text-xl font-black text-yellow-500">
+                                    {type === 'xp' ? `${(top3[0]?.total_xp || 0).toLocaleString('id-ID')} XP` : `${top3[0]?.duel_wins || 0} WINS`}
+                                </div>
                                 <Badge variant="streak" className="mt-0.5 sm:mt-1 mx-auto block w-fit py-0 px-0.5 sm:px-1 text-[4px] sm:text-[5px] lg:text-[7px]">PRO</Badge>
                             </div>
                         </div>
@@ -118,7 +145,9 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
                             </div>
                             <div className="w-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg border border-slate-200/50 dark:border-slate-800/50 rounded-t-sm sm:rounded-t-md p-0.5 sm:p-1 lg:p-2.5 text-center h-6 sm:h-9 lg:h-16 shadow-sm relative overflow-hidden">
                                 <h3 className="text-[5px] sm:text-[6px] lg:text-[10px] font-black truncate text-slate-700 dark:text-slate-200 mb-0 uppercase tracking-tight italic">{top3[2]?.name || 'Empty'}</h3>
-                                <div className="text-[6px] sm:text-[8px] lg:text-xs font-black text-primary">{top3[2]?.total_xp || 0} XP</div>
+                                <div className="text-[6px] sm:text-[8px] lg:text-xs font-black text-primary">
+                                    {type === 'xp' ? `${(top3[2]?.total_xp || 0).toLocaleString('id-ID')} XP` : `${top3[2]?.duel_wins || 0} WINS`}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -127,7 +156,7 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
                 {/* RIGHT SIDE: Ranking List - Responsive */}
                 <div className="flex-1 w-full lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto hide-scrollbar mt-8 sm:mt-10 lg:mt-0">
                     <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 rounded-t-xl sm:rounded-t-2xl">
-                        <span className="text-[8px] sm:text-[9px] lg:text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Rank Sirkel</span>
+                        <span className="text-[8px] sm:text-[9px] lg:text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Rank Bro</span>
                         <span className="text-[8px] sm:text-[9px] lg:text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Power Level</span>
                     </div>
 
@@ -169,16 +198,16 @@ export default function LeaderboardClient({ top3, others, currentUserId }: Leade
                                         </div>
                                         <div className="flex items-center gap-1 sm:gap-1.5">
                                             <Icon name="local_fire_department" size={7} className="text-orange-500 sm:size-2 lg:size-3" filled />
-                                            <span className="text-[6px] sm:text-[7px] lg:text-[9px] font-black text-slate-400 uppercase tracking-widest">{user.current_streak}D Streak</span>
+                                            <span className="text-[6px] sm:text-[7px] lg:text-[9px] font-black text-slate-400 uppercase tracking-widest">{user.current_streak.toLocaleString('id-ID')}D Streak</span>
                                         </div>
                                     </div>
 
                                     <div className="text-right shrink-0">
                                         <div className={`text-[10px] sm:text-sm lg:text-2xl font-black tracking-tighter leading-none ${isMe ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>
-                                            {user.total_xp}
+                                            {type === 'xp' ? user.total_xp.toLocaleString('id-ID') : user.duel_wins}
                                         </div>
                                         <div className="text-[5px] sm:text-[6px] lg:text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mt-0.5">
-                                            XP
+                                            {type === 'xp' ? 'XP' : 'WINS'}
                                         </div>
                                     </div>
                                 </Card>

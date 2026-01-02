@@ -91,7 +91,7 @@ export function AdvancedAnalytics({ users }: { users: any[] }) {
         labels: getTimeframeLabels(),
         datasets: [
             {
-                label: 'Aktivitas Sirkel',
+                label: 'Aktivitas Bro',
                 data: processData('last_login_at'),
                 borderColor: '#00b7ff',
                 borderWidth: 4,
@@ -127,7 +127,7 @@ export function AdvancedAnalytics({ users }: { users: any[] }) {
         labels: users.slice(0, 10).map(u => u.name?.split(' ')[0] || 'Node'),
         datasets: [
             {
-                label: 'Kekayaan (Gems)',
+                label: 'Kekayaan (Crystals)',
                 data: users.slice(0, 10).map(u => u.gems),
                 backgroundColor: 'rgba(245, 158, 11, 0.4)',
                 borderColor: '#f59e0b',
@@ -176,10 +176,10 @@ export function AdvancedAnalytics({ users }: { users: any[] }) {
                     </div>
 
                     <div className="flex flex-wrap gap-4 md:gap-8">
-                        <QuickStat label="Aktif Hari Ini" value={activeToday} color="text-emerald-500" />
-                        <QuickStat label="User Baru" value={newUsers} color="text-blue-500" />
-                        <QuickStat label="Admin Core" value={adminNodes} color="text-primary" />
-                        <QuickStat label="30H Denyut" value={active30d} color="text-amber-500" />
+                        <QuickStat label="Aktif Hari Ini" value={activeToday.toLocaleString('id-ID')} color="text-emerald-500" />
+                        <QuickStat label="User Baru" value={newUsers.toLocaleString('id-ID')} color="text-blue-500" />
+                        <QuickStat label="Admin Core" value={adminNodes.toLocaleString('id-ID')} color="text-primary" />
+                        <QuickStat label="30H Denyut" value={active30d.toLocaleString('id-ID')} color="text-amber-500" />
                     </div>
                 </div>
 
@@ -302,7 +302,7 @@ export function AdvancedAnalytics({ users }: { users: any[] }) {
     );
 }
 
-function QuickStat({ label, value, color }: { label: string, value: number, color: string }) {
+function QuickStat({ label, value, color }: { label: string, value: string | number, color: string }) {
     return (
         <div className="flex flex-col gap-0.5 md:gap-1">
             <p className="text-[7px] md:text-[9px] font-black uppercase text-slate-600 tracking-widest">{label}</p>

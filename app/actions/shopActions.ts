@@ -16,7 +16,7 @@ import { CRYSTAL_PRICES, BORDER_PRICES } from '@/lib/data/shop';
 export async function purchaseCrystal(data: any) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return { success: false, error: 'Harap login sirkel!' };
+        if (!session?.user?.id) return { success: false, error: 'Harap login bro!' };
 
         // Rate Limit (Prevent spam forge)
         const { success: limitSuccess } = await strictRatelimit.limit(session.user.id);
@@ -66,11 +66,11 @@ export async function purchaseCrystal(data: any) {
 export async function purchaseBorder(data: any) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return { success: false, error: 'Harap login sirkel!' };
+        if (!session?.user?.id) return { success: false, error: 'Harap login bro!' };
 
         // Rate Limit
         const { success: limitSuccess } = await strictRatelimit.limit(session.user.id);
-        if (!limitSuccess) return { success: false, error: 'Antri sirkel, jangan borong terus! (Rate Limited)' };
+        if (!limitSuccess) return { success: false, error: 'Antri bro, jangan borong terus! (Rate Limited)' };
 
         const validation = PurchaseBorderSchema.safeParse(data);
         if (!validation.success) return { success: false, error: 'Data tidak valid' };
@@ -106,46 +106,3 @@ export async function purchaseBorder(data: any) {
     }
 }
 
-/**
- * SECURE: Redeem Promo Code Action
- */
-export async function redeemPromoCode(code: string) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return { success: false, error: 'Harap login sirkel!' };
-
-        const userId = session.user.id;
-        const normalizedCode = code.trim().toUpperCase();
-
-        // VALIDATION: Special Code LG26
-        if (normalizedCode !== 'LG26') {
-            return { success: false, error: 'Kode promo tidak valid atau kadaluarsa.' };
-        }
-
-        // Fetch user to check if already used
-        const { data: user } = await supabase.from('users').select('gems, claimed_milestones').eq('id', userId).single();
-        if (!user) return { success: false, error: 'User tidak ditemukan' };
-
-        const claimed = user.claimed_milestones || [];
-        if (claimed.includes('PROMO_LG26')) {
-            return { success: false, error: 'Kode ini sudah kamu gunakan sirkel!' };
-        }
-
-        // Apply reward: 10000 crystals
-        const rewardAmount = 10000;
-        const newClaimed = [...claimed, 'PROMO_LG26'];
-
-        const { error } = await supabase.from('users').update({
-            gems: (user.gems || 0) + rewardAmount,
-            claimed_milestones: newClaimed
-        }).eq('id', userId);
-
-        if (error) return { success: false, error: 'Gagal klaim promo' };
-
-        revalidatePath('/shop');
-        revalidatePath('/profile');
-        return { success: true, amount: rewardAmount };
-    } catch (error) {
-        return { success: false, error: 'Internal Error' };
-    }
-}

@@ -16,6 +16,10 @@ import { calculateXp, calculateStars } from '@/lib/game-logic/xp-calculator';
 import { submitGameScore } from '@/app/actions/gameActions';
 import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
+import { getTacticalFeedback } from '@/app/actions/aiActions';
+import { TacticalAITutor } from './TacticalAITutor';
+import { PremiumAIModal } from './PremiumAIModal';
+import { AdSenseContainer } from '../ui/AdSenseContainer';
 
 interface SpeedBlitzGameProps {
     level: Level;
@@ -39,7 +43,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
     const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const { addGems, addXp, inventory, useCrystal } = useUserStore();
+    const { addGems, addXp, inventory, useCrystal, isPro } = useUserStore();
     const { completeLevel, unlockLevel, getLevelProgress } = useProgressStore();
     const { playSound } = useSound();
     const { data: session } = useSession();
@@ -49,6 +53,10 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
     const [isTimeFrozen, setIsTimeFrozen] = useState(false);
     const [showVision, setShowVision] = useState(false);
     const [boosterActive, setBoosterActive] = useState(false);
+    const [eliminatedChoices, setEliminatedChoices] = useState<number[]>([]);
+    const [aiFeedback, setAiFeedback] = useState<{ explanation: string; tip: string } | null>(null);
+    const [showAiTutor, setShowAiTutor] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
 
     const currentTask = tasks[currentIndex];
 
@@ -141,6 +149,22 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                 setTimeout(() => setPhase('GAMEOVER'), 600);
                 return;
             }
+
+            // QUANTUM AI TUTOR: Fetch feedback on blitz mistake
+            getTacticalFeedback(
+                currentTask.english,
+                choiceIndex === -1 ? 'TIME OUT' : currentTask.choices[choiceIndex],
+                currentTask.choices[currentTask.correctIndex],
+                'blitz',
+                userId
+            ).then((res: any) => {
+                if (res.success) {
+                    setAiFeedback({ explanation: res.explanation, tip: res.tip });
+                    setShowAiTutor(true);
+                } else if (res.isNotPro) {
+                    setShowPremiumModal(true);
+                }
+            });
         }
 
         setTimeout(() => {
@@ -151,6 +175,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                 setShowVision(false);
                 setIsTimeFrozen(false);
                 setSelectedChoice(null);
+                setEliminatedChoices([]);
             } else {
                 handleLevelComplete();
             }
@@ -199,11 +224,36 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
     };
 
     const handleUseBooster = async () => {
-        if (inventory.booster > 0 && !boosterActive && !feedback) {
+        if (inventory.booster > 0 && !boosterActive && phase === 'PLAYING' && !feedback) {
             const used = await useCrystal('booster');
             if (used) {
                 playSound('CRYSTAL');
                 setBoosterActive(true);
+            }
+        }
+    };
+
+    const handleUseEraser = async () => {
+        if (inventory.eraser > 0 && phase === 'PLAYING' && !feedback && eliminatedChoices.length === 0) {
+            const used = await useCrystal('eraser');
+            if (used) {
+                playSound('CRYSTAL');
+                const correctIdx = currentTask.correctIndex;
+                const wrongIndices = currentTask.choices
+                    .map((_, i) => i)
+                    .filter(i => i !== correctIdx);
+                const toEliminate = wrongIndices.sort(() => Math.random() - 0.5).slice(0, 2);
+                setEliminatedChoices(toEliminate);
+            }
+        }
+    };
+
+    const handleUseTimeWarp = async () => {
+        if (inventory.timewarp > 0 && phase === 'PLAYING' && !feedback) {
+            const used = await useCrystal('timewarp');
+            if (used) {
+                playSound('CRYSTAL');
+                setTimeLeft(prev => prev + 10);
             }
         }
     };
@@ -218,7 +268,8 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
             timeRemaining: Math.max(0, maxTime - timeTaken),
             maxTime,
             maxStreak,
-            crystalActive: boosterActive
+            crystalActive: boosterActive,
+            isPro: isPro
         });
 
         const accuracy = (tasks.length - mistakes) / tasks.length;
@@ -350,9 +401,14 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                     {isPassed ? (
                         <>
                             <div className="relative">
-                                <div className="size-32 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-[2.5rem] md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-[0_0_60px_rgba(8,126,255,0.4)] border-4 md:border-8 border-white/10">
+                                <div className="size-32 md:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-[2.5rem] md:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-[0_0_60px_rgba(8,126,255,0.4)] border-4 md:border-8 border-white/10 relative">
                                     <span className="text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">Skor Kilatan</span>
-                                    <span className="text-4xl md:text-7xl font-black text-white tracking-tighter">{score}</span>
+                                    <span className="text-4xl md:text-7xl font-black text-white tracking-tighter">{score.toLocaleString('id-ID')}</span>
+                                    {isPro && (
+                                        <div className="absolute -bottom-2 bg-primary text-[8px] font-black px-2 py-0.5 rounded-full border border-white/20 shadow-lg">
+                                            PRO 1.5X BOOST
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -385,7 +441,7 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                         </div>
                         <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10">
                             <Icon name="diamond" className="text-blue-400 mb-1 md:mb-2" size={20} mdSize={32} filled />
-                            <p className="text-xl md:text-2xl font-black text-white">+{30 + (levelData?.stars || 0) * 20}</p>
+                            <p className="text-xl md:text-2xl font-black text-white">+{(30 + (levelData?.stars || 0) * 20).toLocaleString('id-ID')}</p>
                             <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Kristal</p>
                         </div>
                         <div className="bg-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/10 col-span-2 md:col-span-1">
@@ -396,9 +452,25 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                     </div>
 
                     {isPassed ? (
-                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl shadow-[0_20px_50px_rgba(8,126,255,0.2)]" onClick={() => router.back()}>Lanjut!</Button>
+                        <div className="space-y-6">
+                            <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl shadow-[0_20px_50px_rgba(8,126,255,0.2)]" onClick={() => router.back()}>Lanjut!</Button>
+
+                            {/* TACTICAL ADSENSE UNIT */}
+                            <AdSenseContainer
+                                slot="blitz_results_bottom"
+                                className="rounded-2xl border border-white/10"
+                            />
+                        </div>
                     ) : (
-                        <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl bg-error hover:bg-error-dark shadow-xl" onClick={restartLevel}>Coba Lagi</Button>
+                        <div className="space-y-6">
+                            <Button variant="primary" fullWidth className="py-5 md:py-7 rounded-xl md:rounded-[2rem] font-black uppercase tracking-widest text-base md:text-xl bg-error hover:bg-error-dark shadow-xl" onClick={restartLevel}>Coba Lagi</Button>
+
+                            {/* TACTICAL ADSENSE UNIT */}
+                            <AdSenseContainer
+                                slot="blitz_fail_bottom"
+                                className="rounded-2xl border border-white/10"
+                            />
+                        </div>
                     )}
                 </motion.div>
             </div>
@@ -437,68 +509,77 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                         </div>
 
                         <div className="grid grid-cols-1 gap-3 md:gap-4">
-                            {currentTask.choices.map((choice: string, idx: number) => {
-                                const isCorrectChoice = idx === currentTask.correctIndex;
-                                const isWinner = selectedChoice === idx && feedback === 'CORRECT';
-                                const isLoser = selectedChoice === idx && feedback === 'WRONG';
-                                const showHint = showVision && isCorrectChoice;
+                            {currentTask.choices.map((choice, idx) => {
+                                const isSelected = selectedChoice === idx;
+                                const isCorrect = idx === currentTask.correctIndex;
+                                const showHint = showVision && isCorrect;
+                                const isEliminated = eliminatedChoices.includes(idx);
+
                                 return (
                                     <button
                                         key={idx}
                                         onClick={() => handleAnswer(idx)}
-                                        disabled={feedback !== null}
-                                        className={`w-full p-4 md:p-6 rounded-xl md:rounded-3xl text-left transition-all duration-200 border-2 font-black text-sm md:text-xl flex items-center justify-between group relative
-                                                ${isWinner ? 'bg-success border-success text-white scale-105 shadow-lg shadow-success/20 z-10' :
-                                                isLoser ? 'bg-error border-error text-white shake z-10' :
-                                                    showHint ? 'bg-blue-500/10 border-blue-500 text-blue-500 animate-pulse' :
+                                        disabled={isPaused || feedback !== null || isEliminated}
+                                        className={`p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] text-sm md:text-xl font-black transition-all border-2 text-left flex items-center justify-between group relative overflow-hidden
+                                            ${isSelected ? (isCorrect ? 'bg-success/10 border-success text-success scale-105' : 'bg-error/10 border-error text-error shake') :
+                                                showHint ? 'bg-blue-500/10 border-blue-500 text-blue-500 animate-pulse' :
+                                                    isEliminated ? 'opacity-0 pointer-events-none' :
                                                         'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary hover:bg-primary/5 hover:scale-[1.02]'}
-                                            `}
+                                        `}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={`size-8 rounded-lg flex items-center justify-center text-xs font-black transition-colors
-                                                    ${isWinner || isLoser ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-primary group-hover:text-white'}
+                                                    ${isSelected ? (isCorrect ? 'bg-white/20 text-white' : 'bg-white/20 text-white') : 'bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-primary group-hover:text-white'}
                                                 `}>
                                                 {idx + 1}
                                             </div>
                                             <NoTranslate>{choice}</NoTranslate>
                                         </div>
-                                        {isWinner && <Icon name="check_circle" filled />}
-                                        {isLoser && <Icon name="cancel" filled />}
+                                        {isSelected && isCorrect && <Icon name="check_circle" filled />}
+                                        {isSelected && !isCorrect && <Icon name="cancel" filled />}
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
+                        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-8">
                             <CrystalButton
                                 icon="security"
                                 count={inventory.shield}
-                                label="Tameng"
+                                label="Shield"
                                 active={shieldActive}
                                 onClick={handleUseShield}
                                 disabled={feedback !== null || shieldActive}
                             />
                             <CrystalButton
+                                icon="update"
+                                count={inventory.timewarp || 0}
+                                label="Time Warp"
+                                onClick={handleUseTimeWarp}
+                                disabled={feedback !== null}
+                            />
+                            <CrystalButton
+                                icon="timer_off"
+                                count={inventory.focus}
+                                label="Focus"
+                                active={isPaused} // Focus stops timer
+                                onClick={handleUseFocus}
+                                disabled={feedback !== null}
+                            />
+                            <CrystalButton
                                 icon="psychology"
                                 count={inventory.hint}
-                                label="Visi"
+                                label="Vision"
                                 active={showVision}
                                 onClick={handleUseVision}
                                 disabled={feedback !== null || showVision}
                             />
                             <CrystalButton
-                                icon="timer"
-                                count={inventory.focus}
-                                label="Fokus"
-                                onClick={handleUseFocus}
-                                disabled={feedback !== null}
-                            />
-                            <CrystalButton
-                                icon="ac_unit"
-                                count={inventory.timefreeze}
-                                label="Beku"
-                                onClick={handleUseTimefreeze}
-                                disabled={feedback !== null || isTimeFrozen}
+                                icon="auto_fix_high"
+                                count={inventory.eraser || 0}
+                                label="Eraser"
+                                onClick={handleUseEraser}
+                                disabled={feedback !== null || eliminatedChoices.length > 0}
                             />
                             <CrystalButton
                                 icon="bolt"
@@ -512,13 +593,25 @@ export const SpeedBlitzGame: React.FC<SpeedBlitzGameProps> = ({ level, tasks }) 
                                 icon="auto_awesome"
                                 count={inventory.slay}
                                 label="Phoenix"
-                                onClick={() => { }} // Auto used when dead
+                                onClick={() => { }} // Auto-used
                                 disabled={true}
                             />
                         </div>
                     </motion.div>
                 </AnimatePresence>
             </main>
+
+            <TacticalAITutor
+                isVisible={showAiTutor}
+                explanation={aiFeedback?.explanation || ''}
+                tip={aiFeedback?.tip || ''}
+                onClose={() => setShowAiTutor(false)}
+            />
+
+            <PremiumAIModal
+                isOpen={showPremiumModal}
+                onClose={() => setShowPremiumModal(false)}
+            />
         </div>
     );
 };

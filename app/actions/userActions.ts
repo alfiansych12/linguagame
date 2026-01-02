@@ -33,7 +33,7 @@ export async function equipBorder(data: { borderId: string }) {
         if (fetchError || !userData) return { success: false, error: 'User not found' };
 
         if (!checkBorderUnlocked(borderId, userData)) {
-            return { success: false, error: 'Border masih terkunci sirkel!' };
+            return { success: false, error: 'Border masih terkunci bro!' };
         }
 
         const { error: updateError } = await supabase
@@ -119,7 +119,7 @@ export async function consumeCrystal(data: { crystalType: string }) {
 export async function applyReferral(code: string) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return { success: false, error: 'Harap login sirkel!' };
+        if (!session?.user?.id) return { success: false, error: 'Harap login bro!' };
 
         const userId = session.user.id;
         const normalizedCode = code.trim().toUpperCase();
@@ -237,12 +237,41 @@ export async function unlockAchievement(achievementId: string) {
 export async function redeemPromoCode(code: string) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return { success: false, error: 'Harap login sirkel!' };
+        if (!session?.user?.id) return { success: false, error: 'Harap login bro!' };
 
         const userId = session.user.id;
         const normalizedCode = code.trim().toUpperCase();
 
-        // 1. Fetch the code details
+        // 0. SPECIAL CASE: Legacy Placeholder Codes (LG26 / LG26L)
+        if (normalizedCode === 'LG26' || normalizedCode === 'LG26L') {
+            const { data: user } = await supabase.from('users').select('gems, claimed_milestones').eq('id', userId).single();
+            if (!user) return { success: false, error: 'User tidak ditemukan' };
+
+            const claimed = user.claimed_milestones || [];
+            if (claimed.includes('PROMO_LG26')) {
+                return { success: false, error: 'Kode ini sudah kamu gunakan bro!' };
+            }
+
+            const rewardAmount = 10000;
+            const newClaimed = [...claimed, 'PROMO_LG26'];
+
+            const { error } = await supabase.from('users').update({
+                gems: (user.gems || 0) + rewardAmount,
+                claimed_milestones: newClaimed
+            }).eq('id', userId);
+
+            if (error) return { success: false, error: 'Gagal klaim promo' };
+
+            revalidatePath('/shop');
+            revalidatePath('/profile');
+            return {
+                success: true,
+                amount: rewardAmount,
+                message: `JACKPOT! 🎰 Kamu dapet ${rewardAmount.toLocaleString('id-ID')} Crystal instan. Dompet auto meluber!`
+            };
+        }
+
+        // 1. Fetch the code details from DB
         const { data: promo, error: promoError } = await supabase
             .from('redeem_codes')
             .select('*')
@@ -253,7 +282,7 @@ export async function redeemPromoCode(code: string) {
 
         // 2. Check if expired
         if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-            return { success: false, error: 'Kode ini sudah basi sirkel (kadaluarsa).' };
+            return { success: false, error: 'Kode ini sudah basi bro (kadaluarsa).' };
         }
 
         // 3. Check if max uses reached
@@ -272,7 +301,6 @@ export async function redeemPromoCode(code: string) {
         if (alreadyRedeemed) return { success: false, error: 'Kamu sudah pernah pakai kode ini!' };
 
         // 5. SECURE TRANSACTION: Record usage and update user
-        // Record redemption
         const { error: recordError } = await supabase
             .from('user_redeems')
             .insert({ user_id: userId, code_id: promo.id });
@@ -310,7 +338,8 @@ export async function redeemPromoCode(code: string) {
 
         return {
             success: true,
-            message: `Mantap sirkel! Kamu dapet ${promo.reward_gems} Crystal & ${promo.reward_xp} XP.`
+            amount: promo.reward_gems,
+            message: `Mantap bro! Kamu dapet ${promo.reward_gems.toLocaleString('id-ID')} Crystal & ${promo.reward_xp.toLocaleString('id-ID')} XP.`
         };
     } catch (error) {
         console.error('redeemPromoCode error:', error);
@@ -440,7 +469,7 @@ export async function claimQuestReward(questId: string) {
 
         if (!quest) return { success: false, error: 'Quest not found' };
         if (quest.status === 'CLAIMED') return { success: false, error: 'Reward already claimed' };
-        if (quest.progress < quest.target) return { success: false, error: 'Misi belum selesai sirkel!' };
+        if (quest.progress < quest.target) return { success: false, error: 'Misi belum selesai bro!' };
 
         // 2. Claim reward (Update quest status & add gems to user)
         // Set to CLAIMED
@@ -465,5 +494,61 @@ export async function claimQuestReward(questId: string) {
     } catch (error) {
         console.error('claimQuestReward error:', error);
         return { success: false, error: 'Failed to claim reward' };
+    }
+}
+
+/**
+ * SECURE: Claim Referral Milestone Action
+ */
+export async function claimReferralMilestone(milestoneId: string) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+        const userId = session.user.id;
+
+        // 1. Fetch user data
+        const { data: user, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (fetchError || !user) return { success: false, error: 'User not found' };
+
+        const claimed = user.claimed_milestones || [];
+        if (claimed.includes(milestoneId)) return { success: false, error: 'Sudah diklaim bro!' };
+
+        // 2. Define milestones
+        const milestones: Record<string, { target: number; reward: number }> = {
+            'referral_1': { target: 1, reward: 5000 },
+            'referral_3': { target: 3, reward: 10000 }
+        };
+
+        const milestone = milestones[milestoneId];
+        if (!milestone) return { success: false, error: 'Milestone tidak valid' };
+
+        // 3. Check progress
+        if ((user.referral_count || 0) < milestone.target) {
+            return { success: false, error: 'Target belum tercapai bro!' };
+        }
+
+        // 4. SECURE UPDATE
+        const newClaimed = [...claimed, milestoneId];
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({
+                claimed_milestones: newClaimed,
+                gems: (user.gems || 0) + milestone.reward
+            })
+            .eq('id', userId);
+
+        if (updateError) return { success: false, error: 'Gagal klaim milestone' };
+
+        revalidatePath('/profile');
+        return { success: true, reward: milestone.reward };
+    } catch (error) {
+        console.error('claimReferralMilestone error:', error);
+        return { success: false, error: 'Internal Error' };
     }
 }

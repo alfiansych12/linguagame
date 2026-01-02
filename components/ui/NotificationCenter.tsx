@@ -62,14 +62,14 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean, onClo
                                 {loading ? (
                                     <div className="flex flex-col items-center justify-center h-full space-y-2 opacity-50">
                                         <Icon name="progress_activity" size={24} className="animate-spin text-primary" />
-                                        <p className="text-[10px] font-black uppercase text-slate-500">Loading sirkel info...</p>
+                                        <p className="text-[10px] font-black uppercase text-slate-500">Loading bro info...</p>
                                     </div>
                                 ) : notifications.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full space-y-4 opacity-50 text-center px-8">
                                         <Icon name="drafts" size={48} className="text-slate-300" />
                                         <div>
                                             <p className="text-xs font-black uppercase text-slate-900 dark:text-white">Belum ada info baru</p>
-                                            <p className="text-[10px] font-bold mt-1 text-slate-500">Sirkel lagi adem ayem nih, pantau terus ya!</p>
+                                            <p className="text-[10px] font-bold mt-1 text-slate-500">Bro lagi adem ayem nih, pantau terus ya!</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -77,8 +77,8 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean, onClo
                                         <div
                                             key={n.id}
                                             className={`p-5 rounded-2xl border-2 space-y-3 group transition-all hover:scale-[1.02] ${n.type === 'reward'
-                                                    ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-500/20 shadow-sm shadow-blue-500/5'
-                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm'
+                                                ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-500/20 shadow-sm shadow-blue-500/5'
+                                                : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm'
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between">

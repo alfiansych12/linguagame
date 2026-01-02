@@ -36,7 +36,7 @@ export function SystemNotifications() {
                 // Mocking intruder alert
                 showAlert({
                     title: 'Cepu Alert! 🚨',
-                    message: 'JANGAN CURANG! Selesaiin misi lo dari awal sirkel! Gak sopan main loncat-loncat. 💅 Admin is watching you...',
+                    message: 'JANGAN CURANG! Selesaiin misi lo dari awal bro! Gak sopan main loncat-loncat. 💅 Admin is watching you...',
                     type: 'error',
                     confirmLabel: 'Ampun Admin 🙏'
                 });

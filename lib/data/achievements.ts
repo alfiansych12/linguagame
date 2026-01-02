@@ -22,7 +22,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'rising_star',
         title: 'Bintang Muda',
-        desc: 'Capai 1,000 XP. Sinar kamu mulai kelihatan di sirkel!',
+        desc: 'Capai 1,000 XP. Sinar kamu mulai kelihatan di bro!',
         icon: 'grade',
         target: 1000,
         type: 'xp',
@@ -31,7 +31,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'sepuh_lingua',
         title: 'Sepuh Lingua',
-        desc: 'Capai 5,000 XP total. Udah pantes jadi sepuh sirkel.',
+        desc: 'Capai 5,000 XP total. Udah pantes jadi sepuh bro.',
         icon: 'military_tech',
         target: 5000,
         type: 'xp',
@@ -51,7 +51,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'vocab_novice',
         title: 'Penabung Kata',
-        desc: 'Kuasai 20 kosakata baru. Literasi itu penting, sirkel!',
+        desc: 'Kuasai 20 kosakata baru. Literasi itu penting, bro!',
         icon: 'menu_book',
         target: 20,
         type: 'vocab',
@@ -89,7 +89,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'streak_loyalist',
         title: 'Loyalis Sejati',
-        desc: 'Jaga streak selama 7 hari (seminggu). Dedikasi tinggi sirkel!',
+        desc: 'Jaga streak selama 7 hari (seminggu). Dedikasi tinggi bro!',
         icon: 'verified',
         target: 7,
         type: 'streak',
@@ -118,7 +118,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'crystal_sultan',
         title: 'Sultan Crystal',
-        desc: 'Punya saldo 10,000 Crystal. Dompet sirkel meluber!',
+        desc: 'Punya saldo 10,000 Crystal. Dompet bro meluber!',
         icon: 'diamond',
         target: 10000,
         type: 'gems',

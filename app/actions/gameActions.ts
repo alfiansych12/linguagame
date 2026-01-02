@@ -5,24 +5,44 @@ import { authOptions } from '@/lib/auth';
 import { supabaseAdmin as supabase } from '@/lib/db/supabase-admin';
 import { SubmitScoreSchema } from '@/lib/validations/game';
 import { revalidatePath } from 'next/cache';
-import { strictRatelimit } from '@/lib/ratelimit';
+import { strictRatelimit, detectBotBehavior, isIPBlacklisted } from '@/lib/ratelimit';
+import { headers } from 'next/headers';
 
 /**
- * SECURE: Submit Score Action
+ * SECURE: Submit Score Action (v3.0 Enhanced)
  * - Derives userId from secure server session
  * - Validates input with Zod
  * - Prevents IDOR
  * - Prevents Logically Impossible Scores
+ * - DDoS Protection with IP blacklist check
+ * - Bot behavior detection
  */
 export async function submitGameScore(data: any) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return { success: false, error: 'Harap login sirkel!' };
+        if (!session?.user?.id) return { success: false, error: 'Harap login bro!' };
 
-        // 0. Rate Limiting (Prevent Script Abuse)
+        // 0. IP Blacklist Check
+        const headersList = await headers();
+        const forwardedFor = headersList.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : headersList.get('x-real-ip') || 'unknown';
+
+        if (await isIPBlacklisted(ip)) {
+            console.warn(`Blocked request from blacklisted IP: ${ip}`);
+            return { success: false, error: 'Access denied.' };
+        }
+
+        // 0.1 Rate Limiting (Prevent Script Abuse)
         const { success: limitSuccess } = await strictRatelimit.limit(session.user.id);
         if (!limitSuccess) {
-            return { success: false, error: 'Sabar sirkel, jangan buru-buru submit! (Rate Limited)' };
+            return { success: false, error: 'Sabar bro, jangan buru-buru submit! (Rate Limited)' };
+        }
+
+        // 0.2 Bot Behavior Detection
+        const isBotLike = await detectBotBehavior(session.user.id, 'submit_score');
+        if (isBotLike) {
+            console.warn(`Suspicious bot behavior detected for user: ${session.user.id}`);
+            return { success: false, error: 'Aktivitas mencurigakan terdeteksi. Hubungi admin jika ini kesalahan.' };
         }
 
         // 1. Zod Validation
@@ -41,7 +61,7 @@ export async function submitGameScore(data: any) {
         // 3. Fetch current user and progress
         const [{ data: existingProgress }, { data: userData }] = await Promise.all([
             supabase.from('user_progress').select('*').eq('user_id', userId).eq('level_id', levelId).single(),
-            supabase.from('users').select('total_xp, gems, vocab_count').eq('id', userId).single()
+            supabase.from('users').select('total_xp, gems, vocab_count, is_pro, pro_until').eq('id', userId).single()
         ]);
 
         const isNewBest = !existingProgress || score > (existingProgress.score || 0);
@@ -65,7 +85,14 @@ export async function submitGameScore(data: any) {
             await supabase.from('user_progress').upsert(progressUpdate, { onConflict: 'user_id,level_id' });
 
             // Reward Calculations
-            const xpDiff = existingProgress ? Math.max(0, score - existingProgress.score) : score;
+            let xpDiff = existingProgress ? Math.max(0, score - existingProgress.score) : score;
+
+            // PRO XP BOOST (1.5x)
+            const isPro = userData?.is_pro && userData?.pro_until && new Date(userData.pro_until) > new Date();
+            if (isPro) {
+                xpDiff = Math.floor(xpDiff * 1.5);
+            }
+
             const gemReward = 30 + (stars * 15);
             const vocabReward = 10; // Default increment per level
 
@@ -106,7 +133,7 @@ export async function submitDuelWin() {
 
         // 0. Rate Limit (Prevent Spamming Wins)
         const { success: limitSuccess } = await strictRatelimit.limit(`duel_win_${userId}`);
-        if (!limitSuccess) return { success: false, error: 'Sabar sirkel, jangan farming terus! (Rate Limited)' };
+        if (!limitSuccess) return { success: false, error: 'Sabar bro, jangan farming terus! (Rate Limited)' };
 
         // 1. Fetch current duel wins
         const { data: userData, error: fetchError } = await supabase
@@ -125,7 +152,7 @@ export async function submitDuelWin() {
             .from('users')
             .update({
                 duel_wins: (userData.duel_wins || 0) + 1,
-                gems: (userData.gems || 0) + 50 // Bonus for winning duel
+                gems: (userData.gems || 0) + 100 // Bonus for winning duel (Increased for balance)
             })
             .eq('id', userId);
 

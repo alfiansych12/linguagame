@@ -14,7 +14,7 @@ export default function GrammarGuide() {
             title: 'Simple Present: Si Paling Rutinitas',
             icon: 'cycle',
             color: 'bg-emerald-500',
-            description: 'Buat bahas hobi, fakta unik, atau jadwal mabar sirkel yang rutin.',
+            description: 'Buat bahas hobi, fakta unik, atau jadwal mabar bro yang rutin.',
             content: (
                 <div className="space-y-10">
                     {/* 1. VERBAL SENTENCE */}
@@ -327,7 +327,7 @@ export default function GrammarGuide() {
             title: 'Tips Anti Gagal Grammar',
             icon: 'verified',
             color: 'bg-amber-500',
-            description: 'Biar sirkel kamu gak malu-maluin pas ngomong inggris!',
+            description: 'Biar bro kamu gak malu-maluin pas ngomong inggris!',
             content: (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-5 bg-white dark:bg-slate-900/60 rounded-3xl border-2 border-amber-500/10 hover:border-amber-500/30 transition-all">
@@ -341,7 +341,7 @@ export default function GrammarGuide() {
                         <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white mb-3">
                             <Icon name="history" size={20} filled />
                         </div>
-                        <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase italic mb-2 tracking-tight">Cek Waktu Sirkel!</h4>
+                        <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase italic mb-2 tracking-tight">Cek Waktu Bro!</h4>
                         <p className="text-xs text-slate-500 font-medium leading-relaxed">Kalau ngomongin fakta umum (Bumi itu bulat), pake Simple Present. Kalau lagi mabar sekarang, pake Continuous!</p>
                     </div>
                 </div>
@@ -375,7 +375,7 @@ export default function GrammarGuide() {
                         Kitab <span className="text-primary">Tata Bahasa</span>
                     </h1>
                     <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px] md:text-xs max-w-lg mx-auto leading-relaxed">
-                        Baca bentar, pinter selamanya. <span className="text-primary">Mastering the language</span> buat sirkel mabar yang lebih cerdas! 💅🛡️💎
+                        Baca bentar, pinter selamanya. <span className="text-primary">Mastering the language</span> buat bro mabar yang lebih cerdas! 💅🛡️💎
                     </p>
                 </div>
 
@@ -427,7 +427,7 @@ export default function GrammarGuide() {
                                     <Icon name="rocket_launch" size={24} mdSize={32} filled className="text-white animate-pulse" />
                                 </div>
                                 <h3 className="text-2xl md:text-4xl lg:text-5xl font-black uppercase italic tracking-tighter mb-3 md:mb-4">Udah Siap Slay di Arena?</h3>
-                                <p className="text-slate-400 font-black text-[8px] md:text-[10px] lg:text-xs uppercase tracking-[0.2em] md:tracking-[0.4em] mb-6 md:mb-10 leading-relaxed max-w-md mx-auto">Teori udah di tangan, sekarang buktiin skill tata bahasa kamu ke seluruh sirkel!</p>
+                                <p className="text-slate-400 font-black text-[8px] md:text-[10px] lg:text-xs uppercase tracking-[0.2em] md:tracking-[0.4em] mb-6 md:mb-10 leading-relaxed max-w-md mx-auto">Teori udah di tangan, sekarang buktiin skill tata bahasa kamu ke seluruh bro!</p>
                                 <Button
                                     onClick={() => router.push('/')}
                                     variant="white"

@@ -56,7 +56,7 @@ export default function AchievementsPage() {
                                     HALL OF <span className="text-primary">GACOR</span>
                                 </h1>
                                 <p className="text-slate-500 font-bold text-xs md:text-lg">
-                                    Daftar badge kebanggaan buat sirkel LinguaGame. Literally Sepuh.
+                                    Daftar badge kebanggaan buat bro LinguaGame. Literally Sepuh.
                                 </p>
                             </div>
                             <div className="bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border-2 border-primary/20 shadow-xl shadow-primary/10">
@@ -107,13 +107,13 @@ export default function AchievementsPage() {
                                                 <div className="hidden md:flex flex-col items-center justify-center p-2 rounded-xl bg-primary/5 border border-primary/10">
                                                     <div className="flex items-center gap-1">
                                                         <Icon name="diamond" size={14} className="text-primary" filled />
-                                                        <span className="text-xs font-black text-primary">{ach.reward}</span>
+                                                        <span className="text-xs font-black text-primary">{ach.reward.toLocaleString('id-ID')}</span>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-[8px] md:text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Status</div>
                                                     <div className="text-[9px] md:text-sm font-black text-slate-900 dark:text-white leading-none">
-                                                        {progress.current} <span className="text-slate-400 italic">/ {ach.target}</span>
+                                                        {progress.current.toLocaleString('id-ID')} <span className="text-slate-400 italic">/ {ach.target.toLocaleString('id-ID')}</span>
                                                     </div>
                                                 </div>
                                             </div>

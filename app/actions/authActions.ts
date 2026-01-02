@@ -9,7 +9,7 @@ export async function registerUser(formData: any) {
         const { name, email, password } = formData;
 
         if (!name || !email || !password) {
-            return { success: false, error: 'Semua field harus diisi sirkel!' };
+            return { success: false, error: 'Semua field harus diisi bro!' };
         }
 
         // 1. Check if user already exists
@@ -45,12 +45,12 @@ export async function registerUser(formData: any) {
 
         if (insertError) {
             console.error('Registration insert error:', insertError);
-            return { success: false, error: 'Gagal membuat akun sirkel. Coba lagi ya!' };
+            return { success: false, error: 'Gagal membuat akun bro. Coba lagi ya!' };
         }
 
         return { success: true };
     } catch (error) {
         console.error('Registration error:', error);
-        return { success: false, error: 'Internal system error sirkel!' };
+        return { success: false, error: 'Internal system error bro!' };
     }
 }

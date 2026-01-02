@@ -41,7 +41,7 @@ export const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
-                    throw new Error('Email dan password wajib diisi sirkel!');
+                    throw new Error('Email dan password wajib diisi bro!');
                 }
 
                 // SECURE: Use admin client to find user and check password
@@ -52,17 +52,17 @@ export const authOptions: NextAuthOptions = {
                     .single();
 
                 if (error || !user) {
-                    throw new Error('User gak ketemu sirkel, daftar dulu yuk!');
+                    throw new Error('User gak ketemu bro, daftar dulu yuk!');
                 }
 
                 if (!user.password) {
-                    throw new Error('Email ini login lewat Google/GitHub sirkel!');
+                    throw new Error('Email ini login lewat Google/GitHub bro!');
                 }
 
                 const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
 
                 if (!isPasswordCorrect) {
-                    throw new Error('Password lo salah sirkel, coba lagi!');
+                    throw new Error('Password lo salah bro, coba lagi!');
                 }
 
                 return {

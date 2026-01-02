@@ -11,7 +11,10 @@ export interface CrystalInventory {
     slay: number;      // Streak Slay
     timefreeze: number; // Beku
     autocorrect: number; // Mata Dewa
-    adminvision: number; // Sirkel King
+    adminvision: number; // Bro King
+    eraser: number;      // Penghapus Sesat
+    timewarp: number;    // Putar Waktu
+    oracle: number;      // Mata Batin
 }
 
 import { supabase } from '@/lib/db/supabase';
@@ -42,9 +45,12 @@ interface UserState {
     unlockedAchievements: string[];
     isLoading: boolean;
     userId: string | null;
+    referredBy: string | null;
     image: string;
     equippedBorder: string;
     unlockedBorders: string[];
+    isPro: boolean;
+    proUntil: string | null;
 
     // Actions
     syncWithDb: (userId: string) => Promise<void>;
@@ -69,6 +75,7 @@ interface UserState {
     applyReferralCode: (code: string) => Promise<{ success: boolean; message: string }>;
     updateQuestProgress: (type: 'xp' | 'vocab' | 'streak', amount: number) => Promise<void>;
     initializeQuests: () => Promise<void>;
+    isProActive: () => boolean;
 }
 
 export const useUserStore = create<UserState>()(
@@ -84,6 +91,9 @@ export const useUserStore = create<UserState>()(
                 timefreeze: 0,
                 autocorrect: 0,
                 adminvision: 0,
+                eraser: 0,
+                timewarp: 0,
+                oracle: 0
             },
             totalXp: 0,
             currentStreak: 0,
@@ -98,6 +108,9 @@ export const useUserStore = create<UserState>()(
             unlockedAchievements: [],
             isLoading: false,
             userId: null,
+            referredBy: null,
+            isPro: false,
+            proUntil: null,
             image: '',
             equippedBorder: 'default',
             unlockedBorders: ['default'],
@@ -128,6 +141,9 @@ export const useUserStore = create<UserState>()(
                         totalSpent: data.total_spent || 0,
                         referralCode: data.referral_code,
                         referralCount: data.referral_count || 0,
+                        referredBy: data.referred_by || null,
+                        isPro: data.is_pro || false,
+                        proUntil: data.pro_until || null,
                         claimedMilestones: data.claimed_milestones || [],
                         unlockedAchievements: data.unlocked_achievements || [],
                         image: data.image || '',
@@ -146,9 +162,14 @@ export const useUserStore = create<UserState>()(
             },
 
             initializeQuests: async () => {
-                // Moved to server action initializeUserQuests, 
-                // but kept for backward compatibility if needed internally
                 await initializeUserQuests();
+            },
+
+            isProActive: () => {
+                const { isPro, proUntil } = get();
+                if (!isPro) return false;
+                if (!proUntil) return false;
+                return new Date(proUntil) > new Date();
             },
 
             updateQuestProgress: async (type, amount) => {
@@ -163,7 +184,7 @@ export const useUserStore = create<UserState>()(
                     if (showAlert) {
                         showAlert({
                             title: 'Quest Cleared! 🔥',
-                            message: `Misi selesai sirkel! Siap-siap ambil reward ${result.rewardGems} Crystal.`,
+                            message: `Misi selesai bro! Siap-siap ambil reward ${(result.rewardGems || 0).toLocaleString('id-ID')} Crystal.`,
                             type: 'success'
                         });
                     }
@@ -234,7 +255,7 @@ export const useUserStore = create<UserState>()(
 
             applyReferralCode: async (code) => {
                 const userId = get().userId;
-                if (!userId || userId === 'guest') return { success: false, message: 'Harus login dulu sirkel!' };
+                if (!userId || userId === 'guest') return { success: false, message: 'Harus login dulu bro!' };
 
                 const result = await applyReferralAction(code);
 
@@ -242,7 +263,7 @@ export const useUserStore = create<UserState>()(
                     await get().syncWithDb(userId);
                     return { success: true, message: result.message || 'Berhasil!' };
                 } else {
-                    return { success: false, message: result.error || 'Gagal sirkel.' };
+                    return { success: false, message: result.error || 'Gagal bro.' };
                 }
             },
 
@@ -325,7 +346,7 @@ export const useUserStore = create<UserState>()(
                             if (showAlert) {
                                 showAlert({
                                     title: 'Achievement Unlocked! 🏆',
-                                    message: `Selamat sirkel! Kamu dapet badge "${ach.title}" dan bonus ${result.reward} Crystal. Literally sepuh!`,
+                                    message: `Selamat bro! Kamu dapet badge "${ach.title}" dan bonus ${(result.reward || 0).toLocaleString('id-ID')} Crystal. Literally sepuh!`,
                                     type: 'xp',
                                     autoClose: 5000
                                 });

@@ -44,7 +44,7 @@ export function QuestGacor() {
                 const mappedQuests: Quest[] = data.map(q => ({
                     id: q.id,
                     title: q.quest_id === 'xp' ? 'XP Hunter' : q.quest_id === 'streak' ? 'Stay Hot' : 'Elite Grinder',
-                    desc: q.quest_id === 'xp' ? `Collect ${q.target} XP to slay.` : `Complete ${q.target} activities today.`,
+                    desc: q.quest_id === 'xp' ? `Collect ${q.target.toLocaleString('id-ID')} XP to slay.` : `Complete ${q.target.toLocaleString('id-ID')} activities today.`,
                     target: q.target,
                     current: q.progress,
                     reward: q.reward_gems,
@@ -72,13 +72,13 @@ export function QuestGacor() {
 
                 showAlert({
                     title: 'Reward Cair! 💎',
-                    message: `Berhasil ambil ${quest.reward} Crystal. Gass terus sirkel!`,
+                    message: `Berhasil ambil ${quest.reward.toLocaleString('id-ID')} Crystal. Gass terus bro!`,
                     type: 'success'
                 });
             } catch (err: any) {
                 console.error('Error claiming quest:', err);
                 showAlert({
-                    title: 'Waduh Sirkel...',
+                    title: 'Waduh Bro...',
                     message: err.message || 'Gagal ambil reward. Coba cek sinyal atau login ulang!',
                     type: 'error'
                 });
@@ -137,7 +137,7 @@ export function QuestGacor() {
                                         <div className="flex items-center gap-0.5 sm:gap-1 bg-primary/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg shrink-0">
                                             <Icon name="diamond" size={10} className="sm:size-3 text-primary" filled />
                                             <span className="text-[9px] sm:text-[10px] lg:text-xs font-black text-primary notranslate" translate="no">
-                                                +{quest.reward}
+                                                +{quest.reward.toLocaleString('id-ID')}
                                             </span>
                                         </div>
                                     </div>
@@ -152,7 +152,7 @@ export function QuestGacor() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase text-slate-400 mb-1 sm:mb-1.5">
                                         <span>Progress</span>
-                                        <span>{quest.current}/{quest.target}</span>
+                                        <span>{quest.current.toLocaleString('id-ID')}/{quest.target.toLocaleString('id-ID')}</span>
                                     </div>
                                     <div className="h-1.5 sm:h-2 lg:h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                         <motion.div
@@ -182,7 +182,7 @@ export function QuestGacor() {
                     <div className="text-center py-8 sm:py-12 lg:py-16">
                         <Icon name="inbox" size={48} className="sm:size-16 lg:size-20 text-slate-300 dark:text-slate-700 mx-auto mb-3 sm:mb-4" />
                         <p className="text-xs sm:text-sm lg:text-base font-bold text-slate-400">
-                            Belum ada quest hari ini, sirkel!
+                            Belum ada quest hari ini, bro!
                         </p>
                     </div>
                 )}

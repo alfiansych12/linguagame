@@ -68,7 +68,7 @@ export function QuestGacorCompact() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
                                         <h4 className="font-black text-slate-900 dark:text-white text-base truncate">{quest.title}</h4>
-                                        <span className="text-sm font-black text-primary whitespace-nowrap">+{quest.reward}</span>
+                                        <span className="text-sm font-black text-primary whitespace-nowrap">+{quest.reward.toLocaleString('id-ID')}</span>
                                     </div>
                                     <p className="text-xs font-bold text-slate-500 leading-tight">{quest.desc}</p>
                                 </div>
@@ -78,7 +78,7 @@ export function QuestGacorCompact() {
                                 <div className="flex-1">
                                     <div className="flex justify-between text-xs font-black uppercase text-slate-400 mb-1">
                                         <span>Progress</span>
-                                        <span>{quest.current}/{quest.target}</span>
+                                        <span>{quest.current.toLocaleString('id-ID')}/{quest.target.toLocaleString('id-ID')}</span>
                                     </div>
                                     <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                         <div

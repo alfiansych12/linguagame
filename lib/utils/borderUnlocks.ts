@@ -5,6 +5,7 @@ export interface BorderUnlockCondition {
     value?: number;
     price?: number; // In gems
     achievementId?: string;
+    requiresPro?: boolean;
 }
 
 export const BORDER_UNLOCK_CONDITIONS: Record<string, BorderUnlockCondition> = {
@@ -33,15 +34,18 @@ export const BORDER_UNLOCK_CONDITIONS: Record<string, BorderUnlockCondition> = {
     },
     'royal_obsidian': {
         type: 'purchase',
-        price: 25000
+        price: 25000,
+        requiresPro: true
     },
     'infinity_void': {
         type: 'purchase',
-        price: 50000
+        price: 50000,
+        requiresPro: true
     },
     'celestial_dragon': {
         type: 'purchase',
-        price: 99999
+        price: 99999,
+        requiresPro: true
     }
 };
 
@@ -53,6 +57,8 @@ export function checkBorderUnlocked(
         current_streak: number;
         unlocked_achievements?: string[];
         unlocked_borders?: string[];
+        is_pro?: boolean;
+        pro_until?: string | Date | null;
         email?: string;
         name?: string;
     }
@@ -62,6 +68,12 @@ export function checkBorderUnlocked(
 
     // Default always unlocked
     if (borderId === 'default') return true;
+
+    // Check PRO requirement
+    if (condition.requiresPro) {
+        const isPro = user.is_pro && user.pro_until && new Date(user.pro_until) > new Date();
+        if (!isPro) return false;
+    }
 
     switch (condition.type) {
         case 'xp':
@@ -101,7 +113,7 @@ export function getBorderDisplayName(borderId: string): string {
 
 export function getBorderDescription(borderId: string): string {
     const descriptions: Record<string, string> = {
-        'default': 'Standard border untuk semua sirkel.',
+        'default': 'Standard border untuk semua bro.',
         'silver_warrior': 'Bingkai tangguh ksatria perak. Unlock di Level 5!',
         'gold_champion': 'Kemegahan raja emas. Tanda juara sejati!',
         'diamond_master': 'Bingkai legendaris sovereign berlian. Ultimate flex!',

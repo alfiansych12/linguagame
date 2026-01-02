@@ -51,7 +51,7 @@ export const GrammarModal: React.FC<GrammarModalProps> = ({
                                         Kitab Tata Bahasa
                                     </h2>
                                     <p className="text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase text-[10px] md:text-xs">
-                                        Master the rules, conquer the Sirkel!
+                                        Master the rules, conquer the Bro!
                                     </p>
                                 </div>
 

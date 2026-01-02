@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Icon, Card, Badge, Button } from '../ui/UIComponents';
+import { StreakIndicator } from '../ui/StreakIndicator';
 import { useUserStore } from '@/store/user-store';
 import { motion } from 'framer-motion';
 import { useSession, signOut } from 'next-auth/react';
@@ -66,18 +67,14 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                 </Link>
 
                 <div className="hidden lg:block">
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                        Misi Utama
-                    </h2>
+                    {/* REDUNDANT TITLE REMOVED FOR CLEANER LOOK */}
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-4 bg-white/50 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-white/50 dark:border-slate-700/30 shadow-sm lg:shadow-none lg:bg-transparent lg:border-none">
                     <div className="hidden sm:flex items-center gap-2 mr-2">
-                        <Badge variant="streak" icon="local_fire_department" className="bg-white dark:bg-slate-900/60 shadow-sm border-0">
-                            {user.currentStreak}
-                        </Badge>
+                        <StreakIndicator />
                         <Badge variant="xp" icon="bolt" className="bg-white dark:bg-slate-900/60 shadow-sm border-0">
-                            {user.totalXp}
+                            {user.totalXp.toLocaleString('id-ID')}
                         </Badge>
                         <GemBadge />
                     </div>
@@ -125,7 +122,7 @@ const GemBadge = () => {
     const gems = useUserStore(state => state.gems);
     return (
         <Badge variant="diamond" icon="diamond" className="bg-white dark:bg-slate-900/60 shadow-sm border-0">
-            {gems}
+            {gems.toLocaleString('id-ID')}
         </Badge>
     );
 };
@@ -164,7 +161,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                     id="nav-leaderboard"
                     href="/leaderboard"
                     icon="leaderboard"
-                    label="Sirkel Board"
+                    label="Bro Board"
                     active={activeTab === 'leaderboard'}
                 />
                 <SidebarItem
@@ -178,7 +175,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                     id="nav-duel"
                     href="/duel"
                     icon="groups"
-                    label="Sirkel Arena"
+                    label="Bro Arena"
                     active={activeTab === 'duel'}
                 />
                 <SidebarItem
@@ -198,7 +195,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Crystals</p>
-                            <p className="text-lg font-black text-slate-900 dark:text-white leading-none">{gems}</p>
+                            <p className="text-lg font-black text-slate-900 dark:text-white leading-none">{gems.toLocaleString('id-ID')}</p>
                         </div>
                     </div>
                     <Link href="/shop" className="size-8 rounded-lg bg-blue-500 text-white flex items-center justify-center hover:scale-110 transition-transform">
@@ -211,7 +208,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                         <Button className="w-full py-6 rounded-[2rem] border-2 border-primary/20 bg-primary/5 hover:bg-primary text-primary hover:text-white transition-all duration-300 group shadow-lg shadow-primary/10">
                             <div className="flex items-center justify-center gap-3">
                                 <Icon name="login" size={24} className="group-hover:translate-x-1 transition-transform" />
-                                <span className="font-black uppercase tracking-widest text-xs">Join the Sirkel</span>
+                                <span className="font-black uppercase tracking-widest text-xs">Join the Bro</span>
                             </div>
                         </Button>
                     </Link>

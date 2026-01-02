@@ -16,6 +16,7 @@
   --color-gold: #FFC107;
   --color-silver: #9E9E9E;
   --color-bronze: #CD7F32;
+  --primary-rgb: 72, 72, 229;
 
   --shadow-soft: 0 4px 20px -2px rgba(72, 72, 229, 0.1);
   --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
@@ -181,6 +182,74 @@ body.dark .glass {
 
   to {
     background-position: 0 0;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-scanline {
+  animation: scan-line 3s linear infinite;
+}
+
+@keyframes float-technical {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  33% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+
+  66% {
+    transform: translateY(5px) rotate(-2deg);
+  }
+}
+
+@keyframes data-flow {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes border-glow {
+
+  0%,
+  100% {
+    border-color: rgba(72, 72, 229, 0.2);
+  }
+
+  50% {
+    border-color: rgba(72, 72, 229, 0.6);
   }
 }
 

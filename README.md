@@ -5,7 +5,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
-**LinguaGame** is a high-fidelity, gamified language learning platform built for the "Sirkel Gacor" community. It features ultra-premium "Mega-Mehwah" visual effects, real-time multiplayer duels, and a robust security-first architecture.
+**LinguaGame** is a high-fidelity, gamified language learning platform built for the "Bro Gacor" community. It features ultra-premium "Mega-Mehwah" visual effects, real-time multiplayer duels, and a robust security-first architecture.
 
 ## ✨ Key Features
 

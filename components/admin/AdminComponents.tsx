@@ -8,16 +8,16 @@ import { useAlertStore } from '@/store/alert-store';
 
 const TEMPLATES: Record<string, { title: string, content: string }> = {
     info: {
-        title: "PENGUMUMAN SIRKEL! 📢",
-        content: "Dengerin nih sirkel! Ada info penting biar grinding lo makin lancar jaya. Jangan sampe skip instruksi ini kalau gak mau dibilang cupu. Stay savvy! 💅"
+        title: "PENGUMUMAN BRO! 📢",
+        content: "Dengerin nih bro! Ada info penting biar grinding lo makin lancar jaya. Jangan sampe skip instruksi ini kalau gak mau dibilang cupu. Stay savvy! 💅"
     },
     update: {
         title: "META BARU RILIS! 🚀",
-        content: "Meta baru sudah rilis sirkel! Ada fitur baru yang bikin progress lo makin gacor. Langsung cobain sekarang sebelum kena nerf sama admin. Letsgooo! ✨"
+        content: "Meta baru sudah rilis bro! Ada fitur baru yang bikin progress lo makin gacor. Langsung cobain sekarang sebelum kena nerf sama admin. Letsgooo! ✨"
     },
     reward: {
         title: "REZEKI NOMPLOK! 💎",
-        content: "Waduh sirkel, ada rezeki nomplok nih! Cek profil lo sekarang dan masukan kode ini LG26L di kode promo, ada extra crystal buat lo yang rajin grinding. Jangan lupa sikat habis hadiahnya! 🔥"
+        content: "Waduh bro, ada rezeki nomplok nih! Cek profil lo sekarang dan masukan kode ini LG26L di kode promo, ada extra crystal buat lo yang rajin grinding. Jangan lupa sikat habis hadiahnya! 🔥"
     }
 };
 
@@ -76,7 +76,7 @@ export function PromoAndBroadcastHub({ initialCodes }: { initialCodes: any[] }) 
             setPromoForm({ code: '', reward_gems: 100, reward_xp: 500, max_uses: 10, expires_at: '' });
             showAlert({
                 title: 'Artifact Forged! 🛠️',
-                message: `Artifact ${promoForm.code} berhasil dibuat sirkel! Siap-siap diledakkan ke user.`,
+                message: `Artifact ${promoForm.code} berhasil dibuat bro! Siap-siap diledakkan ke user.`,
                 type: 'success'
             });
         } else {
@@ -96,7 +96,7 @@ export function PromoAndBroadcastHub({ initialCodes }: { initialCodes: any[] }) 
         if (res.success) {
             showAlert({
                 title: 'Signal Sent! 📡',
-                message: 'All users notified sirkel! Signal kamu sudah terkirim ke Mainframe sirkel.',
+                message: 'All users notified bro! Signal kamu sudah terkirim ke Mainframe bro.',
                 type: 'success'
             });
             if (activeSection === 'history') fetchHistory();
@@ -161,11 +161,11 @@ export function PromoAndBroadcastHub({ initialCodes }: { initialCodes: any[] }) 
                                         label="Artifact Code"
                                         value={promoForm.code}
                                         onChange={(v: string) => setPromoForm({ ...promoForm, code: v })}
-                                        placeholder="EX: SIRKELPOWER"
+                                        placeholder="EX: BROPOWER"
                                     />
                                     <div className="grid grid-cols-2 gap-4">
                                         <FormInput
-                                            label="Gems"
+                                            label="Crystals"
                                             type="number"
                                             value={promoForm.reward_gems}
                                             onChange={(v: string) => setPromoForm({ ...promoForm, reward_gems: parseInt(v) || 0 })}
@@ -201,8 +201,8 @@ export function PromoAndBroadcastHub({ initialCodes }: { initialCodes: any[] }) 
                                                 <h4 className="font-black text-lg uppercase italic text-white tracking-tight">{code.code}</h4>
                                                 <div className="flex gap-4 mt-1">
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase">{code.current_uses}/{code.max_uses} Redeemed</span>
-                                                    <span className="text-[10px] font-bold text-emerald-500 uppercase">{code.reward_gems} Gems</span>
-                                                    <span className="text-[10px] font-bold text-blue-500 uppercase">{code.reward_xp} XP</span>
+                                                    <span className="text-[10px] font-bold text-emerald-500 uppercase">{code.reward_gems.toLocaleString('id-ID')} Crystals</span>
+                                                    <span className="text-[10px] font-bold text-blue-500 uppercase">{code.reward_xp.toLocaleString('id-ID')} XP</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -283,7 +283,7 @@ export function PromoAndBroadcastHub({ initialCodes }: { initialCodes: any[] }) 
                                     <Card className="p-0 overflow-hidden border-primary/20 bg-[#0a0a0f] shadow-2xl max-w-sm mx-auto">
                                         <div className="p-4 bg-primary/5 border-b border-white/5 flex items-center gap-3">
                                             <Icon name="notifications" className="text-primary" size={18} filled />
-                                            <h5 className="font-black text-xs uppercase italic tracking-tighter">Sirkel Notification</h5>
+                                            <h5 className="font-black text-xs uppercase italic tracking-tighter">Bro Notification</h5>
                                         </div>
                                         <div className="p-6 space-y-3">
                                             <div className="flex items-center justify-between">
@@ -444,25 +444,25 @@ export function UserMonitor({ users }: { users: any[] }) {
                         <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">Global <span className="text-primary">Node Radar</span></h2>
                     </div>
                     <p className="text-slate-400 font-bold max-w-xl text-xs md:text-base leading-relaxed">
-                        Sistem deteksi sirkel aktif secara real-time. Memantau distribusi XP, fluktuasi Crystal,
+                        Sistem deteksi bro aktif secara real-time. Memantau distribusi XP, fluktuasi Crystal,
                         dan aktivitas node di seluruh mainframe LinguaGame.
                     </p>
 
                     <div className="flex flex-wrap gap-3 md:gap-4 pt-2 md:pt-4">
                         <div className="bg-white/5 border border-white/10 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl flex flex-col">
                             <span className="text-[7px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Nodes</span>
-                            <span className="text-xl md:text-2xl font-black italic tracking-tighter text-white">{users.length}</span>
+                            <span className="text-xl md:text-2xl font-black italic tracking-tighter text-white">{(users.length).toLocaleString('id-ID')}</span>
                         </div>
                         <div className="bg-white/5 border border-white/10 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl flex flex-col">
                             <span className="text-[7px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">Admin Clearance</span>
                             <span className="text-xl md:text-2xl font-black italic tracking-tighter text-primary">
-                                {users.filter(u => u.is_admin).length}
+                                {(users.filter(u => u.is_admin).length).toLocaleString('id-ID')}
                             </span>
                         </div>
                         <div className="bg-white/5 border border-white/10 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl flex flex-col">
                             <span className="text-[7px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Flux</span>
                             <span className="text-xl md:text-2xl font-black italic tracking-tighter text-emerald-500">
-                                {users.reduce((acc, u) => acc + (u.total_xp || 0), 0).toLocaleString()} XP
+                                {users.reduce((acc, u) => acc + (u.total_xp || 0), 0).toLocaleString('id-ID')} XP
                             </span>
                         </div>
                     </div>
@@ -607,11 +607,11 @@ export function UserMonitor({ users }: { users: any[] }) {
 
                                             <div className="mt-4 grid grid-cols-2 gap-4">
                                                 <div className="space-y-1">
-                                                    <p className="text-xl font-black text-white italic leading-none">{user.total_xp.toLocaleString()}</p>
+                                                    <p className="text-xl font-black text-white italic leading-none">{user.total_xp.toLocaleString('id-ID')}</p>
                                                     <p className="text-[7px] font-black text-slate-600 uppercase tracking-[0.2em]">Flux XP</p>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-xl font-black text-amber-500 italic leading-none">{user.gems.toLocaleString()}</p>
+                                                    <p className="text-xl font-black text-amber-500 italic leading-none">{user.gems.toLocaleString('id-ID')}</p>
                                                     <p className="text-[7px] font-black text-slate-600 uppercase tracking-[0.2em]">Crystals</p>
                                                 </div>
                                             </div>
@@ -677,11 +677,11 @@ export function UserMonitor({ users }: { users: any[] }) {
                                         <td className="px-8 py-6">
                                             <div className="flex gap-10">
                                                 <div>
-                                                    <p className="text-xl font-black text-white italic leading-none">{user.total_xp}</p>
+                                                    <p className="text-xl font-black text-white italic leading-none">{user.total_xp.toLocaleString('id-ID')}</p>
                                                     <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Total XP</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-xl font-black text-amber-500 italic leading-none">{user.gems}</p>
+                                                    <p className="text-xl font-black text-amber-500 italic leading-none">{user.gems.toLocaleString('id-ID')}</p>
                                                     <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Crystals</p>
                                                 </div>
                                             </div>

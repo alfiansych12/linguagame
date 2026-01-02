@@ -26,12 +26,12 @@ export default function LoginPage() {
                 if (res.success) {
                     showAlert({
                         title: 'Akun Gacor Tercipta! 🎉',
-                        message: 'Mantap sirkel, akun lo sudah aktif. Sekarang login yuk!',
+                        message: 'Mantap bro, akun lo sudah aktif. Sekarang login yuk!',
                         type: 'success'
                     });
                     setMode('login');
                 } else {
-                    showAlert({ title: 'Gagal Nih Sirkel ❌', message: res.error || 'Terjadi kesalahan', type: 'error' });
+                    showAlert({ title: 'Gagal Nih Bro ❌', message: res.error || 'Terjadi kesalahan', type: 'error' });
                 }
             } else {
                 const res = await signIn('credentials', {
@@ -49,7 +49,7 @@ export default function LoginPage() {
                 }
             }
         } catch (error) {
-            showAlert({ title: 'Error System 🛰️', message: 'Koneksi terganggu sirkel!', type: 'error' });
+            showAlert({ title: 'Error System 🛰️', message: 'Koneksi terganggu bro!', type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -145,9 +145,9 @@ export default function LoginPage() {
 
                     <Card className="p-5 sm:p-7 lg:p-8 border-0 lg:border-2 border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl lg:shadow-2xl rounded-[2rem] md:rounded-[2.5rem]">
                         <div className="mb-4">
-                            <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">Sirkel Auth</h2>
+                            <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5">Bro Auth</h2>
                             <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                                {mode === 'login' ? 'Welcome Back!' : 'Join the Sirkel'}
+                                {mode === 'login' ? 'Welcome Back!' : 'Join the Bro'}
                             </h3>
                         </div>
 
@@ -194,7 +194,7 @@ export default function LoginPage() {
                                 <input
                                     required
                                     type="email"
-                                    placeholder="nama@sirkel.com"
+                                    placeholder="nama@bro.com"
                                     className="w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all placeholder:text-slate-400"
                                     value={form.email}
                                     onChange={e => setForm({ ...form, email: e.target.value })}

@@ -16,6 +16,10 @@ import { submitGameScore, resetLevelProgress } from '@/app/actions/gameActions';
 import { CURRICULUM_LEVELS } from '@/lib/data/mockLevels';
 import { useSound } from '@/hooks/use-sound';
 import { highlightVocabInSentence } from '@/lib/utils/vocab-highlight';
+import { getTacticalFeedback } from '@/app/actions/aiActions';
+import { TacticalAITutor } from './TacticalAITutor';
+import { PremiumAIModal } from './PremiumAIModal';
+import { AdSenseContainer } from '../ui/AdSenseContainer';
 
 interface VocabularyGameProps {
     level: Level;
@@ -37,13 +41,18 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
     const [startTime, setStartTime] = useState(0);
     const [xpBreakdown, setXpBreakdown] = useState<any>(null);
 
-    const { addGems, addXp, addVocab, inventory, useCrystal } = useUserStore();
+    const { addGems, addXp, addVocab, inventory, useCrystal, isPro } = useUserStore();
     const { completeLevel, unlockLevel, getLevelProgress } = useProgressStore();
     const { playSound } = useSound();
 
     const [showVision, setShowVision] = useState(false);
     const [shieldActive, setShieldActive] = useState(false);
     const [boosterActive, setBoosterActive] = useState(false);
+    const [eliminatedOptions, setEliminatedOptions] = useState<string[]>([]);
+    const [showOracle, setShowOracle] = useState(false);
+    const [aiFeedback, setAiFeedback] = useState<{ explanation: string; tip: string } | null>(null);
+    const [showAiTutor, setShowAiTutor] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
 
     // Prepare quiz options when currentIndex changes
     useEffect(() => {
@@ -61,6 +70,8 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
             setIsCorrect(null);
             setShowVision(false);
             setShieldActive(false);
+            setEliminatedOptions([]);
+            setShowOracle(false);
         }
     }, [phase, currentIndex, words]);
 
@@ -131,13 +142,31 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                 playSound('GAMEOVER');
                 setTimeout(() => setPhase('GAMEOVER'), 1000);
             } else {
+                // QUANTUM AI TUTOR: Fetch feedback on mistake
+                console.log('Fetching AI Feedback...');
+                getTacticalFeedback(
+                    words[currentIndex].english,
+                    answer,
+                    words[currentIndex].indonesian,
+                    'vocab',
+                    userId || 'guest'
+                ).then((res: any) => {
+                    console.log('AI Feedback Full Result:', res);
+                    if (res.success) {
+                        setAiFeedback({ explanation: res.explanation || '', tip: res.tip || '' });
+                        setShowAiTutor(true);
+                    } else if (res.isNotPro) {
+                        setShowPremiumModal(true);
+                    }
+                });
+
                 setTimeout(() => {
                     if (currentIndex < words.length - 1) {
                         setCurrentIndex(prev => prev + 1);
                     } else {
                         handleLevelComplete();
                     }
-                }, 1500);
+                }, 3000); // Increased to 3s for AI visibility
             }
         }
     };
@@ -182,6 +211,39 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
         }
     };
 
+    const handleUseEraser = async () => {
+        if (inventory.eraser > 0 && !selectedOption && eliminatedOptions.length === 0) {
+            const used = await useCrystal('eraser');
+            if (used) {
+                playSound('CRYSTAL');
+                const correctOption = words[currentIndex].indonesian;
+                const wrongOptions = options.filter(opt => opt !== correctOption);
+                const toEliminate = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 2);
+                setEliminatedOptions(toEliminate);
+            }
+        }
+    };
+
+    const handleUseTimeWarp = async () => {
+        if (inventory.timewarp > 0 && lives < 10) {
+            const used = await useCrystal('timewarp');
+            if (used) {
+                playSound('SUCCESS');
+                setLives(prev => Math.min(10, prev + 5));
+            }
+        }
+    };
+
+    const handleUseOracle = async () => {
+        if (inventory.oracle > 0 && !showOracle && !selectedOption) {
+            const used = await useCrystal('oracle');
+            if (used) {
+                playSound('CRYSTAL');
+                setShowOracle(true);
+            }
+        }
+    };
+
     const { data: session } = useSession();
     const userId = session?.user?.id || 'guest';
 
@@ -201,7 +263,8 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
             timeRemaining: Math.max(0, maxTime - timeTaken),
             maxTime,
             maxStreak: 0,
-            crystalActive: boosterActive
+            crystalActive: boosterActive,
+            isPro: isPro
         });
 
         const winStars = calculateStars(accuracy);
@@ -380,7 +443,12 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                         <>
                             <div className="size-24 md:size-32 lg:size-48 bg-gradient-to-br from-primary to-primary-dark rounded-2xl md:rounded-3xl lg:rounded-[4rem] flex flex-col items-center justify-center mx-auto shadow-2xl border-2 md:border-4 lg:border-8 border-white/10 relative">
                                 <span className="text-[10px] md:text-[10px] font-black text-white/60 uppercase tracking-widest mt-2">XP Didapat</span>
-                                <span className="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter">{score}</span>
+                                <span className="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter">{score.toLocaleString('id-ID')}</span>
+                                {isPro && (
+                                    <div className="absolute -bottom-2 bg-primary text-[8px] font-black px-2 py-0.5 rounded-full border border-white/20 shadow-lg">
+                                        PRO 1.5X BOOST
+                                    </div>
+                                )}
                                 {isPerfect && level.isExam && (
                                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-white px-3 py-1.5 rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-lg animate-bounce">
                                         Pencapaian!
@@ -405,7 +473,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                 </div>
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50">
                                     <Icon name="diamond" className="text-blue-500 mb-1 md:mb-2" size={24} mdSize={32} filled />
-                                    <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{25 + (levelData?.stars || 0) * 10}</p>
+                                    <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">+{(25 + (levelData?.stars || 0) * 10).toLocaleString('id-ID')}</p>
                                     <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">Kristal</p>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-slate-200/50 col-span-2 md:col-span-1">
@@ -443,10 +511,23 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                         </div>
                     )}
 
-                    {isPassed && (
-                        <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.back()}>
-                            Lanjut!
-                        </Button>
+                    {isPassed ? (
+                        <div className="space-y-6">
+                            <Button variant="primary" fullWidth className="py-6 rounded-[2rem] font-black uppercase tracking-widest shadow-xl" onClick={() => router.back()}>
+                                Lanjut!
+                            </Button>
+
+                            {/* TACTICAL ADSENSE UNIT */}
+                            <AdSenseContainer
+                                slot="vocabulary_results_bottom"
+                                className="rounded-2xl border border-slate-700/30"
+                            />
+                        </div>
+                    ) : (
+                        <AdSenseContainer
+                            slot="vocabulary_fail_bottom"
+                            className="rounded-2xl border border-slate-700/30"
+                        />
                     )}
                 </motion.div>
             </div>
@@ -535,21 +616,47 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                 </AnimatePresence>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 md:gap-4">
+                            {/* Oracle Hint */}
+                            <AnimatePresence>
+                                {showOracle && words[currentIndex]?.exampleSentence && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mx-4 p-4 md:p-6 bg-amber-500/10 border-2 border-dashed border-amber-500/30 rounded-xl md:rounded-[2rem] text-center relative overflow-hidden group shadow-lg"
+                                    >
+                                        <div className="absolute top-0 left-0 p-2 opacity-10">
+                                            <Icon name="visibility" size={40} className="text-amber-500" />
+                                        </div>
+                                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2">Clue dari Mata Batin</p>
+                                        <p className="text-sm md:text-lg font-bold text-slate-700 dark:text-slate-300 italic px-4">
+                                            "{words[currentIndex].exampleSentence.replace(new RegExp(words[currentIndex].english, 'gi'), '_____')}"
+                                        </p>
+                                        <div className="absolute bottom-0 right-0 p-2 opacity-10">
+                                            <Icon name="psychology" size={40} className="text-amber-500" />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <div className="grid grid-cols-1 gap-3 md:gap-4 px-4">
                                 {options.map((option, idx) => {
                                     const isCorrectOption = option === words[currentIndex].indonesian;
                                     const isSelected = selectedOption === option;
                                     const showHint = showVision && isCorrectOption;
 
+                                    const isEliminated = eliminatedOptions.includes(option);
+
                                     return (
                                         <button
                                             key={idx}
                                             onClick={() => handleAnswer(option)}
-                                            disabled={selectedOption !== null}
+                                            disabled={selectedOption !== null || isEliminated}
                                             className={`p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl lg:rounded-[2rem] text-base md:text-lg lg:text-xl font-black transition-all duration-200 border-2 text-left flex items-center justify-between group relative
                                                 ${isSelected ? (isCorrect ? 'bg-success/10 border-success text-success scale-105' : 'bg-error/10 border-error text-error shake') :
                                                     showHint ? 'bg-blue-500/10 border-blue-500 text-blue-500 animate-pulse' :
-                                                        'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary hover:bg-primary/5 hover:scale-[1.02]'}
+                                                        isEliminated ? 'opacity-0 pointer-events-none' :
+                                                            'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary hover:bg-primary/5 hover:scale-[1.02]'}
                                             `}
                                         >
                                             <div className="flex items-center gap-3 md:gap-4">
@@ -598,6 +705,28 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                     disabled={selectedOption !== null || boosterActive}
                                 />
                                 <CrystalButton
+                                    icon="update"
+                                    count={inventory.timewarp || 0}
+                                    label="Recovery"
+                                    onClick={handleUseTimeWarp}
+                                    disabled={lives >= 10}
+                                />
+                                <CrystalButton
+                                    icon="auto_fix_high"
+                                    count={inventory.eraser || 0}
+                                    label="Eraser"
+                                    onClick={handleUseEraser}
+                                    disabled={selectedOption !== null || eliminatedOptions.length > 0}
+                                />
+                                <CrystalButton
+                                    icon="visibility"
+                                    count={inventory.oracle || 0}
+                                    label="Oracle"
+                                    onClick={handleUseOracle}
+                                    active={showOracle}
+                                    disabled={selectedOption !== null || showOracle}
+                                />
+                                <CrystalButton
                                     icon="auto_awesome"
                                     count={inventory.slay}
                                     label="Phoenix"
@@ -609,6 +738,18 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                     )}
                 </AnimatePresence>
             </main>
+
+            <TacticalAITutor
+                isVisible={showAiTutor}
+                explanation={aiFeedback?.explanation || ''}
+                tip={aiFeedback?.tip || ''}
+                onClose={() => setShowAiTutor(false)}
+            />
+
+            <PremiumAIModal
+                isOpen={showPremiumModal}
+                onClose={() => setShowPremiumModal(false)}
+            />
         </div>
     );
 };

@@ -11,7 +11,8 @@ import { LoginModal } from '@/components/ui/LoginModal';
 import { useSound } from '@/hooks/use-sound';
 import { useAlertStore } from '@/store/alert-store';
 import { AvatarFrame } from '@/components/ui/AvatarFrame';
-import { purchaseCrystal, purchaseBorder, redeemPromoCode } from '@/app/actions/shopActions';
+import { purchaseCrystal, purchaseBorder } from '@/app/actions/shopActions';
+import { redeemPromoCode } from '@/app/actions/userActions';
 
 interface CrystalItem {
     id: keyof CrystalInventory;
@@ -36,7 +37,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
         id: 'shield',
         name: 'Shield Crystal',
         description: 'Jagain Energy lo biar nggak gampang game over pas lagi grinding misi.',
-        cost: 50,
+        cost: 35,
         icon: 'security',
         color: 'text-emerald-500',
         glow: 'shadow-emerald-500/20'
@@ -45,7 +46,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
         id: 'booster',
         name: 'XP Overflow',
         description: 'Double XP buat 3 level kedepan. Literally shortcut buat jadi sepuh!',
-        cost: 100,
+        cost: 75,
         icon: 'bolt',
         color: 'text-amber-500',
         glow: 'shadow-amber-500/20'
@@ -53,8 +54,8 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     {
         id: 'hint',
         name: 'Vision Crystal',
-        description: 'Pusing nggak tau jawabannya? Pake ini buat intip bocoran sirkel pusat.',
-        cost: 150,
+        description: 'Pusing nggak tau jawabannya? Pake ini buat intip bocoran bro pusat.',
+        cost: 45,
         icon: 'psychology',
         color: 'text-blue-500',
         glow: 'shadow-blue-500/20'
@@ -63,7 +64,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
         id: 'focus',
         name: 'Temporal Crystal',
         description: 'Timer di Speed Blitz auto stop. Bisa mikir santuy tanpa panik, literally.',
-        cost: 200,
+        cost: 85,
         icon: 'timer_off',
         color: 'text-purple-500',
         glow: 'shadow-purple-500/20'
@@ -72,7 +73,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
         id: 'slay',
         name: 'Phoenix Crystal',
         description: 'Jagain streak lo biar tetep slay walaupun lo lupa login seharian.',
-        cost: 300,
+        cost: 350,
         icon: 'auto_awesome',
         color: 'text-rose-500',
         glow: 'shadow-rose-500/20'
@@ -81,7 +82,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
         id: 'timefreeze',
         name: 'Stasis Crystal',
         description: 'Literally berhentiin waktu pas duel selama 5 detik. Musuh auto bengong!',
-        cost: 2000,
+        cost: 750,
         icon: 'ac_unit',
         color: 'text-cyan-400',
         glow: 'shadow-cyan-400/20'
@@ -90,7 +91,7 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
         id: 'autocorrect',
         name: 'Divine Eye',
         description: 'Auto-pick jawaban bener. Pilihan dewa buat yang pengen cepet beres.',
-        cost: 5000,
+        cost: 1500,
         icon: 'remove_red_eye',
         color: 'text-orange-400',
         glow: 'shadow-orange-400/20'
@@ -98,11 +99,38 @@ const CRYSTAL_ITEMS: CrystalItem[] = [
     {
         id: 'adminvision',
         name: 'King Vision',
-        description: 'Exclusive skill! Intip semua jawaban musuh lo di sirkel duel arena.',
+        description: 'Exclusive skill! Intip semua jawaban musuh lo di bro duel arena.',
         cost: 999999,
         icon: 'visibility',
         color: 'text-fuchsia-500',
         glow: 'shadow-fuchsia-500/30'
+    },
+    {
+        id: 'eraser',
+        name: 'Penghapus Sesat',
+        description: 'Bantu hapus 2 jawaban salah biar lo nggak bingung milih yang mana. Mantap jiwa!',
+        cost: 60,
+        icon: 'auto_fix_high',
+        color: 'text-indigo-400',
+        glow: 'shadow-indigo-400/20'
+    },
+    {
+        id: 'timewarp',
+        name: 'Putar Waktu',
+        description: 'Nambah 10 detik buat mikir. Berguna banget pas lagi mode panic di Speed Blitz!',
+        cost: 90,
+        icon: 'update',
+        color: 'text-sky-400',
+        glow: 'shadow-sky-400/20'
+    },
+    {
+        id: 'oracle',
+        name: 'Mata Batin',
+        description: 'Intip penjelasan atau contoh kalimat sebelum jawab. Belajar jadi lebih sat set bro!',
+        cost: 145,
+        icon: 'visibility',
+        color: 'text-amber-400',
+        glow: 'shadow-amber-400/20'
     }
 ];
 
@@ -111,42 +139,42 @@ const BORDER_ITEMS: BorderShopItem[] = [
         id: 'silver_warrior',
         name: 'Silver Warrior',
         description: 'Efek metallic silver buat kamu yang baru mulai grinding.',
-        cost: 1000,
+        cost: 800,
         tier: 'rare'
     },
     {
         id: 'diamond_master',
         name: 'Diamond Master',
-        description: 'Aura berlian berkilau, sirkel elit pasti punya ini.',
-        cost: 5000,
+        description: 'Aura berlian berkilau, bro elit pasti punya ini.',
+        cost: 3500,
         tier: 'epic'
     },
     {
         id: 'emerald_mythic',
         name: 'Emerald Mythic',
         description: 'Efek emerald premium dengan partikel mistis yang mempesona.',
-        cost: 15000,
+        cost: 8500,
         tier: 'mythic'
     },
     {
         id: 'royal_obsidian',
         name: 'Royal Obsidian',
         description: 'Warna deep black dengan aura ungu gelap yang misterius dan mewah.',
-        cost: 25000,
+        cost: 15000,
         tier: 'legendary'
     },
     {
         id: 'infinity_void',
         name: 'Infinity Void',
         description: 'Efek kosmik bintang-bintang bergerak. Mewah nggak ngotak!',
-        cost: 50000,
+        cost: 25000,
         tier: 'mythic'
     },
     {
         id: 'celestial_dragon',
         name: 'Celestial Dragon',
         description: 'The ultimate border! Aura naga emas dengan partikel dewa.',
-        cost: 99999,
+        cost: 50000,
         tier: 'mythic'
     }
 ];
@@ -173,7 +201,7 @@ export default function ShopPage() {
             playSound('WRONG');
             showAlert({
                 title: 'Saldo Kurang!',
-                message: `Crystals kamu cuma ${gems}, butuh ${item.cost} buat forge ${item.name}. Grinding lagi yuk!`,
+                message: `Crystals kamu cuma ${gems.toLocaleString('id-ID')}, butuh ${item.cost.toLocaleString('id-ID')} buat forge ${item.name}. Grinding lagi yuk!`,
                 type: 'error',
                 confirmLabel: 'Siap Sepuh!'
             });
@@ -182,7 +210,7 @@ export default function ShopPage() {
 
         showAlert({
             title: 'Forge Crystal? ⚒️',
-            message: `Berapa banyak ${item.name} yang mau lo bikin sirkel?`,
+            message: `Berapa banyak ${item.name} yang mau lo bikin bro?`,
             type: 'crystal',
             showQuantitySelector: true,
             pricePerItem: item.cost,
@@ -200,7 +228,7 @@ export default function ShopPage() {
             playSound('WRONG');
             showAlert({
                 title: 'Saldo Gagal! ❌',
-                message: `Waduh, buat beli ${qty} crystal lo butuh ${totalCost}, tapi saldo lo cuma ${gems}. Dikurangin dikit porsinya!`,
+                message: `Waduh, buat beli ${qty} crystal lo butuh ${totalCost.toLocaleString('id-ID')}, tapi saldo lo cuma ${gems.toLocaleString('id-ID')}. Dikurangin dikit porsinya!`,
                 type: 'error'
             });
             return;
@@ -228,7 +256,7 @@ export default function ShopPage() {
 
             showAlert({
                 title: 'Literally Gacor! ✨',
-                message: `${qty}x ${item.name} berhasil di-forge. Inventory makin tebel, sirkel makin solid!`,
+                message: `${qty}x ${item.name} berhasil di-forge. Inventory makin tebel, bro makin solid!`,
                 type: 'success',
                 autoClose: 3000
             });
@@ -251,7 +279,7 @@ export default function ShopPage() {
         if (unlockedBorders.includes(item.id)) {
             showAlert({
                 title: 'Sudah Punya! ✨',
-                message: `Border ${item.name} sudah ada di koleksi lo sirkel.`,
+                message: `Border ${item.name} sudah ada di koleksi lo bro.`,
                 type: 'info'
             });
             return;
@@ -261,7 +289,7 @@ export default function ShopPage() {
             playSound('WRONG');
             showAlert({
                 title: 'Saldo Kurang!',
-                message: `Crystals kamu cuma ${gems}, butuh ${item.cost} buat beli border ${item.name}.`,
+                message: `Crystals kamu cuma ${gems.toLocaleString('id-ID')}, butuh ${item.cost.toLocaleString('id-ID')} buat beli border ${item.name}.`,
                 type: 'error'
             });
             return;
@@ -269,7 +297,7 @@ export default function ShopPage() {
 
         showAlert({
             title: 'Beli Border Luxury? 🎨',
-            message: `Yakin mau beli ${item.name} seharga ${item.cost} Crystal? Penampilan sirkel lo auto level up!`,
+            message: `Yakin mau beli ${item.name} seharga ${item.cost.toLocaleString('id-ID')} Crystal? Penampilan bro lo auto level up!`,
             type: 'crystal',
             confirmLabel: 'Beli Sekarang!',
             cancelLabel: 'Batal',
@@ -299,7 +327,7 @@ export default function ShopPage() {
 
             showAlert({
                 title: 'Vibe Mewah! ✨',
-                message: `Border ${item.name} berhasil dibeli. Langsung pake di profil sirkel lo gih!`,
+                message: `Border ${item.name} berhasil dibeli. Langsung pake di profil bro lo gih!`,
                 type: 'success',
                 autoClose: 3000
             });
@@ -335,7 +363,7 @@ export default function ShopPage() {
 
                 showAlert({
                     title: 'JACKPOT! 🎰',
-                    message: `Gila bang! Kode promo berhasil, lo dapet ${result.amount?.toLocaleString()} Crystals instan. Dompet auto meluber!`,
+                    message: `Gila bang! Kode promo berhasil, lo dapet ${result.amount?.toLocaleString('id-ID')} Crystals instan. Dompet auto meluber!`,
                     type: 'success'
                 });
 
@@ -345,7 +373,7 @@ export default function ShopPage() {
                 playSound('WRONG');
                 showAlert({
                     title: 'Yah Gagal...',
-                    message: result.error || 'Kode promo salah sirkel.',
+                    message: result.error || 'Kode promo salah bro.',
                     type: 'error'
                 });
             }
@@ -371,13 +399,13 @@ export default function ShopPage() {
                             icon="diamond"
                             className="mx-auto px-2 sm:px-4 lg:px-6 py-0.5 sm:py-1 lg:py-2 text-[8px] sm:text-xs lg:text-lg"
                         >
-                            {gems} Crystals Available
+                            {gems.toLocaleString('id-ID')} Crystals Available
                         </Badge>
                         <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase">
                             SHOP <span className="text-primary border-b-2 sm:border-b-4 lg:border-b-8 border-primary/20">ARENA</span>
                         </h1>
                         <p className="text-[10px] sm:text-sm lg:text-xl text-slate-500 font-bold max-w-2xl mx-auto px-2">
-                            Pilih perlengkapan tempur sirkel lo. <br className="hidden sm:block" />
+                            Pilih perlengkapan tempur bro lo. <br className="hidden sm:block" />
                             Upgrade skill atau penampilan, <span className="text-primary italic underline decoration-wavy decoration-2 underline-offset-4">literally mehwah.</span>
                         </p>
                     </motion.div>
@@ -449,7 +477,7 @@ export default function ShopPage() {
                                                 <span className="leading-none">{gems < item.cost ? 'Gagal' : 'Forge'}</span>
                                                 <div className="flex items-center gap-0.5 sm:gap-1 bg-white/20 px-1 sm:px-1.5 lg:px-2 py-0.5 rounded-md lg:rounded-lg">
                                                     <Icon name="diamond" size={10} className="sm:size-3 lg:size-3.5" filled />
-                                                    <span className="font-black tracking-tighter">{item.cost}</span>
+                                                    <span className="font-black tracking-tighter">{item.cost.toLocaleString('id-ID')}</span>
                                                 </div>
                                             </div>
                                         </Button>
@@ -505,7 +533,7 @@ export default function ShopPage() {
                                                     <span className="leading-none">Unlock</span>
                                                     <div className="flex items-center gap-0.5 sm:gap-1 bg-white/20 px-1 sm:px-1.5 lg:px-2 py-0.5 rounded-md lg:rounded-lg">
                                                         <Icon name="diamond" size={10} className="sm:size-3 lg:size-3.5" filled />
-                                                        <span className="font-black tracking-tighter">{item.cost}</span>
+                                                        <span className="font-black tracking-tighter">{item.cost.toLocaleString('id-ID')}</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -527,7 +555,7 @@ export default function ShopPage() {
                         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
                             <div className="flex-1 text-center sm:text-left space-y-1 sm:space-y-2">
                                 <h3 className="text-base sm:text-xl lg:text-3xl font-black text-slate-900 dark:text-white uppercase italic">Punya Kode Promo?</h3>
-                                <p className="text-[10px] sm:text-sm lg:text-lg text-slate-500 font-bold">Masukin kodenya dapet Crystal instan. <br className="hidden sm:block" /> Rejeki anak sirkel nggak kemana!</p>
+                                <p className="text-[10px] sm:text-sm lg:text-lg text-slate-500 font-bold">Masukin kodenya dapet Crystal instan. <br className="hidden sm:block" /> Rejeki anak bro nggak kemana!</p>
                             </div>
 
                             <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2 sm:gap-3">

@@ -44,6 +44,35 @@ function HomeContent() {
     window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
   }, [mode, selectedGrammarCat]);
 
+  const isAuthenticated = status === 'authenticated';
+
+  // Update streak on page load (daily login tracking)
+  React.useEffect(() => {
+    if (isAuthenticated && session?.user?.id) {
+      const updateStreak = async () => {
+        try {
+          const { updateUserStreak } = await import('@/app/actions/streakActions');
+          const result = await updateUserStreak();
+
+          if (result.success && result.streak !== undefined) {
+            // Update local store with new streak
+            useUserStore.getState().updateStreak(result.streak);
+
+            // Show notification if Phoenix was used
+            if (result.phoenixUsed) {
+              playSound('SUCCESS');
+              // Could show a toast notification here
+            }
+          }
+        } catch (error) {
+          console.error('Failed to update streak:', error);
+        }
+      };
+
+      updateStreak();
+    }
+  }, [isAuthenticated, session?.user?.id, playSound]);
+
   // Filter levels based on mode and selected category
   const levels = mode === 'VOCAB'
     ? ALL_LEVELS.filter(l => l.id.startsWith('vocab'))
@@ -51,8 +80,6 @@ function HomeContent() {
       ? ALL_LEVELS.filter(l => l.category === selectedGrammarCat)
       : [] // Categories shown instead
     );
-
-  const isAuthenticated = status === 'authenticated';
 
   // Convert progress store data to the format expected by LearningPath
   const userProgress = levels.map(level => {
@@ -103,35 +130,59 @@ function HomeContent() {
 
   return (
     <PageLayout activeTab="home" user={userStats}>
-      <div className="flex flex-col items-center justify-center mb-8 md:mb-12 text-center space-y-3 md:space-y-4 px-4 mt-6 md:mt-8 lg:mt-12">
-        <div className="px-3 md:px-4 py-1 md:py-1.5 rounded-full bg-primary/10 text-primary text-[8px] md:text-[10px] font-black uppercase tracking-widest animate-bounce-gentle">
-          {isAuthenticated ? 'Target Hari Ini: +50 XP' : 'Gabung dan Mulai Belajar!'}
-        </div>
-        <h2 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tighter max-w-2xl italic uppercase px-2">
+      <div className="relative flex flex-col items-center justify-center pt-8 md:pt-16 pb-4 md:pb-6 text-center px-4 overflow-hidden">
+        {/* TACTICAL HEADER BACKGROUND */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="px-4 md:px-6 py-1.5 md:py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 shadow-xl shadow-primary/5 mb-6 md:mb-8 flex items-center gap-3"
+        >
+          <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            {isAuthenticated ? `LINK ESTABLISHED: +${userStats.totalXp.toLocaleString('id-ID')} XP` : 'MAINFRAME OFFLINE: LOGIN REQUIRED'}
+          </span>
+        </motion.div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight md:tracking-tighter max-w-4xl italic uppercase px-2 leading-tight md:leading-none mb-4 md:mb-6 relative"
+        >
           {isAuthenticated ? (
-            <>Siap belajar, <span className="text-primary">{userStats.name.split(' ')[0]}</span>? ✨</>
+            <>Siap <span className="text-primary">Mabar</span>, {userStats.name.split(' ')[0]}? <span className="text-primary italic">⚡</span></>
           ) : (
-            <>Kuasai Bahasa Inggris, <span className="text-primary">Sekarang Juga!</span> 💅</>
+            <>Kuasai <span className="text-primary">Mainframe</span> Inggris! <span className="text-primary italic">💅</span></>
           )}
-        </h2>
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-[10px] md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest md:tracking-[0.3em] max-w-xl leading-relaxed mb-8 md:mb-12"
+        >
+          Pilih salah satu jalur grinding di bawah ini untuk meningkatkan level bahasa kamu.
+        </motion.p>
 
         {/* MODE SELECTOR */}
-        <div className="flex items-center gap-1.5 md:gap-2 p-1.5 md:p-2 bg-slate-100 dark:bg-slate-900 rounded-2xl md:rounded-[2rem] mt-6 md:mt-8 w-full max-w-sm mx-auto shadow-inner">
+        <div className="flex items-center gap-2 md:gap-3 p-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-[2rem] md:rounded-[2.5rem] w-full max-w-md mx-auto shadow-2xl">
           <button
             onClick={() => { playSound('CLICK'); setMode('VOCAB'); setSelectedGrammarCat(null); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-2 md:py-3 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'VOCAB' ? 'bg-white dark:bg-slate-800 text-primary shadow-lg scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex-1 flex items-center justify-center gap-2 md:gap-3 py-3 md:py-4 rounded-2xl md:rounded-[2rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'VOCAB' ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-[1.05]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
-            <Icon name="translate" size={16} mdSize={18} />
-            <span className="hidden sm:inline">Jalur Kosakata</span>
-            <span className="sm:hidden">Kosakata</span>
+            <Icon name="translate" size={18} mdSize={22} filled={mode === 'VOCAB'} />
+            <span>Kosakata</span>
           </button>
           <button
             onClick={() => { playSound('CLICK'); setMode('GRAMMAR'); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-2 md:py-3 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'GRAMMAR' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-lg scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex-1 flex items-center justify-center gap-2 md:gap-3 py-3 md:py-4 rounded-2xl md:rounded-[2rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'GRAMMAR' ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/30 scale-[1.05]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
-            <Icon name="history_edu" size={16} mdSize={18} />
-            <span className="hidden sm:inline">Jalur Tata Bahasa</span>
-            <span className="sm:hidden">Tata Bahasa</span>
+            <Icon name="history_edu" size={18} mdSize={22} filled={mode === 'GRAMMAR'} />
+            <span>Tata Bahasa</span>
           </button>
         </div>
       </div>
@@ -165,7 +216,7 @@ function HomeContent() {
                       Kitab Tata Bahasa
                     </h3>
                     <p className="text-[9px] md:text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
-                      Belajar teori dulu sirkel biar gak bingung pas mabar!
+                      Belajar teori dulu bro biar gak bingung pas mabar!
                     </p>
                   </div>
                   <Icon name="arrow_forward" size={20} className="text-slate-300 group-hover:text-purple-500 transition-colors" />
