@@ -639,7 +639,7 @@ export const VocabularyGame: React.FC<VocabularyGameProps> = ({ level, words }) 
                                 )}
                             </AnimatePresence>
 
-                            <div className="grid grid-cols-1 gap-3 md:gap-4 px-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 px-4">
                                 {options.map((option, idx) => {
                                     const isCorrectOption = option === words[currentIndex].indonesian;
                                     const isSelected = selectedOption === option;
