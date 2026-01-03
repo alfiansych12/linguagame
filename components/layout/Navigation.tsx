@@ -168,7 +168,7 @@ export const Sidebar: React.FC<{ activeTab: string }> = ({ activeTab }) => {
                     id="nav-profile"
                     href="/profile"
                     icon="person"
-                    label="Personal Branding"
+                    label="Profile"
                     active={activeTab === 'profile'}
                 />
                 <SidebarItem

@@ -10,6 +10,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useAlertStore } from '@/store/alert-store';
 import { ACHIEVEMENTS, Achievement } from '@/lib/data/achievements';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { uploadProfilePhoto } from '@/app/actions/upload';
 import { AvatarFrame } from '@/components/ui/AvatarFrame';
 import { BorderSelector } from '@/components/ui/BorderSelector';
@@ -29,6 +30,8 @@ export default function ProfilePage() {
         addGems, checkReferralMilestones, setReferralCode, setName, applyReferralCode, syncWithDb,
         unlockedAchievements, gems, image, setImage, equippedBorder, isPro, proUntil
     } = useUserStore();
+
+    const router = useRouter();
 
     const [refCodeInput, setRefCodeInput] = useState('');
     const [loadingRef, setLoadingRef] = useState(false);
@@ -317,6 +320,15 @@ export default function ProfilePage() {
                             >
                                 <Icon name="menu_book" size={12} className="mr-2 sm:size-3.5 lg:size-4" />
                                 User Handbook
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                fullWidth
+                                className="py-2.5 sm:py-3 h-auto rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest border border-slate-200/50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                onClick={() => router.push('/about')}
+                            >
+                                <Icon name="info" size={12} className="mr-2 sm:size-3.5 lg:size-4" />
+                                About LinguaGame
                             </Button>
                             <Button
                                 variant="ghost"

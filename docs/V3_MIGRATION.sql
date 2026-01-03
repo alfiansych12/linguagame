@@ -22,7 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_logs_action ON public.admin_logs(action);
 -- RLS Policies
 ALTER TABLE public.admin_logs ENABLE ROW LEVEL SECURITY;
 
--- Only admins can view logs
+-- Only admins can view all logs
 CREATE POLICY "Admins can view all logs"
     ON public.admin_logs
     FOR SELECT
@@ -48,16 +48,30 @@ CREATE POLICY "Admins can insert logs"
 
 -- ============================================
 -- UPDATE USERS TABLE FOR V3.0
--- Add streak tracking column
+-- Add streak tracking and PRO columns
 -- ============================================
 
 -- Add last_streak_date column if not exists
 ALTER TABLE public.users 
 ADD COLUMN IF NOT EXISTS last_streak_date DATE;
 
+-- Add PRO columns
+ALTER TABLE public.users 
+ADD COLUMN IF NOT EXISTS is_pro BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS pro_until TIMESTAMPTZ;
+
 -- Create index for streak queries
 CREATE INDEX IF NOT EXISTS idx_users_last_streak_date 
 ON public.users(last_streak_date);
+
+-- Create index for PRO queries
+CREATE INDEX IF NOT EXISTS idx_users_pro_status 
+ON public.users(is_pro, pro_until);
+
+-- COMMENT
+COMMENT ON COLUMN users.is_pro IS 'Indicates if user has active PRO subscription';
+COMMENT ON COLUMN users.pro_until IS 'Expiration date of PRO subscription';
+
 
 -- ============================================
 -- VERIFICATION QUERIES
@@ -73,13 +87,13 @@ FROM information_schema.columns
 WHERE table_name = 'admin_logs' 
 ORDER BY ordinal_position;
 
--- Check users table for new column
+-- Check users table for new columns
 SELECT column_name, data_type 
 FROM information_schema.columns 
 WHERE table_name = 'users' 
-AND column_name = 'last_streak_date';
+AND column_name IN ('last_streak_date', 'is_pro', 'pro_until');
 
 -- ============================================
 -- SUCCESS MESSAGE
 -- ============================================
-SELECT 'V3.0 Security Tables Created Successfully! 🛡️' AS status;
+SELECT 'V3.0 Security & PRO Tables Updated Successfully! 🛡️💎' AS status;

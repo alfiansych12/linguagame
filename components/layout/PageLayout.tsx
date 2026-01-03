@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sidebar, BottomNav, Header, RightSidebar } from './Navigation';
+import { Footer } from './Footer';
 import { OnboardingOverlay } from '../ui/OnboardingOverlay';
 import { useUserStore } from '@/store/user-store';
 import { useProgressStore } from '@/store/progress-store';
@@ -60,10 +61,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children, activeTab, use
                     <Header user={user} />
 
                     <main className="flex-1 py-4 md:py-8 lg:py-12 pb-32 md:pb-48 lg:pb-16 h-[calc(100vh-80px)] overflow-y-auto hide-scrollbar transition-all duration-500">
-                        {/* THE MAIN CONTENT - CLEAN & TECHNICAL */}
-                        <div className="min-h-full">
+                        <div className="min-h-full pb-10">
                             {children}
                         </div>
+                        <Footer />
                     </main>
                 </div>
 

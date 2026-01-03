@@ -130,61 +130,179 @@ function HomeContent() {
 
   return (
     <PageLayout activeTab="home" user={userStats}>
-      <div className="relative flex flex-col items-center justify-center pt-8 md:pt-16 pb-4 md:pb-6 text-center px-4 overflow-hidden">
-        {/* TACTICAL HEADER BACKGROUND */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+      <div className="relative flex flex-col pt-4 md:pt-8 px-4 overflow-hidden mb-8 md:mb-12">
+        {!isAuthenticated ? (
+          /* HERO SECTION FOR GUESTS - "ORANG AWAM" FRIENDLY */
+          <div className="relative rounded-[2.5rem] overflow-hidden min-h-[500px] flex items-center justify-center text-center px-6 mb-12 shadow-2xl">
+            <div className="absolute inset-0 z-0">
+              <img src="/kamar.jpg" alt="Background" className="w-full h-full object-cover opacity-30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/80 to-transparent"></div>
+            </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="px-4 md:px-6 py-1.5 md:py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 shadow-xl shadow-primary/5 mb-6 md:mb-8 flex items-center gap-3"
-        >
-          <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-            {isAuthenticated ? `LINK ESTABLISHED: +${userStats.totalXp.toLocaleString('id-ID')} XP` : 'MAINFRAME OFFLINE: LOGIN REQUIRED'}
-          </span>
-        </motion.div>
+            <div className="relative z-10 max-w-2xl space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-white mb-4">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Live: Season 1</span>
+              </div>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight md:tracking-tighter max-w-4xl italic uppercase px-2 leading-tight md:leading-none mb-4 md:mb-6 relative"
-        >
-          {isAuthenticated ? (
-            <>Siap <span className="text-primary">Mabar</span>, {userStats.name.split(' ')[0]}? <span className="text-primary italic">⚡</span></>
-          ) : (
-            <>Kuasai <span className="text-primary">Mainframe</span> Inggris! <span className="text-primary italic">💅</span></>
-          )}
-        </motion.h2>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white uppercase italic tracking-tighter leading-[0.9]">
+                Level Up Your <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">English Skills</span>
+              </h1>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-[10px] md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest md:tracking-[0.3em] max-w-xl leading-relaxed mb-8 md:mb-12"
-        >
-          Pilih salah satu jalur grinding di bawah ini untuk meningkatkan level bahasa kamu.
-        </motion.p>
+              <p className="text-base md:text-lg text-slate-300 font-medium leading-relaxed max-w-lg mx-auto">
+                Cara paling seru belajar bahasa Inggris. Mainkan game, selesaikan misi, dan adu mekanik dengan ribuan player lain. 100% Gratis.
+              </p>
 
-        {/* MODE SELECTOR */}
-        <div className="flex items-center gap-2 md:gap-3 p-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-[2rem] md:rounded-[2.5rem] w-full max-w-md mx-auto shadow-2xl">
-          <button
-            onClick={() => { playSound('CLICK'); setMode('VOCAB'); setSelectedGrammarCat(null); }}
-            className={`flex-1 flex items-center justify-center gap-2 md:gap-3 py-3 md:py-4 rounded-2xl md:rounded-[2rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'VOCAB' ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-[1.05]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-          >
-            <Icon name="translate" size={18} mdSize={22} filled={mode === 'VOCAB'} />
-            <span>Kosakata</span>
-          </button>
-          <button
-            onClick={() => { playSound('CLICK'); setMode('GRAMMAR'); }}
-            className={`flex-1 flex items-center justify-center gap-2 md:gap-3 py-3 md:py-4 rounded-2xl md:rounded-[2rem] font-black text-[10px] md:text-xs uppercase tracking-widest transition-all ${mode === 'GRAMMAR' ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/30 scale-[1.05]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-          >
-            <Icon name="history_edu" size={18} mdSize={22} filled={mode === 'GRAMMAR'} />
-            <span>Tata Bahasa</span>
-          </button>
-        </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <Button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="h-14 px-8 rounded-2xl bg-primary text-white text-sm font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-primary/25"
+                >
+                  Mulai Main Sekarang
+                </Button>
+                <Link href="/about">
+                  <Button
+                    variant="ghost"
+                    className="h-14 px-8 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 text-white text-sm font-black uppercase tracking-widest hover:bg-white/10"
+                  >
+                    Pelajari Lebih Lanjut
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="pt-8 flex items-center justify-center gap-8 opacity-60">
+                <div className="text-center">
+                  <p className="text-2xl font-black text-white">10K+</p>
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Users</p>
+                </div>
+                <div className="w-px h-8 bg-white/20"></div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-white">500+</p>
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Missions</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* DASHBOARD FOR LOGGED IN USERS - CLEAN COMMAND CENTER */
+          <>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 md:mb-12">
+              <div className="text-center md:text-left">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-2"
+                >
+                  <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black uppercase tracking-widest">System Online</span>
+                </motion.div>
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter"
+                >
+                  Welcome, {userStats.name.split(' ')[0]}
+                </motion.h2>
+                <p className="text-sm text-slate-500 font-medium max-w-md mt-2">
+                  Ready to grind? Pilih mode misi di bawah untuk melanjutkan progress.
+                </p>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex gap-3"
+              >
+                <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg text-center min-w-[100px]">
+                  <Icon name="bolt" size={24} className="text-primary mx-auto mb-1" filled />
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">{userStats.totalXp.toLocaleString()}</p>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total XP</p>
+                </div>
+                <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg text-center min-w-[100px]">
+                  <Icon name="local_fire_department" size={24} className={userStats.currentStreak > 0 ? "text-orange-500" : "text-slate-400"} mx-auto mb-1 filled />
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">{userStats.currentStreak}</p>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Day Streak</p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* DASHBOARD GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="md:col-span-2"
+              >
+                <div className="h-full p-6 bg-gradient-to-br from-primary to-purple-600 rounded-[2rem] text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[10px] font-black uppercase tracking-widest border border-white/10">
+                        <Icon name="radar" size={14} />
+                        Active Mission
+                      </div>
+                      <Icon name="sports_esports" size={24} className="opacity-80" />
+                    </div>
+
+                    <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-2">
+                      {mode === 'VOCAB' ? 'Vocabulary' : 'Grammar'} Protocol
+                    </h3>
+
+                    <div className="flex gap-2 mt-8">
+                      <button
+                        onClick={() => { playSound('CLICK'); setMode('VOCAB'); setSelectedGrammarCat(null); }}
+                        className={`flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${mode === 'VOCAB' ? 'bg-white text-primary shadow-xl scale-105' : 'bg-black/20 text-white hover:bg-black/30'}`}
+                      >
+                        <Icon name="translate" size={16} /> Vocab
+                      </button>
+                      <button
+                        onClick={() => { playSound('CLICK'); setMode('GRAMMAR'); }}
+                        className={`flex-1 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${mode === 'GRAMMAR' ? 'bg-white text-purple-600 shadow-xl scale-105' : 'bg-black/20 text-white hover:bg-black/30'}`}
+                      >
+                        <Icon name="history_edu" size={16} /> Grammar
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 size-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-white/20 transition-colors"></div>
+                  <Icon name="stadia_controller" size={120} className="absolute -bottom-10 -right-10 text-white opacity-10 rotate-12 group-hover:rotate-6 transition-transform" filled />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Link href="/about">
+                  <Card className="h-full p-6 flex flex-col border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 group hover:border-primary/50 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-2 text-slate-400 mb-4">
+                      <Icon name="info" size={20} className="group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Base Intel</span>
+                    </div>
+
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight mb-2">
+                      About LinguaGame
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed mb-6 flex-1">
+                      Pelajari misi, visi, dan cerita di balik markas ini.
+                    </p>
+
+                    <div className="mt-auto flex justify-end">
+                      <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                        <Icon name="arrow_forward" size={16} />
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              </motion.div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="max-w-4xl mx-auto px-4 pb-20">
@@ -298,6 +416,74 @@ function HomeContent() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* SEO & CONTENT SECTION FOR ADSENSE VALUATION */}
+      <section className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 -mx-4 md:-mx-8 lg:-mx-16 px-4 md:px-8 lg:px-16 py-12 md:py-20 mt-12 md:mt-20">
+        <div className="max-w-4xl mx-auto space-y-16">
+
+          {/* Main Value Prop */}
+          <div className="text-center space-y-6">
+            <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
+              Platform Belajar Bahasa Inggris <span className="text-primary">#1 Paling Seru</span>
+            </h2>
+            <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
+              LinguaGame mengubah cara kamu belajar bahasa Inggris. Lupakan buku tebal membosankan.
+              Di sini, setiap kata yang kamu pelajari adalah senjata, dan setiap grammar adalah strategi untuk menaklukkan misi.
+            </p>
+          </div>
+
+          {/* Feature Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-4">
+              <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <Icon name="psychology" size={24} filled />
+              </div>
+              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Metode Gamifikasi</h3>
+              <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
+                Sistem level, XP, dan Rank yang membuat ketagihan. Belajar jadi tidak terasa berat karena kamu sibuk mengejar Rank Sepuh!
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                <Icon name="school" size={24} filled />
+              </div>
+              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Kurikulum Terstruktur</h3>
+              <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
+                Materi disusun oleh ahli bahasa. Mulai dari Basic Vocabulary hingga Advanced Grammar, semua ada jalurnya.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="size-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                <Icon name="trophy" size={24} filled />
+              </div>
+              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Kompetisi Global</h3>
+              <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
+                Adu kemampuan dengan user lain di Leaderboard. Buktikan kalau kamu memang jagoan bahasa Inggris di arena Duel.
+              </p>
+            </div>
+          </div>
+
+          {/* AdSense Policy & Safety Text */}
+          <div className="pt-12 border-t border-slate-200 dark:border-slate-800 text-center">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
+              Safety & Quality Standards
+            </p>
+            <p className="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed mb-6">
+              LinguaGame berkomitmen menyediakan konten edukasi berkualitas tinggi yang aman untuk semua umur.
+              Kami mematuhi seluruh kebijakan program Google AdSense dengan memastikan navigasi yang jelas,
+              konten orisinal yang bermanfaat, dan pengalaman pengguna yang transparan.
+              Hubungi dukungan kami jika menemukan masalah.
+            </p>
+            <div className="flex justify-center gap-6">
+              <Link href="/privacy" className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest">Privacy Policy</Link>
+              <Link href="/terms" className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest">Terms of Service</Link>
+            </div>
+          </div>
+
+        </div>
+      </section>
 
       <LoginModal
         isOpen={isLoginModalOpen}

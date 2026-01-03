@@ -151,6 +151,9 @@ create table public.users (
   is_admin boolean null default false,
   last_login_at timestamp with time zone null default now(),
   password text null,
+  last_streak_date date null,
+  is_pro boolean null default false,
+  pro_until timestamp with time zone null,
   constraint users_pkey primary key (id),
   constraint users_email_key unique (email),
   constraint users_referral_code_key unique (referral_code),
@@ -207,6 +210,20 @@ create table public.user_quests (
   constraint user_quests_pkey primary key (id),
   constraint user_quests_user_id_fkey foreign KEY (user_id) references users (id) on delete CASCADE
 ) TABLESPACE pg_default;
+
+-- Admin Logs for Security V3.0
+create table public.admin_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    admin_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    target TEXT,
+    details TEXT,
+    timestamp TIMESTAMPTZ DEFAULT NOW()
+) TABLESPACE pg_default;
+
+create index IF not exists idx_admin_logs_admin_id ON public.admin_logs(admin_id);
+create index IF not exists idx_admin_logs_timestamp ON public.admin_logs(timestamp DESC);
+create index IF not exists idx_admin_logs_action ON public.admin_logs(action);
 
 -- TRIGGERS & FUNCTIONS
 create trigger trigger_update_xp
