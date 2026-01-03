@@ -639,23 +639,27 @@ interface CrystalButtonProps {
     disabled?: boolean;
 }
 
-const CrystalButton: React.FC<CrystalButtonProps> = ({ icon, count, label, onClick, active, disabled }) => (
-    <button
-        onClick={onClick}
-        disabled={disabled || count <= 0}
-        className={`flex flex-col items-center gap-1 group transition-all ${count <= 0 ? 'opacity-20 grayscale cursor-not-allowed' : 'hover:scale-110 active:scale-95'}`}
-    >
-        <div className={`size-12 rounded-xl flex items-center justify-center relative border-2 transition-all
+const CrystalButton: React.FC<CrystalButtonProps> = ({ icon, count, label, onClick, active, disabled }) => {
+    if (count <= 0) return null;
+
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            className={`flex flex-col items-center gap-1 group transition-all hover:scale-110 active:scale-95`}
+        >
+            <div className={`size-12 rounded-xl flex items-center justify-center relative border-2 transition-all
             ${active
-                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30 scale-110'
-                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 group-hover:border-primary/50 group-hover:text-primary'}
-            ${count > 0 && !active && !disabled ? 'ring-2 ring-primary/20 ring-offset-2 dark:ring-offset-[#0a0a0f]' : ''}
+                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30 scale-110'
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 group-hover:border-primary/50 group-hover:text-primary'}
+            ${!active && !disabled ? 'ring-2 ring-primary/20 ring-offset-2 dark:ring-offset-[#0a0a0f]' : ''}
         `}>
-            <Icon name={icon} size={24} filled={active} />
-            <div className="absolute -top-2 -right-2 size-5 bg-primary text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-md border-2 border-white dark:border-[#0a0a0f]">
-                {count}
+                <Icon name={icon} size={24} filled={active} />
+                <div className="absolute -top-2 -right-2 size-5 bg-primary text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-md border-2 border-white dark:border-[#0a0a0f]">
+                    {count}
+                </div>
             </div>
-        </div>
-        <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{label}</span>
-    </button>
-);
+            <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{label}</span>
+        </button>
+    );
+};

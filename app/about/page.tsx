@@ -45,17 +45,17 @@ export default function AboutPage() {
                             Revolusi Cara <br /><span className="text-primary">Belajar Bahasa.</span>
                         </h1>
                         <p className="text-sm md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
-                            Kami percaya pendidikan tidak harus membosankan. LinguaGame lahir dari frustrasi melihat metode belajar konvensional yang kaku. Kami hadir untuk mengubah "belajar" menjadi "bermain".
+                            Kami percaya pendidikan tidak harus membosankan. LinguaGame hadir untuk mengubah "belajar" menjadi "bermain", menghapus batasan antara hiburan dan pendidikan.
                         </p>
                     </div>
 
-                    {/* Stats */}
+                    {/* Stats - Adjusted for new realistic launch */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                         {[
-                            { label: 'Users', value: '10K+' },
+                            { label: 'Platform', value: 'V1.8' },
                             { label: 'Missions', value: '500+' },
-                            { label: 'Reviews', value: '4.9/5' },
-                            { label: 'Countries', value: 'ID' }
+                            { label: 'Vision', value: '100%' },
+                            { label: 'Origin', value: 'ID' }
                         ].map((stat, i) => (
                             <div key={i} className="text-center p-6 bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800">
                                 <h3 className="text-3xl font-black text-slate-900 dark:text-white italic mb-1">{stat.value}</h3>
@@ -68,17 +68,17 @@ export default function AboutPage() {
                     <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
                         <div className="space-y-6 order-2 md:order-1">
                             <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight">
-                                Dari Kamar Tidur ke <span className="text-primary">Ribuan User</span>
+                                Lahir dari Keresahan, <span className="text-primary">Dibangun untuk Perubahan</span>
                             </h2>
                             <div className="space-y-4 text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
                                 <p>
-                                    LinguaGame dimulai sebagai proyek iseng di akhir pekan. Tujuannya sederhana: membuat alat bantu hafal vocab yang tidak bikin ngantuk.
+                                    LinguaGame lahir karena satu alasan sederhana: belajar bahasa Inggris seringkali terasa membosankan. Buku tebal, rumus rumit, dan metode kuno membuat banyak orang menyerah sebelum benar-benar bisa.
                                 </p>
                                 <p>
-                                    Setelah rilis versi alpha, respons yang kami terima di luar dugaan. Ribuan user mendaftar dalam minggu pertama. Ini membuktikan satu hal: semua orang ingin belajar, tapi tidak semua orang suka cara mereka diajar.
+                                    Kami percaya bahwa belajar seharusnya tidak terasa seperti beban. Dengan menggabungkan elemen RPG, strategi taktis, dan teknologi modern, kami menciptakan sebuah arena di mana setiap kata baru adalah senjata, dan setiap tantangan adalah level yang harus ditaklukkan.
                                 </p>
                                 <p>
-                                    Kini, LinguaGame terus berkembang dengan fitur-fitur canggih seperti AI Tutor dan Real-time PVP, namun visi kami tetap sama: <strong>Make Learning addictive.</strong>
+                                    Visi kami jelas: <strong>Menciptakan ekosistem belajar yang adiktif, kompetitif, dan efektif.</strong> Di sini, Anda bukan sekadar murid, tapi seorang Player yang sedang membangun skill set masa depan.
                                 </p>
                             </div>
                         </div>
